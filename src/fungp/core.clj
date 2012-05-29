@@ -40,10 +40,12 @@
 (defn flip [chance]
   (< (rand) chance))
 
-(defn make-gp [{pop-size :pop-size forest-size :forest-size
-                symbols :symbols funcs :funcs [term-max term-min] :const
-                [depth-max depth-min] :depth [repfunc reprate] :rep mutation-rate :mutation
-                tournament-size :tournament [testfit tests] :test}]
+(defn run-gp [{cycles :cycles gens :gens
+               pop-size :pop-size forest-size :forest-size
+               symbols :symbols funcs :funcs [term-max term-min] :const
+               [depth-max depth-min] :depth [repfunc reprate] :rep
+               mutation-rate :mutation tournament-size :tournament
+               [testfit tests] :test}]
 
   (def actual (map (fn [x] (apply testfit x)) tests))
 
@@ -152,8 +154,8 @@
                                  (if (> (:fitness cur-best) (:fitness best))
                                    best cur-best))]
                 (recur (- cycles 1) gens cur-pop new-best))))))
-  
-  {:parallel parallel-generations :single generations})
+
+  (parallel-generations cycles gens nil nil))
 
  (defn test-gp [cycle iter]
   (println "fungp :: Functional Genetic Programming in Clojure")
@@ -162,13 +164,16 @@
   (println "Attempting to minimize this function:")
   (println symbtest)
   (println "\nLower numbers are better. Results shown are sum of error.\n")
-  (def g (:parallel (make-gp {:pop-size 6 :forest-size 50 :symbols symbols
-                              :funcs funcs :const [1 -1] :depth [2 1]
-                              :rep [repfunc 1] :mutation 0.1 :tournament 3
-                              :test [testfit testdata]})))
-  (def results (g cycle iter nil nil))
+  (def results (run-gp {:gens iter :cycles cycle
+                        :pop-size 6 :forest-size 50
+                        :symbols symbols :funcs funcs
+                        :const [1 -1] :depth [2 1]
+                        :rep [repfunc 1] :mutation 0.1 :tournament 3
+                        :test [testfit testdata]}))
   (def best-result (:best results))
+  (def out-func (list 'fn symbols (conv-code (:tree best-result) funcs)))
   (println "Done!")
-  (println (conv-code (:tree best-result) funcs))
-  (print "Lowest error: ")(print (:fitness best-result))(print "\n"))
+  (println out-func)
+  (print "Lowest error: ")(print (:fitness best-result))(print "\n")
+  (eval out-func))
    
