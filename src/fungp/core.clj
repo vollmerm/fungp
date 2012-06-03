@@ -50,7 +50,7 @@
 ;;;       {:op +   :arity 2 :name '+}
 ;;;       {:op sin :arity 1 :name 'sin}]
 ;;;
-;;; TODO: write code to pass options map (and validate it), rather than using clojure
+;;; TODO: write code to pass options map (and validate it), rather than using run-gp closure
 
 
 (ns fungp.core
