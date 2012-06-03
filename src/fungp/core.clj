@@ -1,6 +1,8 @@
 ;;; Genetic programming in clojure
 ;;; ==============================
 ;;;
+;;; Mike Vollmer, 2012, GPL
+;;;
 ;;; What is this?
 ;;; -------------
 ;;;
@@ -44,9 +46,11 @@
 ;;;
 ;;; Here's an example:
 ;;;
-;;;    [{:op *   :arity 2 :name '*}
-;;;     {:op +   :arity 2 :name '+}
-;;;     {:op sin :arity 1 :name 'sin}]
+;;;      [{:op *   :arity 2 :name '*}
+;;;       {:op +   :arity 2 :name '+}
+;;;       {:op sin :arity 1 :name 'sin}]
+;;;
+;;; TODO: write code to pass options map (and validate it), rather than using clojure
 
 
 (ns fungp.core
