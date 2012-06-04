@@ -31,12 +31,14 @@
 ;;;
 ;;; Here's an example:
 ;;;
-;;;      (run-gp {:gens iter :cycles cycle
-;;;               :pop-size 6 :forest-size 50
-;;;               :symbols symbols :funcs funcs
-;;;               :const [1 -1] :depth [2 1]
-;;;               :rep [repfunc 1] :mutation 0.1 :tournament 3
-;;;               :test [testfit testdata]}))
+;;;     (run-gp {:gens iter :cycles cycle
+;;;             :pop-size 6 :forest-size 50
+;;;             :symbols symbols :funcs funcs
+;;;             :range-max 1 :range-min -1
+;;;             :max-depth 4 :min-depth 2
+;;;             :repfunc repfunc  :reprate 1
+;;;             :mutation-rate 0.1 :tournament-size 5
+;;;             :actual actual :tests testdata})
 ;;;
 ;;; Functions are defined as a sequence of maps, each having keys :op,
 ;;; :arity, and :name. :op is for the function, :arity is the number
@@ -50,207 +52,193 @@
 ;;;       {:op +   :arity 2 :name '+}
 ;;;       {:op sin :arity 1 :name 'sin}]
 ;;;
-;;; TODO: write code to pass options map (and validate it), rather than using run-gp closure
+;;; For more information on how to use it, see the source code below.
 
 
 (ns fungp.core
-  (:require [clojure.math [numeric-tower :as math]]))
+  (:use fungp.util))
 
-(defn flip
-  "Convenience function. Generates true with a probablilty of the
-   given parameter (a number between 0 and 1)"
-  [chance] (< (rand) chance))
+(defn build-options
+  "Take passed-in parameters and merge them with default parameters to construct
+   the options hash that gets passed to the other functions."
+  [o] (let [defaults {:term-max 1 :term-min -1 :depth-max 4 :depth-min 2
+                      :mutation-rate 0.05 :tournament-size 5}]
+        (merge defaults o)))
 
-(defn find-op
-  "Find the entry in the function sequence for a given operator."
-  [op funcs] (first (filter (fn [x] (= (:op x) op)) funcs)))
+;;; Many of the functions below use the options hash built by the build-options
+;;; function. In most cases this is invisible, since run-gp constructs the
+;;; options hash and runs the parallel-generations function, but for purposes
+;;; of testing or modification/extension you can do this manually with build-options.
 
-(defn conv-code
-  "Take a tree and return a list of symbols based on the :name symbols."
-  [tree funcs]
-  (if (not (seq? tree))
-    (if (fn? tree) (:name (find-op tree funcs)) tree)
-    (map (fn [t] (conv-code t funcs)) tree)))
+(defn terminal
+  "Return a random terminal for the source tree. Takes the options hash as parameter."
+  [o] (if (flip 0.5) (rand-nth (:symbols o))
+          (+ (:term-min o) (rand-int (- (:term-max o) (:term-min o))))))
+
+;;; My method of random tree generation is a combination of the "grow" and "fill"
+;;; methods of tree building, similar to Koza's "ramped half-and-half" method.
+
+(defn build-tree
+  "Build a random tree of lisp code. The tree will be filled up to the minimum depth,
+   then grown to the maximum depth. Minimum and maximum depth are specified in the
+   options, but can optionally be passed explicitly."
+  ([o] (build-tree o (:depth-max o) (:depth-min o)))
+  ([o depth-max depth-min]
+     (if (or (zero? depth-max)
+             (and (<= depth-min 0) (flip 0.5)))
+       (terminal o) ;; insert a random terminal
+       (let [f (rand-nth (:funcs o))]
+         (cons (:op f) ;; cons the operation onto a sublist matching the arity of f
+               (repeatedly (:arity f) #(build-tree o (- depth-max 1) (- depth-min 1))))))))
+
+(defn max-tree-height
+  "Find the maximum height of a tree."
+  [tree] (if (not (seq? tree)) 0 (+ 1 (reduce max (map max-tree-height tree)))))
+
+(defn rand-subtree
+  "Return a random subtree of a list (presumably of lisp code)."
+  ([tree] (rand-subtree tree (rand-int (max-tree-height tree))))
+  ([tree n] (if (or (not (seq? tree)) (= n 0)) tree
+                (recur (rand-nth (rest tree)) (rand-int (- n 1))))))
+
+(defn replace-subtree
+  "Replace a random subtree with a given subtree."
+  ([tree sub] (replace-subtree tree sub (max-tree-height tree)))
+  ([tree sub n] (if (or (not (seq? tree)) (= n 0)) sub
+                    (let [r (+ 1 (rand-int (- (count (rest tree)) 1)))]                 
+                      (concat (take r tree)
+                              (list (replace-subtree
+                                     (nth tree r) sub (rand-int (- n 1))))
+                              (nthrest tree (+ r 1)))))))
+
+;;; With rand-subtree and replace-subtree out of the way, the rest of the
+;;; single-generation pass is pretty simple. Mutation and crossover both
+;;; can easily be written in terms of rand-subtree and replace-subtree.
+
+(defn mutate
+  "Mutate a tree by substituting in a randomly-built tree of code."
+  [o tree] (if (flip (:mutation-rate o))
+             (replace-subtree tree (build-tree o)) tree))
+
+(defn crossover
+  "The crossover function is simple to define in terms of replace-subtree
+   and rand-subtree. Basically, crossing over two trees involves selecting a
+   random subtree from one tree, and placing it randomly in the other tree."
+  [tree1 tree2] (replace-subtree tree1 (rand-subtree tree2)))
+
+(defn build-forest
+  "Returns a sequence of trees. A bunch of trees is a forest, right? Get it?"
+  [o] (repeatedly (:forest-size o) #(build-tree o)))
+
+;;; The selection process is convenient to express in lisp using heigher-order
+;;; functions and **map**.
+
+(defn find-error
+  "Compares the output of the individual tree with the test data to calculate error."
+  [o tree]
+  (let [func (eval (list 'fn (:symbols o) tree))]
+    (reduce + (map off-by (map (fn [arg] (apply func arg)) (:tests o)) (:actual o)))))
+
+(defn forest-error
+  "Runs find-error on every tree in parallel, and returns a map with keys
+   :tree and :fitness in place of each tree. It needs the options hash because
+   find-error needs to extract symbols, tests and actual."
+  [o forest]
+  (pmap (fn tree-error [tree] {:tree tree :fitness (find-error o tree)}) forest))
+
+;;; A few of the following functions refer to **ferror**, a sequence returned
+;;; by forest-error. It's a sequence of maps, each with keys for :tree and
+;;; :fitness. The keys correspond to the source tree and the fitness score,
+;;; respectively. It's simple enough to sort the sequence by fitness, for
+;;; example.
+
+(defn tournament-select-error
+  "Select out a few individuals (tournament size is in o) and run a
+   tournament amongst them. The two most fit in the tournament are crossed over
+   to produce a child. Larger tournaments lead to more selective pressure."
+  [o ferror]
+  (let [selected (sort-by :fitness (repeatedly (:tournament-size o) #(rand-nth ferror)))]
+    (crossover (:tree (first selected)) (:tree (second selected)))))
+
+(defn tournament-select
+  "Run tournament-select-error enough times to re-populate the forest. The options
+   hash is passed so tournament-select-error can extract tournament-size."
+  [o ferror]
+  (repeatedly (count ferror) #(tournament-select-error o ferror)))
+
+(defn get-best
+  "Returns the best tree, given ferror."
+  [ferror]
+  (first (sort-by :fitness ferror)))
+
+(defn generations
+  "Run n generations of a forest. Over the course of one generation, the trees in
+   the forest will go through selection, crossover, and mutation. The best individual
+   seen so far in the forest is saved and passed on as the last parameter (it is nil
+   when no best individual has been found)."
+  [o n forest best]
+  (if (or (zero? n)
+          (and (not (nil? best))
+               (zero? (:fitness best)))) ;; stop early when fitness is zero
+    {:forest forest :best best} ;; return forest and current best
+    (do (when (mod n (:reprate o))
+          ((:repfunc o) best false))
+        (let [ferror (forest-error o forest)
+              cur-best (get-best ferror)
+              new-best (if (nil? best) cur-best
+                           (if (> (:fitness cur-best) (:fitness best)) best cur-best))
+              new-forest (map (fn [tree] (mutate o tree))
+                              (tournament-select o ferror))]
+          ;; the recursive call for the next generation
+          (recur o
+                 (- n 1)
+                 (if (nil? best) new-forest
+                     (conj (rest new-forest)
+                           (:tree new-best)))
+                 new-best)))))
+
+(defn build-population
+  "Call build-forest repeatedly to fill a population."
+  [o] (repeatedly (:pop-size o) #(build-forest o)))
+
+(defn population-crossover
+  "Individual trees migrate between forests."
+  [population]
+  (let [cross (map rand-nth population)]
+    (map (fn [[forest selected]] (conj (rest (shuffle forest)) selected))
+         (zipmap population cross))))
+
+;;; **parallel-generations** is the function that runs the show. It runs the
+;;; generations function defined above on each of the forests (and does so in
+;;; parallel, thanks to Clojure's convenient parallelism features).
+  
+(defn parallel-generations
+  "Spawn threads to run each of the forests for a specified amount of time, and
+   cross over between the forests at specified intervals. If the search is starting
+   from the beginning, the only necessary parameter is the options hash. The initial
+   values of the other parameters can be inferred from it. If you're resuming a search
+   you can simply pass in the population explicitly and this function will start
+   where it left off."
+  ([o] (parallel-generations o (:cycles o) (:gens o) nil nil))
+  ([o cycles gens population best]
+     (if (nil? population) (recur o cycles gens (build-population o) nil)
+         (if (or (= cycles 0)
+                 (and (not (nil? best))
+                      (zero? (:fitness best))))
+           {:population population :best best}
+           (do (when (and (not (nil? best)) (mod cycles (:reprate o)))
+                 ((:repfunc o) best true))
+               (let [p (pmap (fn [forest] (generations o gens forest best)) population)
+                     cur-pop (population-crossover (map :forest p))
+                     all-bests (map :best p)
+                     cur-best (first (sort-by :fitness all-bests))
+                     new-best (if (nil? best) cur-best
+                                  (if (> (:fitness cur-best) (:fitness best))
+                                    best cur-best))]
+                 (recur o (- cycles 1) gens cur-pop new-best)))))))
+
 
 (defn run-gp
   "Create a population of source trees and evolve them to fit the test function
-   and data passed in."
-  [{cycles :cycles gens :gens
-    pop-size :pop-size forest-size :forest-size
-    symbols :symbols funcs :funcs [term-max term-min] :const
-    [depth-max depth-min] :depth [repfunc reprate] :rep
-    mutation-rate :mutation tournament-size :tournament
-    [testfit tests] :test}]
-
-  ;;; The rest of the functions are wrapped in this closure so they have access
-  ;;; to all the parameters passed to run-gp. This is much simpler than propagating
-  ;;; all those parameters to the different functions. 
-
-  (def actual
-    "Find the \"actual\" or known test output by running all the training
-     case inputs against the training function."
-    (map (fn [x] (apply testfit x)) tests))
-
-  (defn terminal
-    "Return a random terminal for the source tree."
-    [] (if (flip 0.5) (rand-nth symbols)
-           (+ term-min (rand-int (- term-max term-min)))))
-
-  ;;; **build-tree** is a combination of the "grow" and "fill" methods of tree building,
-  ;;; similar to Koza's "ramped half-and-half" method.
-  (defn build-tree
-    "Build a random tree of lisp code. The first parameter of the function is the
-     maximum depth of the tree, and the second is the minimum depth --- the tree
-     will be filled up to the minimum depth, then grown to the maximum depth."
-    [depth-max depth-min]
-    (if (or (zero? depth-max)
-            (and (<= depth-min 0) (flip 0.5)))
-      (terminal) ; insert a random terminal
-      (let [f (rand-nth funcs)]
-        (cons (:op f) ; cons the operation onto a sublist matching the arity of f
-              (repeatedly (:arity f) #(build-tree (- depth-max 1) (- depth-min 1)))))))
-
-  (defn max-tree-height [tree]
-    (if (not (seq? tree)) 0
-        (+ 1 (reduce max (map max-tree-height tree)))))
-
-  ;;; I used clojure's ability to define functions of multiple arities to make
-  ;;; the rand-subtree and replace-subtree functions recurse based on height
-  ;;; but not require height as a parameter.
-
-  (defn rand-subtree
-    "Return a random subtree of a list (presumably of lisp code)."
-    ([tree] (rand-subtree tree (rand-int (max-tree-height tree))))
-    ([tree n] (if (or (not (seq? tree)) (= n 0)) tree
-                  (recur (rand-nth (rest tree)) (rand-int (- n 1))))))
-
-  (defn replace-subtree
-    "Replace a random subtree with a given subtree."
-    ([tree sub] (replace-subtree tree sub (max-tree-height tree)))
-    ([tree sub n] (if (or (not (seq? tree)) (= n 0)) sub
-                      (let [r (+ 1 (rand-int (- (count (rest tree)) 1)))]                 
-                        (concat (take r tree)
-                                (list (replace-subtree
-                                       (nth tree r) sub (rand-int (- n 1))))
-                                (nthrest tree (+ r 1)))))))
-
-  ;;; With rand-subtree and replace-subtree out of the way, the rest of the
-  ;;; single-generation pass is pretty simple. Mutation and crossover both
-  ;;; can easily be written in terms of rand-subtree and replace-subtree.
-
-  (defn mutate
-    "Mutate a tree by substituting in a randomly-built tree of code. The first
-     parameter is the tree to potentially mutate, and the second parameter is
-     the probability of mutation"
-    [tree chance]
-    (if (flip chance) (replace-subtree tree (build-tree 2 1)) tree))
-
-  (defn crossover
-    "The crossover function is simple to define in terms of replace-subtree
-     and rand-subtree. Basically, crossing over two trees involves selecting a
-     random subtree from one tree, and placing it randomly in the other tree."
-    [tree1 tree2] (replace-subtree tree1 (rand-subtree tree2)))
-
-  (defn build-forest
-    "Returns a sequence of trees. A bunch of trees is a forest, right? Get it?"
-    [size options] (repeatedly size #(apply build-tree options)))
-
-  ;;; The selection process is convenient to express in lisp using heigher-order
-  ;;; functions and **map**.
-
-  (defn off-by [x y] (math/abs (- x y)))
-
-  (defn find-error
-    "Compares the output of the individual tree with the test data to calculate error."
-    [tree]
-    (let [func (eval (list 'fn symbols tree))]
-      (reduce + (map off-by (map (fn [arg] (apply func arg)) tests) actual))))
-
-  ;;; A few of the following functions refer to **ferror**, a sequence returned
-  ;;; by forest-error. It's a sequence of maps, each with keys for :tree and
-  ;;; :fitness. The keys correspond to the source tree and the fitness score,
-  ;;; respectively. It's simple enough to sort the sequence by fitness, for
-  ;;; example.
-  
-  (defn forest-error
-    "Runs find-error on every tree in parallel, and returns a map with keys
-     :tree and :fitness in place of each tree."
-    [forest]
-    (pmap (fn tree-error [tree] {:tree tree :fitness (find-error tree)}) forest))
-
-  (defn tournament-select-error
-    "Select out a few individuals (size specified by first parameter) and run a
-     tournament amongst them. The two most fit in the tournament are crossed over
-     to produce a child. Larger tournaments lead to more selective pressure."
-    [tournament-size ferror]
-    (let [selected (sort-by :fitness (repeatedly tournament-size #(rand-nth ferror)))]
-      (crossover (:tree (first selected)) (:tree (second selected)))))
-
-  (defn tournament-select
-    "Run tournament-select-error enough times to re-populate the forest."
-    [tournament-size ferror]
-    (repeatedly (count ferror) #(tournament-select-error tournament-size ferror)))
-
-  (defn get-best [ferror]
-    (first (sort-by :fitness ferror)))
-
-  (defn generations
-    "Run n generations of a forest. The best individual seen so far in the forest is
-     saved and passed on as the last parameter (it is nil when no best individual has
-     been found)."
-    [n forest best]
-    (if (or (zero? n)
-            (and (not (nil? best))
-                 (zero? (:fitness best)))) ; Stop when fitness is zero.
-      {:forest forest :best best}
-      (do (when (mod n reprate)
-            (repfunc best false))
-          ; This let form establishes the "best" and "forest" parameters to
-          ; use in the recursive call.
-          (let [ferror (forest-error forest)
-                cur-best (get-best ferror)
-                new-best (if (nil? best) cur-best
-                             (if (> (:fitness cur-best) (:fitness best)) best cur-best))
-                new-forest (map (fn [tree] (mutate tree mutation-rate))
-                                (tournament-select tournament-size ferror))]
-          (recur (- n 1)
-                 (if (nil? best) new-forest
-                     (conj (rest new-forest)
-                       (:tree new-best)))
-                 new-best)))))
-  
-  (defn build-population
-    "Call build-forest repeatedly to fill a population."
-    [] (repeatedly pop-size #(build-forest forest-size [depth-max depth-min])))
-
-  (defn population-crossover
-    "Individual trees migrate between forests."
-    [population]
-    (let [cross (map rand-nth population)]
-      (map (fn [[forest selected]] (conj (rest (shuffle forest)) selected))
-           (zipmap population cross))))
-
-  ;;; **parallel-generations** is the function that runs the show. It runs the
-  ;;; generations function defined above on each of the forests (and does so in
-  ;;; parallel, thanks to Clojure's convenient parallelism features).
-  
-  (defn parallel-generations
-    "Spawn threads to run each of the forests for a specified amount of time, and
-     cross over between the forests at specified intervals." 
-    [cycles gens population best]
-    (if (nil? population) (recur cycles gens (build-population) nil)
-        (if (or (= cycles 0)
-                (and (not (nil? best))
-                     (zero? (:fitness best))))
-          {:population population :best best}
-          (do (when (and (not (nil? best)) (mod cycles reprate)) (repfunc best true))
-              (let [p (pmap (fn [forest] (generations gens forest best)) population)
-                    cur-pop (population-crossover (map :forest p))
-                    all-bests (map :best p)
-                    cur-best (first (sort-by :fitness all-bests))
-                    new-best (if (nil? best) cur-best
-                                 (if (> (:fitness cur-best) (:fitness best))
-                                   best cur-best))]
-                (recur (- cycles 1) gens cur-pop new-best))))))
-
-  (parallel-generations cycles gens nil nil))
+   and data passed in. This is probably the function you'll want to call."
+  [o] (parallel-generations (build-options o)))
