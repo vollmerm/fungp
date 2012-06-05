@@ -3064,7 +3064,7 @@ keyword parameters.</p>
 <pre><code>(run-gp {:gens iter :cycles cycle
         :pop-size 6 :forest-size 50
         :symbols symbols :funcs funcs
-        :range-max 1 :range-min -1
+        :term-max 1 :term-min -1
         :max-depth 4 :min-depth 2
         :repfunc repfunc  :reprate 1
         :mutation-rate 0.1 :tournament-size 5
@@ -3084,13 +3084,40 @@ name of the function).</p>
   {:op sin :arity 1 :name 'sin}]
 </code></pre>
 
-<p>For more information on how to use it, see the source code below.</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
+<p>For more information on how to use it, see the source code below. The
+code is sometimes dense (it's amazing how a few lines of lisp code can
+do as much or more as a hundred lines of a more verbose language like
+C or Java), but it shouldn't be too hard to understand the general
+concepts.</p>
+
+<p>This is my first time really attempting literate programming. I tried to
+organize the code in the way I think about it, which occasionally leads
+to some awkwardness, but the code should --- I hope --- be readable. I'm also
+new to Clojure as a language, so I'm not familiar with all of the idiomatic 
+patterns.</p>
+
+<p>I organized the code in more-or-less the order I originally wrote it, even
+though I've since re-written nearly all of it and changed my original logic.
+Basically, the ordering represents designing the program from the inside out,
+(bottom-up design), which is well suited to problems like this and to lisp
+in general. I started with the lowest level parts (tree manipulation,
+forest construction), moved to the higher level (mutation, crossover, selection,
+generations), and again to an even higher level (parallel generations). </p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>This is the start of the core of the library.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.core
-  (:use fungp.util))</pre></td></tr><tr><td class="docs"><p>Take passed-in parameters and merge them with default parameters to construct
+  (:use fungp.util))</pre></td></tr><tr><td class="docs"><h3>Options</h3>
+
+<p>Before I get into the implementation of the algorithm, I need to get this
+out of the way. The options hash has all the information necessary to
+run the rest of the functions, and for sake of simplicity I just lump it
+all together and pass it to any function that needs it. This function takes
+the user's input and merges it with a hash of defaults (the user's options
+will override the defaults, but the defaults will be used if the user does
+not specify that option).</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Take passed-in parameters and merge them with default parameters to construct
    the options hash that gets passed to the other functions.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn build-options
-  [o] (let [defaults {:term-max 1 :term-min -1 :depth-max 4 :depth-min 2
+  [o] (let [defaults {:term-max 1 :term-min -1 :depth-max 2 :depth-min 1
                       :mutation-rate 0.05 :tournament-size 5}]
         (merge defaults o)))</pre></td></tr><tr><td class="docs"><p>Many of the functions below use the options hash built by the build-options
 function. In most cases this is invisible, since run-gp constructs the
@@ -3114,38 +3141,75 @@ methods of tree building, similar to Koza's "ramped half-and-half" method.</p>
        (terminal o) ;; insert a random terminal
        (let [f (rand-nth (:funcs o))]
          (cons (:op f) ;; cons the operation onto a sublist matching the arity of f
-               (repeatedly (:arity f) #(build-tree o (- depth-max 1) (- depth-min 1))))))))</pre></td></tr><tr><td class="docs"><p>Returns a sequence of trees. A bunch of trees is a forest, right? Get it?</p>
+               (repeatedly (:arity f) #(build-tree o (- depth-max 1) (- depth-min 1))))))))</pre></td></tr><tr><td class="docs"><p>First we define a function for creating a collection of trees, then one for
+creating a collection of a collection of trees. If you can imagine this program
+as being built from the inside out (starting with generating trees, then manipulating
+them, then mutating/crossing/selecting for one generation, then multiple...etc),
+these two functions each extend the data representation one step "outward," from
+specific to general. Once we have code for running a single generation on a forest,
+we can extend it to multiple generations on forests, then extend that horizontally
+across a population.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Returns a sequence of trees. A bunch of trees is a forest, right? Get it?</p>
 </td><td class="codes"><pre class="brush: clojure">(defn build-forest
-  [o] (repeatedly (:forest-size o) #(build-tree o)))</pre></td></tr><tr><td class="docs"><p>Call build-forest repeatedly to fill a population.</p>
+  [o] (repeatedly (:forest-size o) #(build-tree o)))</pre></td></tr><tr><td class="docs"><p>Call build-forest repeatedly to fill a population. A population is a collection
+   of forests.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn build-population
   [o] (repeatedly (:pop-size o) #(build-forest o)))</pre></td></tr><tr><td class="docs"><p>Find the maximum height of a tree.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn max-tree-height
-  [tree] (if (not (seq? tree)) 0 (+ 1 (reduce max (map max-tree-height tree)))))</pre></td></tr><tr><td class="docs"><p>Return a random subtree of a list (presumably of lisp code).</p>
+  [tree] (if (not (seq? tree)) 0 (+ 1 (reduce max (map max-tree-height tree)))))</pre></td></tr><tr><td class="docs"><p><strong>rand-subtree</strong> and <strong>replace-subtree</strong> are two of the most important functions.
+They define how the trees are modified.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>The basic idea for how I implemented both of them is that recursion can be
+used to reduce the problem at each step: given a tree (or a subtree, all of
+which have the same form), recurse on a random subtree, along with a
+reduced value of n. The base case is when n is zero or the function hits a leaf.</p>
+
+<p>Additionally, <strong>replace-subtree</strong> uses concat to reconstruct
+the tree on its way back up the stack.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Return a random subtree of a list (presumably of lisp code).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn rand-subtree
-  ([tree] (rand-subtree tree (rand-int (max-tree-height tree))))
-  ([tree n] (if (or (not (seq? tree)) (= n 0)) tree
-                (recur (rand-nth (rest tree)) (rand-int (- n 1))))))</pre></td></tr><tr><td class="docs"><p>Replace a random subtree with a given subtree.</p>
+  ([tree] (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
+  ([tree n] (if (or (zero? n) (not (seq? tree))) tree
+                (recur (rand-nth (rest tree))
+                       (rand-int n)))))</pre></td></tr><tr><td class="docs"><p>Replace a random subtree with a given subtree.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn replace-subtree
-  ([tree sub] (replace-subtree tree sub (max-tree-height tree)))
-  ([tree sub n] (if (or (not (seq? tree)) (= n 0)) sub
-                    (let [r (+ 1 (rand-int (- (count (rest tree)) 1)))]                 
+  ([tree sub] (replace-subtree tree sub (rand-int (+ 1 (max-tree-height tree)))))
+  ([tree sub n] (if (or (zero? n) (not (seq? tree))) sub
+                    (let [r (+ 1 (rand-int (count (rest tree))))] 
                       (concat (take r tree)
                               (list (replace-subtree
-                                     (nth tree r) sub (rand-int (- n 1))))
+                                     (nth tree r) sub
+                                     (rand-int n)))
                               (nthrest tree (+ r 1)))))))</pre></td></tr><tr><td class="docs"><h3>Mutation, crossover, and selection</h3>
 
 <p>With rand-subtree and replace-subtree out of the way, the rest of the
 single-generation pass is pretty simple. Mutation and crossover both
 can easily be written in terms of rand-subtree and replace-subtree.</p>
+
+<p><strong>Mutation</strong> takes a tree and (occasionally) randomly changes part of it.
+The idea, like the rest of the fundamental aspects of genetic algorithms,
+is taken from nature; when DNA is copied, there is a slight chance of
+"mistakes" being introduced in the copy. This can lead to beneficial
+changes and increases genetic diversity.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Mutate a tree by substituting in a randomly-built tree of code.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn mutate
   [o tree] (if (flip (:mutation-rate o))
-             (replace-subtree tree (build-tree o)) tree))</pre></td></tr><tr><td class="docs"><p>The crossover function is simple to define in terms of replace-subtree
+             (replace-subtree tree (build-tree o)) tree))</pre></td></tr><tr><td class="docs"><p><strong>Crossover</strong> is the process of combining two parents to make a child.
+It involves copying the genetic material (in this case, lisp code) from
+the two parents, combining them, and returning the result of the combination.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>The crossover function is simple to define in terms of replace-subtree
    and rand-subtree. Basically, crossing over two trees involves selecting a
    random subtree from one tree, and placing it randomly in the other tree.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn crossover
-  [tree1 tree2] (replace-subtree tree1 (rand-subtree tree2)))</pre></td></tr><tr><td class="docs"><p>The selection process is convenient to express in lisp using heigher-order
-functions.</p>
+  [tree1 tree2] (replace-subtree tree1 (rand-subtree tree2)))</pre></td></tr><tr><td class="docs"><p><strong>Selection</strong> is the process in which more fit individuals are "selected," or
+more likely to breed (be involved in a crossover), while less fit individuals
+are less likely to breed.</p>
+
+<p>To carry out the selection phase, it's necessary to determine how fit the
+individuals are. The following functions use the training data to give the
+individual trees a grade, which is the sum of the error. Lower grades are
+better. Then, in the selection phase, individuals with lower error are more
+likely to be selected for crossover, and thus pass on their genetic
+material to the next generation.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Compares the output of the individual tree with the test data to calculate error.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn find-error
   [o tree]
@@ -3160,7 +3224,9 @@ by forest-error. It's a sequence of maps, each with keys for :tree and
 :fitness. The keys correspond to the source tree and the fitness score,
 respectively. It's simple enough to sort the sequence by fitness, for
 example.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Select out a few individuals (tournament size is in o) and run a
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Returns the best tree, given ferror.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn get-best
+  [ferror] (first (sort-by :fitness ferror)))</pre></td></tr><tr><td class="docs"><p>Select out a few individuals (tournament size is in o) and run a
    tournament amongst them. The two most fit in the tournament are crossed over
    to produce a child. Larger tournaments lead to more selective pressure.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn tournament-select-error
@@ -3169,11 +3235,19 @@ example.</p>
     (crossover (:tree (first selected)) (:tree (second selected)))))</pre></td></tr><tr><td class="docs"><p>Run tournament-select-error enough times to re-populate the forest. The options
    hash is passed so tournament-select-error can extract tournament-size.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn tournament-select
-  [o ferror]
-  (repeatedly (count ferror) #(tournament-select-error o ferror)))</pre></td></tr><tr><td class="docs"><p>Returns the best tree, given ferror.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn get-best
-  [ferror]
-  (first (sort-by :fitness ferror)))</pre></td></tr><tr><td class="docs"><h3>Putting it together</h3>
+  [o ferror] (repeatedly (count ferror) #(tournament-select-error o ferror)))</pre></td></tr><tr><td class="docs"><h3>Putting it together</h3>
+
+<p>This takes care of all the steps necessary to complete one generation of the algorithm.
+The process can be extended to multiple generations with a simple tail recursive
+function.</p>
+
+<p>There are some extra considerations here. The function should:</p>
+
+<ul>
+<li>stop when a perfect individual has been found, meaning fitness is zero</li>
+<li>be resumable, meaning the search can halt, returning information, and that information
+can be passed back in to start the search at the same place</li>
+</ul>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Run n generations of a forest. Over the course of one generation, the trees in
    the forest will go through selection, crossover, and mutation. The best individual
    seen so far in the forest is saved and passed on as the last parameter (it is nil
@@ -3184,21 +3258,24 @@ example.</p>
           (and (not (nil? best))
                (zero? (:fitness best)))) ;; stop early when fitness is zero
     {:forest forest :best best} ;; return forest and current best
-    (do (when (mod n (:reprate o))
-          ((:repfunc o) best false))
-        (let [ferror (forest-error o forest)
-              cur-best (get-best ferror)
-              new-best (if (nil? best) cur-best
-                           (if (&gt; (:fitness cur-best) (:fitness best)) best cur-best))
-              new-forest (map (fn [tree] (mutate o tree))
-                              (tournament-select o ferror))]
-          ;; the recursive call for the next generation
-          (recur o
-                 (- n 1)
-                 (if (nil? best) new-forest
-                     (conj (rest new-forest)
-                           (:tree new-best)))
-                 new-best)))))</pre></td></tr><tr><td class="docs"><h3>Populations</h3>
+    (let [ferror (forest-error o forest)
+          cur-best (get-best ferror)
+          new-best (if (nil? best) cur-best
+                       (if (&gt; (:fitness cur-best) (:fitness best)) best cur-best))
+          new-forest (map (fn [tree] (mutate o tree))
+                          (tournament-select o ferror))]
+      ;; the recursive call for the next generation
+      (recur o
+             (- n 1)
+             (if (nil? best) new-forest
+                 (conj (rest new-forest)
+                       (:tree new-best)))
+             new-best))))</pre></td></tr><tr><td class="docs"><h3>Populations</h3>
+
+<p>After building a single tree, then a single generation, then multiple generations,
+it's one more step to parallel generations. Above there's a function for defining
+a "population" of forests. We can evolve the forests in the population individually
+and cross over between them.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Individual trees migrate between forests.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn population-crossover
   [population]
@@ -3219,7 +3296,7 @@ parallel, thanks to Clojure's convenient parallelism features).</p>
      (if (or (zero? cycles) (and (not (nil? best)) (zero? (:fitness best))))
        {:population population :best best} ;; done
        (do (when (and (not (nil? best)) (zero? (mod cycles (:reprate o))))
-             ((:repfunc o) best true)) ;; report
+             ((:repfunc o) best)) ;; report
            ;; similar pattern to the generations function
            (let [p (pmap (fn [forest] (generations o gens forest best)) population)
                  cur-pop (population-crossover (map :forest p))
@@ -3263,18 +3340,16 @@ be wrapped in clojure functions.</p>
             {:op cos :arity 1 :name 'cos}
             {:op tan :arity 1 :name 'tan}])</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def symbols ['a])</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def symbtest '(fn [a] (+ (sin a) (tan a))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def symbtest '(fn [a] (+ 1 (+ (sin a) a))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def testfit (eval symbtest))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def rtests (range -60 60))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def testdata (map vector rtests))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def actual (map testfit rtests))</pre></td></tr><tr><td class="docs"><p>Reporting function. This one is designed to only report when invoked in
    parallel-population.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn repfunc
-  [{tree :tree fitness :fitness} par]
-  (when par
-    (do
+  [{tree :tree fitness :fitness}]
       (print &quot;Code:\t&quot;)(print (list 'fn symbols (conv-code tree funcs)))(print &quot;\n&quot;)
-      (print &quot;Error:\t&quot;)(print fitness)(print &quot;\n\n&quot;))))</pre></td></tr><tr><td class="docs"><p>A simple test function for fungp. It attempts to match a function by supplying
+      (print &quot;Error:\t&quot;)(print fitness)(print &quot;\n\n&quot;))</pre></td></tr><tr><td class="docs"><p>A simple test function for fungp. It attempts to match a function by supplying
    training cases in the form of inputs and outputs generated from the function
    to be matched.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn test-gp
@@ -3286,12 +3361,10 @@ be wrapped in clojure functions.</p>
   (pprint symbtest)
   (println &quot;\nLower numbers are better. Results shown are sum of error. Best so far:\n&quot;)
   (def results (run-gp {:gens iter :cycles cycle
-                        :pop-size 6 :forest-size 50
+                        :pop-size 6 :forest-size 15
                         :symbols symbols :funcs funcs
-                        :range-max 1 :range-min -1
-                        :max-depth 4 :min-depth 2
                         :repfunc repfunc  :reprate 1
-                        :mutation-rate 0.1 :tournament-size 5
+                        :mutation-rate 0.1 :tournament-size 3
                         :actual actual :tests testdata}))
   (def best-result (:best results))
   (def out-func (list 'fn symbols (conv-code (:tree best-result) funcs)))

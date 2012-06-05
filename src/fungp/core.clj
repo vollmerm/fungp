@@ -31,7 +31,7 @@
 ;;;     (run-gp {:gens iter :cycles cycle
 ;;;             :pop-size 6 :forest-size 50
 ;;;             :symbols symbols :funcs funcs
-;;;             :range-max 1 :range-min -1
+;;;             :term-max 1 :term-min -1
 ;;;             :max-depth 4 :min-depth 2
 ;;;             :repfunc repfunc  :reprate 1
 ;;;             :mutation-rate 0.1 :tournament-size 5
@@ -58,8 +58,8 @@
 ;;; This is my first time really attempting literate programming. I tried to
 ;;; organize the code in the way I think about it, which occasionally leads
 ;;; to some awkwardness, but the code should --- I hope --- be readable. I'm also
-;;; new to Clojure as a language (coming from Scheme and Ruby, primarily), so
-;;; I'm not familiar with all of the idiomatic patterns.
+;;; new to Clojure as a language, so I'm not familiar with all of the idiomatic 
+;;; patterns.
 ;;;
 ;;; I organized the code in more-or-less the order I originally wrote it, even
 ;;; though I've since re-written nearly all of it and changed my original logic.
@@ -86,7 +86,7 @@
 (defn build-options
   "Take passed-in parameters and merge them with default parameters to construct
    the options hash that gets passed to the other functions."
-  [o] (let [defaults {:term-max 1 :term-min -1 :depth-max 4 :depth-min 2
+  [o] (let [defaults {:term-max 1 :term-min -1 :depth-max 2 :depth-min 1
                       :mutation-rate 0.05 :tournament-size 5}]
         (merge defaults o)))
 
@@ -147,25 +147,26 @@
 ;;; used to reduce the problem at each step: given a tree (or a subtree, all of
 ;;; which have the same form), recurse on a random subtree, along with a
 ;;; reduced value of n. The base case is when n is zero or the function hits a leaf.
-;;; **rand-subtree** reduces n by one each time until it hits 0 or a leaf, while
-;;; **replace-subtree** reduces n by setting it to a random value between 0 and
-;;; the subtree height. Additionally, **replace-subtree** uses concat to reconstruct
+;;;
+;;; Additionally, **replace-subtree** uses concat to reconstruct
 ;;; the tree on its way back up the stack.
 
 (defn rand-subtree
   "Return a random subtree of a list (presumably of lisp code)."
-  ([tree] (rand-subtree tree (rand-int (max-tree-height tree))))
-  ([tree n] (if (or (not (seq? tree)) (= n 0)) tree
-                (recur (rand-nth (rest tree)) (rand-int (- n 1))))))
+  ([tree] (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
+  ([tree n] (if (or (zero? n) (not (seq? tree))) tree
+                (recur (rand-nth (rest tree))
+                       (rand-int n)))))
 
 (defn replace-subtree
   "Replace a random subtree with a given subtree."
-  ([tree sub] (replace-subtree tree sub (max-tree-height tree)))
-  ([tree sub n] (if (or (not (seq? tree)) (= n 0)) sub
-                    (let [r (+ 1 (rand-int (- (count (rest tree)) 1)))]                 
+  ([tree sub] (replace-subtree tree sub (rand-int (+ 1 (max-tree-height tree)))))
+  ([tree sub n] (if (or (zero? n) (not (seq? tree))) sub
+                    (let [r (+ 1 (rand-int (count (rest tree))))] 
                       (concat (take r tree)
                               (list (replace-subtree
-                                     (nth tree r) sub (rand-int (- n 1))))
+                                     (nth tree r) sub
+                                     (rand-int n)))
                               (nthrest tree (+ r 1)))))))
 
 ;;; ### Mutation, crossover, and selection
@@ -264,21 +265,19 @@
           (and (not (nil? best))
                (zero? (:fitness best)))) ;; stop early when fitness is zero
     {:forest forest :best best} ;; return forest and current best
-    (do (when (mod n (:reprate o))
-          ((:repfunc o) best false))
-        (let [ferror (forest-error o forest)
-              cur-best (get-best ferror)
-              new-best (if (nil? best) cur-best
-                           (if (> (:fitness cur-best) (:fitness best)) best cur-best))
-              new-forest (map (fn [tree] (mutate o tree))
-                              (tournament-select o ferror))]
-          ;; the recursive call for the next generation
-          (recur o
-                 (- n 1)
-                 (if (nil? best) new-forest
-                     (conj (rest new-forest)
-                           (:tree new-best)))
-                 new-best)))))
+    (let [ferror (forest-error o forest)
+          cur-best (get-best ferror)
+          new-best (if (nil? best) cur-best
+                       (if (> (:fitness cur-best) (:fitness best)) best cur-best))
+          new-forest (map (fn [tree] (mutate o tree))
+                          (tournament-select o ferror))]
+      ;; the recursive call for the next generation
+      (recur o
+             (- n 1)
+             (if (nil? best) new-forest
+                 (conj (rest new-forest)
+                       (:tree new-best)))
+             new-best))))
 
 ;;; ### Populations
 ;;;
@@ -310,7 +309,7 @@
      (if (or (zero? cycles) (and (not (nil? best)) (zero? (:fitness best))))
        {:population population :best best} ;; done
        (do (when (and (not (nil? best)) (zero? (mod cycles (:reprate o))))
-             ((:repfunc o) best true)) ;; report
+             ((:repfunc o) best)) ;; report
            ;; similar pattern to the generations function
            (let [p (pmap (fn [forest] (generations o gens forest best)) population)
                  cur-pop (population-crossover (map :forest p))

@@ -40,7 +40,7 @@
 
 (def symbols ['a])
 
-(def symbtest '(fn [a] (+ (sin a) (tan a))))
+(def symbtest '(fn [a] (+ 1 (+ (sin a) a))))
 
 (def testfit (eval symbtest))
 
@@ -53,11 +53,9 @@
 (defn repfunc
   "Reporting function. This one is designed to only report when invoked in
    parallel-population."
-  [{tree :tree fitness :fitness} par]
-  (when par
-    (do
+  [{tree :tree fitness :fitness}]
       (print "Code:\t")(print (list 'fn symbols (conv-code tree funcs)))(print "\n")
-      (print "Error:\t")(print fitness)(print "\n\n"))))
+      (print "Error:\t")(print fitness)(print "\n\n"))
 
 (defn test-gp
   "A simple test function for fungp. It attempts to match a function by supplying
@@ -71,12 +69,10 @@
   (pprint symbtest)
   (println "\nLower numbers are better. Results shown are sum of error. Best so far:\n")
   (def results (run-gp {:gens iter :cycles cycle
-                        :pop-size 6 :forest-size 50
+                        :pop-size 6 :forest-size 15
                         :symbols symbols :funcs funcs
-                        :range-max 1 :range-min -1
-                        :max-depth 4 :min-depth 2
                         :repfunc repfunc  :reprate 1
-                        :mutation-rate 0.1 :tournament-size 5
+                        :mutation-rate 0.1 :tournament-size 3
                         :actual actual :tests testdata}))
   (def best-result (:best results))
   (def out-func (list 'fn symbols (conv-code (:tree best-result) funcs)))
