@@ -15,8 +15,7 @@
 ;;; The library is in its early stages right now, but it's usable. Currently it
 ;;; has the following features:
 ;;;
-;;;  * Custom evaluation and reporting logic via function parameters
-;;;  * Training data can be 
+;;;  * Custom evaluation and reporting logic
 ;;;  * Parallelism: subpopulations run in native threads
 ;;;  * Evolve and test functions of multiple arities
 ;;;
