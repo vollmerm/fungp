@@ -3,7 +3,7 @@ About this program
 
 **fungp** is a genetic programming library implemented in the Clojure programming language. It's pronounced fun-gee-pee, for *functional genetic programming*. 
 
-It's written in a literate programming style and is heavily documented. [Read the documentation here](http://probabilityzero.github.com/fungp/uberdoc.html).
+It's written in a literate programming style and is heavily documented. [Read the documentation here](http://gaia.ecs.csus.edu/~vollmerm/gp/).
 
 How do I use it?
 -----------------

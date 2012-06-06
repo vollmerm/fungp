@@ -1,6 +1,6 @@
 ;;; Mike Vollmer, 2012, GPL
 ;;;
-;;; Project hosted on GitHub: https://github.com/probabilityZero/fungp
+;;; [Project hosted on GitHub](https://github.com/probabilityZero/fungp)
 ;;;
 ;;; What is this?
 ;;; -------------
@@ -70,6 +70,21 @@
 ;;; the user's input and merges it with a hash of defaults (the user's options
 ;;; will override the defaults, but the defaults will be used if the user does
 ;;; not specify that option).
+;;;
+;;;The following options keywords are accepted:
+;;;
+;;; * *pop-size* --- the number of forests, and the number of top-level threads to run
+;;; * *forest-size* --- the number of trees in each forest
+;;; * *symbols* --- a sequence of symbols to be placed in the generated code as terminals
+;;; * *funcs* --- a sequence (following a certain format; see core.clj or sample.clj) describing the functions to be used in the generated code
+;;; * *term-max* and *term-min* --- the range of number terminals to be used in generated code (default to 1 and -1, respectively)
+;;; * *depth-max* and *depth-min* --- the minimum/maximum height of randomly generated trees (defaults to 2 and 1, respectively)
+;;; * *repfunc* --- the reporting function, which gets passed the best-seen individual (a hash with keys :tree and :fitness; see sample.clj for an example)
+;;; * *reprate* --- the reporting rate; every nth cycle repfunc will be called
+;;; * *mutation-rate* --- a number between 0 and 1 that determines the chance of mutation (defaults to 0.05)
+;;; * *tournament-size* --- the number of individuals in each tournament selection (defaults to 5)
+;;; * *tests* --- test inputs for your function, in the form of a sequence of vectors (each should match the length of *symbols* above)
+;;; * *actual* --- the correct outputs for each of the *tests* elements
 
 (defn build-options
   "Take passed-in parameters and merge them with default parameters to construct

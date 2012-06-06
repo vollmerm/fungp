@@ -3031,7 +3031,7 @@ net.brehaut.ClojureTools = (function (SH) {
 </script><title>fungp -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">fungp</h1><h2 class="project-version">0.1</h2><br /><p>Genetic programming in Clojure</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">org.clojure/math.numeric-tower</td><td class="dotted"><hr /></td><td class="dep-version">0.0.1</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.sample">fungp.sample</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
 
-<p>Project hosted on GitHub: https://github.com/probabilityZero/fungp</p>
+<p><a href="https://github.com/probabilityZero/fungp">Project hosted on GitHub</a></p>
 
 <h2>What is this?</h2>
 
@@ -3102,6 +3102,23 @@ all together and pass it to any function that needs it. This function takes
 the user's input and merges it with a hash of defaults (the user's options
 will override the defaults, but the defaults will be used if the user does
 not specify that option).</p>
+
+<p>The following options keywords are accepted:</p>
+
+<ul>
+<li><em>pop-size</em> --- the number of forests, and the number of top-level threads to run</li>
+<li><em>forest-size</em> --- the number of trees in each forest</li>
+<li><em>symbols</em> --- a sequence of symbols to be placed in the generated code as terminals</li>
+<li><em>funcs</em> --- a sequence (following a certain format; see core.clj or sample.clj) describing the functions to be used in the generated code</li>
+<li><em>term-max</em> and <em>term-min</em> --- the range of number terminals to be used in generated code (default to 1 and -1, respectively)</li>
+<li><em>depth-max</em> and <em>depth-min</em> --- the minimum/maximum height of randomly generated trees (defaults to 2 and 1, respectively)</li>
+<li><em>repfunc</em> --- the reporting function, which gets passed the best-seen individual (a hash with keys :tree and :fitness; see sample.clj for an example)</li>
+<li><em>reprate</em> --- the reporting rate; every nth cycle repfunc will be called</li>
+<li><em>mutation-rate</em> --- a number between 0 and 1 that determines the chance of mutation (defaults to 0.05)</li>
+<li><em>tournament-size</em> --- the number of individuals in each tournament selection (defaults to 5)</li>
+<li><em>tests</em> --- test inputs for your function, in the form of a sequence of vectors (each should match the length of <em>symbols</em> above)</li>
+<li><em>actual</em> --- the correct outputs for each of the <em>tests</em> elements</li>
+</ul>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Take passed-in parameters and merge them with default parameters to construct
    the options hash that gets passed to the other functions.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn build-options
