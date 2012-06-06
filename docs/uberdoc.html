@@ -3031,11 +3031,14 @@ net.brehaut.ClojureTools = (function (SH) {
 </script><title>fungp -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">fungp</h1><h2 class="project-version">0.1</h2><br /><p>Genetic programming in Clojure</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">org.clojure/math.numeric-tower</td><td class="dotted"><hr /></td><td class="dep-version">0.0.1</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.sample">fungp.sample</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
 
+<p>Project hosted on GitHub: https://github.com/probabilityZero/fungp</p>
+
 <h2>What is this?</h2>
 
 <p><strong>fungp</strong> is a parallel genetic programming library implemented in the
-Clojure programming language. The "fun" comes from functional, and because
-genetic programming can be fun! Also I'm bad at naming things.</p>
+Clojure programming language, pronounced fun-gee-pee. The "fun" comes
+from functional, and because genetic programming can be fun! Also I'm
+bad at naming things.</p>
 
 <blockquote>
   <p>There are only two hard things in Computer Science: cache invalidation,
@@ -3087,21 +3090,7 @@ name of the function).</p>
 code is sometimes dense (it's amazing how a few lines of lisp code can
 do as much or more as a hundred lines of a more verbose language like
 C or Java), but it shouldn't be too hard to understand the general
-concepts.</p>
-
-<p>This is my first time really attempting literate programming. I tried to
-organize the code in the way I think about it, which occasionally leads
-to some awkwardness, but the code should --- I hope --- be readable. I'm also
-new to Clojure as a language, so I'm not familiar with all of the idiomatic 
-patterns.</p>
-
-<p>I organized the code in more-or-less the order I originally wrote it, even
-though I've since re-written nearly all of it and changed my original logic.
-Basically, the ordering represents designing the program from the inside out,
-(bottom-up design), which is well suited to problems like this and to lisp
-in general. I started with the lowest level parts (tree manipulation,
-forest construction), moved to the higher level (mutation, crossover, selection,
-generations), and again to an even higher level (parallel generations). </p>
+concepts, especially if you have some familiarity with lisp.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>This is the start of the core of the library.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.core
   (:use fungp.util))</pre></td></tr><tr><td class="docs"><h3>Options</h3>
@@ -3141,13 +3130,7 @@ methods of tree building, similar to Koza's "ramped half-and-half" method.</p>
        (let [f (rand-nth (:funcs o))]
          (cons (:op f) ;; cons the operation onto a sublist matching the arity of f
                (repeatedly (:arity f) #(build-tree o (- depth-max 1) (- depth-min 1))))))))</pre></td></tr><tr><td class="docs"><p>First we define a function for creating a collection of trees, then one for
-creating a collection of a collection of trees. If you can imagine this program
-as being built from the inside out (starting with generating trees, then manipulating
-them, then mutating/crossing/selecting for one generation, then multiple...etc),
-these two functions each extend the data representation one step "outward," from
-specific to general. Once we have code for running a single generation on a forest,
-we can extend it to multiple generations on forests, then extend that horizontally
-across a population.</p>
+creating a collection of a collection of trees.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Returns a sequence of trees. A bunch of trees is a forest, right? Get it?</p>
 </td><td class="codes"><pre class="brush: clojure">(defn build-forest
   [o] (repeatedly (:forest-size o) #(build-tree o)))</pre></td></tr><tr><td class="docs"><p>Call build-forest repeatedly to fill a population. A population is a collection
@@ -3164,7 +3147,7 @@ reduced value of n. The base case is when n is zero or the function hits a leaf.
 
 <p>Additionally, <strong>replace-subtree</strong> uses concat to reconstruct
 the tree on its way back up the stack.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Return a random subtree of a list (presumably of lisp code).</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Return a random subtree of a list.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn rand-subtree
   ([tree] (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
   ([tree n] (if (or (zero? n) (not (seq? tree))) tree

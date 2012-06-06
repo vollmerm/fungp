@@ -1,11 +1,14 @@
 ;;; Mike Vollmer, 2012, GPL
 ;;;
+;;; Project hosted on GitHub: https://github.com/probabilityZero/fungp
+;;;
 ;;; What is this?
 ;;; -------------
 ;;;
 ;;; **fungp** is a parallel genetic programming library implemented in the
-;;; Clojure programming language. The "fun" comes from functional, and because
-;;; genetic programming can be fun! Also I'm bad at naming things.
+;;; Clojure programming language, pronounced fun-gee-pee. The "fun" comes
+;;; from functional, and because genetic programming can be fun! Also I'm
+;;; bad at naming things.
 ;;;
 ;;; > There are only two hard things in Computer Science: cache invalidation,
 ;;; > naming things, and off-by-one errors.
@@ -52,21 +55,7 @@
 ;;; code is sometimes dense (it's amazing how a few lines of lisp code can
 ;;; do as much or more as a hundred lines of a more verbose language like
 ;;; C or Java), but it shouldn't be too hard to understand the general
-;;; concepts.
-;;;
-;;; This is my first time really attempting literate programming. I tried to
-;;; organize the code in the way I think about it, which occasionally leads
-;;; to some awkwardness, but the code should --- I hope --- be readable. I'm also
-;;; new to Clojure as a language, so I'm not familiar with all of the idiomatic 
-;;; patterns.
-;;;
-;;; I organized the code in more-or-less the order I originally wrote it, even
-;;; though I've since re-written nearly all of it and changed my original logic.
-;;; Basically, the ordering represents designing the program from the inside out,
-;;; (bottom-up design), which is well suited to problems like this and to lisp
-;;; in general. I started with the lowest level parts (tree manipulation,
-;;; forest construction), moved to the higher level (mutation, crossover, selection,
-;;; generations), and again to an even higher level (parallel generations). 
+;;; concepts, especially if you have some familiarity with lisp.
 
 (ns fungp.core
   "This is the start of the core of the library."
@@ -118,13 +107,7 @@
                (repeatedly (:arity f) #(build-tree o (- depth-max 1) (- depth-min 1))))))))
 
 ;;; First we define a function for creating a collection of trees, then one for
-;;; creating a collection of a collection of trees. If you can imagine this program
-;;; as being built from the inside out (starting with generating trees, then manipulating
-;;; them, then mutating/crossing/selecting for one generation, then multiple...etc),
-;;; these two functions each extend the data representation one step "outward," from
-;;; specific to general. Once we have code for running a single generation on a forest,
-;;; we can extend it to multiple generations on forests, then extend that horizontally
-;;; across a population.
+;;; creating a collection of a collection of trees.
 
 (defn build-forest
   "Returns a sequence of trees. A bunch of trees is a forest, right? Get it?"
@@ -151,7 +134,7 @@
 ;;; the tree on its way back up the stack.
 
 (defn rand-subtree
-  "Return a random subtree of a list (presumably of lisp code)."
+  "Return a random subtree of a list."
   ([tree] (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
   ([tree n] (if (or (zero? n) (not (seq? tree))) tree
                 (recur (rand-nth (rest tree))
