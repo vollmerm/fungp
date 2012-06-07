@@ -36,7 +36,8 @@
 
 (ns fungp.sample
   (:use fungp.core)
-  (:use fungp.util))
+  (:use fungp.util)
+  (:gen-class))
 
 ;;; Safe versions of inverse and divide to avoid divide-by-zero errors.
 
@@ -112,3 +113,6 @@
   (println out-func)
   (print "Lowest error: ")(print (:fitness best-result))(print "\n")
   (eval out-func))
+
+(defn -main []
+  (test-gp 160 4))
