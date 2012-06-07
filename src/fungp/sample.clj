@@ -36,8 +36,7 @@
 
 (ns fungp.sample
   (:use fungp.core)
-  (:use fungp.util)
-  (:use clojure.pprint))
+  (:use fungp.util))
 
 ;;; Safe versions of inverse and divide to avoid divide-by-zero errors.
 
@@ -65,9 +64,9 @@
           ;;{:op inc :arity 1 :name 'inc} 
           ;;{:op dec :arity 1 :name 'dec}
           ;;{:op inv :arity 1 :name 'inv}
-            {:op sin :arity 1 :name 'sin}
-            {:op cos :arity 1 :name 'cos}
-            {:op tan :arity 1 :name 'tan}])
+            {:op sin :arity 1 :name 'fungp.sample/sin}
+            {:op cos :arity 1 :name 'fungp.sample/cos}
+            {:op tan :arity 1 :name 'fungp.sample/tan}])
 
 (def symbols ['a])
 
@@ -85,8 +84,9 @@
   "Reporting function. This one is designed to only report when invoked in
    parallel-population."
   [{tree :tree fitness :fitness}]
-      (print "Code:\t")(print (list 'fn symbols (conv-code tree funcs)))(print "\n")
-      (print "Error:\t")(print fitness)(print "\n\n"))
+  (flush)
+  (print "Code:\t")(print (list 'fn symbols (conv-code tree funcs)))(print "\n")
+  (print "Error:\t")(print fitness)(print "\n\n"))
 
 (defn test-gp
   "A simple test function for fungp. It attempts to match a function by supplying
@@ -97,7 +97,7 @@
   (println "Mike Vollmer, 2012")
   (println "==================================================\n")
   (println "Attempting to match this function:")
-  (pprint symbtest)
+  (print symbtest)
   (println "\nLower numbers are better. Results shown are sum of error. Best so far:\n")
   (def results (run-gp {:gens iter :cycles cycle
                         :pop-size 6 :forest-size 15
@@ -105,6 +105,7 @@
                         :repfunc repfunc  :reprate 1
                         :mutation-rate 0.1 :tournament-size 3
                         :actual actual :tests testdata}))
+  (shutdown-agents)
   (def best-result (:best results))
   (def out-func (list 'fn symbols (conv-code (:tree best-result) funcs)))
   (println "Done!")

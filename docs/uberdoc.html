@@ -3029,7 +3029,7 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>fungp -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">fungp</h1><h2 class="project-version">0.1</h2><br /><p>Genetic programming in Clojure</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">org.clojure/math.numeric-tower</td><td class="dotted"><hr /></td><td class="dep-version">0.0.1</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.sample">fungp.sample</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">org.clojure/math.numeric-tower</td><td class="dotted"><hr /></td><td class="dep-version">0.0.1</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.sample">fungp.sample</a></li><li><a href="#fungp.sample-main">fungp.sample-main</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
 
 <p><a href="https://github.com/probabilityZero/fungp">Project hosted on GitHub</a></p>
 
@@ -3345,8 +3345,7 @@ Lowest error: 0.0
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample
   (:use fungp.core)
-  (:use fungp.util)
-  (:use clojure.pprint))</pre></td></tr><tr><td class="docs"><p>Safe versions of inverse and divide to avoid divide-by-zero errors.</p>
+  (:use fungp.util))</pre></td></tr><tr><td class="docs"><p>Safe versions of inverse and divide to avoid divide-by-zero errors.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn inv [x]
   (if (zero? x) 0
@@ -3366,9 +3365,9 @@ be wrapped in clojure functions.</p>
           ;;{:op inc :arity 1 :name 'inc} 
           ;;{:op dec :arity 1 :name 'dec}
           ;;{:op inv :arity 1 :name 'inv}
-            {:op sin :arity 1 :name 'sin}
-            {:op cos :arity 1 :name 'cos}
-            {:op tan :arity 1 :name 'tan}])</pre></td></tr><tr><td class="docs">
+            {:op sin :arity 1 :name 'fungp.sample/sin}
+            {:op cos :arity 1 :name 'fungp.sample/cos}
+            {:op tan :arity 1 :name 'fungp.sample/tan}])</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def symbols ['a])</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def symbtest '(fn [a] (+ 1 (+ (sin a) a))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def testfit (eval symbtest))</pre></td></tr><tr><td class="docs">
@@ -3378,8 +3377,9 @@ be wrapped in clojure functions.</p>
    parallel-population.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn repfunc
   [{tree :tree fitness :fitness}]
-      (print &quot;Code:\t&quot;)(print (list 'fn symbols (conv-code tree funcs)))(print &quot;\n&quot;)
-      (print &quot;Error:\t&quot;)(print fitness)(print &quot;\n\n&quot;))</pre></td></tr><tr><td class="docs"><p>A simple test function for fungp. It attempts to match a function by supplying
+  (flush)
+  (print &quot;Code:\t&quot;)(print (list 'fn symbols (conv-code tree funcs)))(print &quot;\n&quot;)
+  (print &quot;Error:\t&quot;)(print fitness)(print &quot;\n\n&quot;))</pre></td></tr><tr><td class="docs"><p>A simple test function for fungp. It attempts to match a function by supplying
    training cases in the form of inputs and outputs generated from the function
    to be matched.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn test-gp
@@ -3388,7 +3388,7 @@ be wrapped in clojure functions.</p>
   (println &quot;Mike Vollmer, 2012&quot;)
   (println &quot;==================================================\n&quot;)
   (println &quot;Attempting to match this function:&quot;)
-  (pprint symbtest)
+  (print symbtest)
   (println &quot;\nLower numbers are better. Results shown are sum of error. Best so far:\n&quot;)
   (def results (run-gp {:gens iter :cycles cycle
                         :pop-size 6 :forest-size 15
@@ -3396,12 +3396,17 @@ be wrapped in clojure functions.</p>
                         :repfunc repfunc  :reprate 1
                         :mutation-rate 0.1 :tournament-size 3
                         :actual actual :tests testdata}))
+  (shutdown-agents)
   (def best-result (:best results))
   (def out-func (list 'fn symbols (conv-code (:tree best-result) funcs)))
   (println &quot;Done!&quot;)
   (println out-func)
   (print &quot;Lowest error: &quot;)(print (:fitness best-result))(print &quot;\n&quot;)
-  (eval out-func))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.util" name="fungp.util"><h1 class="project-name">fungp.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+  (eval out-func))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample-main" name="fungp.sample-main"><h1 class="project-name">fungp.sample-main</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns fungp.sample-main
+  (:use fungp.sample))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn -main []
+  (test-gp 160 4))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.util" name="fungp.util"><h1 class="project-name">fungp.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.util
     (:require [clojure.math [numeric-tower :as math]]))</pre></td></tr><tr><td class="docs"><p>Convenience function. Generates true with a probablilty of the
    given parameter (a number between 0 and 1)</p>
