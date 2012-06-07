@@ -3064,13 +3064,13 @@ keyword parameters.</p>
 <p>Here's an example:</p>
 
 <pre><code>(run-gp {:gens iter :cycles cycle
-        :pop-size 6 :forest-size 50
-        :symbols symbols :funcs funcs
-        :term-max 1 :term-min -1
-        :max-depth 4 :min-depth 2
-        :repfunc repfunc  :reprate 1
-        :mutation-rate 0.1 :tournament-size 5
-        :actual actual :tests testdata})
+         :pop-size 6 :forest-size 50
+         :symbols symbols :funcs funcs
+         :term-max 1 :term-min -1
+         :max-depth 4 :min-depth 2
+         :repfunc repfunc  :reprate 1
+         :mutation-rate 0.1 :tournament-size 5
+         :actual actual :tests testdata})
 </code></pre>
 
 <p>Functions are defined as a sequence of maps, each having keys :op,
@@ -3213,12 +3213,12 @@ material to the next generation.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn find-error
   [o tree]
   (let [func (eval (list 'fn (:symbols o) tree))]
-    (reduce + (map off-by (map (fn [arg] (apply func arg)) (:tests o)) (:actual o)))))</pre></td></tr><tr><td class="docs"><p>Runs find-error on every tree in parallel, and returns a map with keys
+    (reduce + (map off-by (map (fn [arg] (apply func arg)) (:tests o)) (:actual o)))))</pre></td></tr><tr><td class="docs"><p>Runs find-error on every tree, and returns a map with keys
    :tree and :fitness in place of each tree. It needs the options hash because
    find-error needs to extract symbols, tests and actual.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn forest-error
   [o forest]
-  (pmap (fn tree-error [tree] {:tree tree :fitness (find-error o tree)}) forest))</pre></td></tr><tr><td class="docs"><p>A few of the following functions refer to <strong>ferror</strong>, a sequence returned
+  (map (fn tree-error [tree] {:tree tree :fitness (find-error o tree)}) forest))</pre></td></tr><tr><td class="docs"><p>A few of the following functions refer to <strong>ferror</strong>, a sequence returned
 by forest-error. It's a sequence of maps, each with keys for :tree and
 :fitness. The keys correspond to the source tree and the fitness score,
 respectively. It's simple enough to sort the sequence by fitness, for

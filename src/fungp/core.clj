@@ -31,13 +31,13 @@
 ;;; Here's an example:
 ;;;
 ;;;     (run-gp {:gens iter :cycles cycle
-;;;             :pop-size 6 :forest-size 50
-;;;             :symbols symbols :funcs funcs
-;;;             :term-max 1 :term-min -1
-;;;             :max-depth 4 :min-depth 2
-;;;             :repfunc repfunc  :reprate 1
-;;;             :mutation-rate 0.1 :tournament-size 5
-;;;             :actual actual :tests testdata})
+;;;              :pop-size 6 :forest-size 50
+;;;              :symbols symbols :funcs funcs
+;;;              :term-max 1 :term-min -1
+;;;              :max-depth 4 :min-depth 2
+;;;              :repfunc repfunc  :reprate 1
+;;;              :mutation-rate 0.1 :tournament-size 5
+;;;              :actual actual :tests testdata})
 ;;;
 ;;; Functions are defined as a sequence of maps, each having keys :op,
 ;;; :arity, and :name. :op is for the function, :arity is the number
@@ -211,11 +211,11 @@
     (reduce + (map off-by (map (fn [arg] (apply func arg)) (:tests o)) (:actual o)))))
 
 (defn forest-error
-  "Runs find-error on every tree in parallel, and returns a map with keys
+  "Runs find-error on every tree, and returns a map with keys
    :tree and :fitness in place of each tree. It needs the options hash because
    find-error needs to extract symbols, tests and actual."
   [o forest]
-  (pmap (fn tree-error [tree] {:tree tree :fitness (find-error o tree)}) forest))
+  (map (fn tree-error [tree] {:tree tree :fitness (find-error o tree)}) forest))
 
 ;;; A few of the following functions refer to **ferror**, a sequence returned
 ;;; by forest-error. It's a sequence of maps, each with keys for :tree and
