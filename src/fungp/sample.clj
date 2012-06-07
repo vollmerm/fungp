@@ -2,6 +2,37 @@
 ;;; ----------
 ;;;
 ;;; This demonstrates a sample use of **fungp**.
+;;;
+;;; Here's an example of output from the **test-gp** function:
+;;;     
+;;;     fungp :: Functional Genetic Programming in Clojure
+;;;     Mike Vollmer, 2012
+;;;     ==================================================
+;;;     
+;;;     Attempting to match this function:
+;;;     (fn [a] (+ 1 (+ (sin a) a)))
+;;;     
+;;;     Lower numbers are better. Results shown are sum of
+;;;     error. Best so far:
+;;;     
+;;;     Code:   (fn [a] (+ (cos -1) a))
+;;;     Error:  84.6391402476599
+;;;     
+;;;     Code:   (fn [a] (- a -1))
+;;;     Error:  76.4219514139867
+;;;     
+;;;     Code:   (fn [a] (+ (cos (cos (* a (sin a)))) (+ 
+;;;     (sin a) a)))
+;;;     Error:  26.815311352785372
+;;;     
+;;;     Code:   (fn [a] (+ (sin (sin (+ (+ 0 a) 0))) (+
+;;;     (+ 0 a) (cos (sin (* (cos (cos (- 0 a))) 0))))))
+;;;     Error:  8.111235956013786
+;;;     
+;;;     Done!
+;;;     (fn [a] (+ (cos (sin (- a a))) (+ (sin a) a)))
+;;;     Lowest error: 0.0
+;;;     
 
 (ns fungp.sample
   (:use fungp.core)
