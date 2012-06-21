@@ -42,14 +42,15 @@
 ;;; Functions are defined as a sequence of maps, each having keys :op,
 ;;; :arity, and :name. :op is for the function, :arity is the number
 ;;; of arguments, and :name is the symbol used to print it out if it's
-;;; in the answer at the end (you probably want it to be the same as the
-;;; name of the function).
+;;; in the answer at the end (you usually want it to be the same as the
+;;; name of the function). 
 ;;;
 ;;; Here's an example:
 ;;;
-;;;      [{:op *   :arity 2 :name '*}
-;;;       {:op +   :arity 2 :name '+}
-;;;       {:op sin :arity 1 :name 'sin}]
+;;;      [{:op *    :arity 2 :name '*}
+;;;       {:op +    :arity 2 :name '+}
+;;;       {:op sdiv :arity 2 :name '/}
+;;;       {:op sin  :arity 1 :name 'sin}]
 ;;;
 ;;; For more information on how to use it, see the source code below. The
 ;;; code is sometimes dense (it's amazing how a few lines of lisp code can
@@ -75,10 +76,11 @@
 ;;;
 ;;; * *pop-size* --- the number of forests, and the number of top-level threads to run
 ;;; * *forest-size* --- the number of trees in each forest
+;;; * *max-height* --- the maximum height of the tree (larger trees will be shrunk)
 ;;; * *symbols* --- a sequence of symbols to be placed in the generated code as terminals
 ;;; * *funcs* --- a sequence (following a certain format; see core.clj or sample.clj) describing the functions to be used in the generated code
-;;; * *term-max* and *term-min* --- the range of number terminals to be used in generated code (default to 1 and -1, respectively)
-;;; * *depth-max* and *depth-min* --- the minimum/maximum height of randomly generated trees (defaults to 2 and 1, respectively)
+;;; * *term* --- a vector representing the range of number terminals to be used in generated code (empty for no number terminals)
+;;; * *depth* --- a vector representing the minimum and maximum height of randomly generated trees (defaults to [1 2])
 ;;; * *repfunc* --- the reporting function, which gets passed the best-seen individual (a hash with keys :tree and :fitness; see sample.clj for an example)
 ;;; * *reprate* --- the reporting rate; every nth cycle repfunc will be called
 ;;; * *mutation-rate* --- a number between 0 and 1 that determines the chance of mutation (defaults to 0.05)
@@ -89,9 +91,8 @@
 (defn build-options
   "Take passed-in parameters and merge them with default parameters to construct
    the options hash that gets passed to the other functions."
-  [o] (let [defaults {:term-max 1 :term-min -1 :depth-max 2 :depth-min 1
-                      :mutation-rate 0.05 :tournament-size 5
-                      :literal-terms [] :term-num false }]
+  [o] (let [defaults {:depth [1 2] :mutation-rate 0.1 :tournament-size 3
+                      :literal-terms [] :term [] :max-height 25}]
         (merge defaults o)))
 
 ;;; Many of the functions below use the options hash built by the build-options
@@ -101,8 +102,8 @@
 
 (defn terminal
   "Return a random terminal for the source tree. Takes the options hash as parameter."
-  [o] (if (and (:term-num o) (flip 0.5))
-        (+ (:term-min o) (rand-int (- (:term-max o) (:term-min o))))
+  [o] (if (and (not (empty? (:term o))) (flip 0.5))
+        (+ (first (:term o)) (rand-int (- (second (:term o)) (first (:term o)))))
         (rand-nth (concat (:literal-terms o) (:symbols o)))))
 
 ;;; ### Tree manipulation
@@ -114,7 +115,7 @@
   "Build a random tree of lisp code. The tree will be filled up to the minimum depth,
    then grown to the maximum depth. Minimum and maximum depth are specified in the
    options, but can optionally be passed explicitly."
-  ([o] (build-tree o (:depth-max o) (:depth-min o)))
+  ([o] (build-tree o (second (:depth o)) (first (:depth o))))
   ([o depth-max depth-min]
      (if (or (zero? depth-max)
              (and (<= depth-min 0) (flip 0.5)))
@@ -182,8 +183,19 @@
 
 (defn mutate
   "Mutate a tree by substituting in a randomly-built tree of code."
-  [o tree] (if (flip (:mutation-rate o))
-             (replace-subtree tree (build-tree o)) tree))
+  [o tree]
+  (truncate o (if (flip (:mutation-rate o))
+                (if (flip 0.5)
+                  (if (or (flip 0.5) (< (max-tree-height tree) (:max-height o)))
+                    (replace-subtree tree (build-tree o))
+                    (replace-subtree tree (terminal o)))
+                  (rand-subtree tree)) ;; subtree lifting
+                tree)))
+
+(defn truncate
+  "Prevent trees from growing too big"
+  [o tree] (if (and (:max-height o) (< (max-tree-height tree) (:max-height o)))
+             (rand-subtree tree) tree))
 
 ;;; **Crossover** is the process of combining two parents to make a child.
 ;;; It involves copying the genetic material (in this case, lisp code) from

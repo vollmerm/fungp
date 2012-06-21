@@ -54,29 +54,43 @@
 (defn sin [x] (Math/sin x))
 (defn cos [x] (Math/cos x))
 (defn tan [x] (Math/tan x))
+(defn abs [x] (if (< x 0) (* -1 x) x))
+
+
+(defn ifeq [a b c d] (if (= a b) c d))
+(defn ifnoteq [a b c d] (if (not (= a b)) c d))
+(defn gte [a b c d] (if (>= a b) c d))
 
 
 ;;; Functions are defined in a vector of maps like this.
 (def funcs [{:op * :arity 2 :name '*}
             {:op + :arity 2 :name '+} 
             {:op - :arity 2 :name '-}
-          ;;{:op sdiv :arity 2 :name 'sdiv}
-          ;;{:op inc :arity 1 :name 'inc} 
-          ;;{:op dec :arity 1 :name 'dec}
-          ;;{:op inv :arity 1 :name 'inv}
-            {:op sin :arity 1 :name 'fungp.sample/sin}
-            {:op cos :arity 1 :name 'fungp.sample/cos}
-            {:op tan :arity 1 :name 'fungp.sample/tan}])
+            {:op sdiv :arity 2 :name '/}
+            {:op inc :arity 1 :name 'inc} 
+            {:op dec :arity 1 :name 'dec}
+            {:op inv :arity 1 :name 'inv}
+            {:op abs :arity 1 :name 'abs}
+            {:op sin :arity 1 :name 'Math/sin}
+            {:op cos :arity 1 :name 'Math/cos}
+            {:op tan :arity 1 :name 'Math/tan}
+            {:op ifeq :arity 4 :name 'ifeq}
+            {:op ifnoteq :arity 4 :name 'ifnoteq}
+            {:op gte :arity 4 :name 'gte}
+            ])
 
 (def symbols ['a])
 
-(def lits ['Math/PI])
+(def lits ['Math/PI 'Math/E])
 
-(def symbtest '(fn [a] (* Math/PI (+ (sin a) (cos a)))))
+;;(def symbtest '(fn [a] (/ Math/E (* Math/PI (+ a (inv (sin a)))))))
+(def symbtest '(fn [a]
+                 (if (= a 0) 100
+                     (- (Math/abs a) (Math/sin a)))))
 
 (def testfit (eval symbtest))
 
-(def rtests (range -60 60))
+(def rtests (range -20 20))
 
 (def testdata (map vector rtests))
 
@@ -101,19 +115,19 @@
   (println "Attempting to match this function:")
   (print symbtest)
   (println "\nLower numbers are better. Results shown are sum of error. Best so far:\n")
-  (def results (run-gp {:gens iter :cycles cycle
-                        :literal-terms lits
-                        :pop-size 6 :forest-size 15
+  (def results (run-gp {:gens iter :cycles cycle :term [-1 1]
+                        :pop-size 8 :forest-size 150 :depth [2 3]
                         :symbols symbols :funcs funcs
                         :repfunc repfunc  :reprate 1
-                        :mutation-rate 0.1 :tournament-size 3
-                        :actual actual :tests testdata}))
+                        :tournament-size 5 :actual actual
+                        :tests testdata}))
   (def best-result (:best results))
   (def out-func (list 'fn symbols (conv-code (:tree best-result) funcs)))
   (println "Done!")
   (println out-func)
   (print "Lowest error: ")(print (:fitness best-result))(print "\n")
-  (eval out-func))
+  ;; return quoted list of best function
+  out-func)
 
 (defn -main []
   (test-gp 160 4))
