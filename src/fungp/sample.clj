@@ -36,8 +36,7 @@
 
 (ns fungp.sample
   (:use fungp.core)
-  (:use fungp.util)
-  (:gen-class))
+  (:use fungp.util))
 
 ;;; Safe versions of inverse and divide to avoid divide-by-zero errors.
 
@@ -71,7 +70,9 @@
 
 (def symbols ['a])
 
-(def symbtest '(fn [a] (+ 1 (+ (sin a) a))))
+(def lits ['Math/PI])
+
+(def symbtest '(fn [a] (* Math/PI (+ (sin a) (cos a)))))
 
 (def testfit (eval symbtest))
 
@@ -101,12 +102,12 @@
   (print symbtest)
   (println "\nLower numbers are better. Results shown are sum of error. Best so far:\n")
   (def results (run-gp {:gens iter :cycles cycle
+                        :literal-terms lits
                         :pop-size 6 :forest-size 15
                         :symbols symbols :funcs funcs
                         :repfunc repfunc  :reprate 1
                         :mutation-rate 0.1 :tournament-size 3
                         :actual actual :tests testdata}))
-  (shutdown-agents)
   (def best-result (:best results))
   (def out-func (list 'fn symbols (conv-code (:tree best-result) funcs)))
   (println "Done!")

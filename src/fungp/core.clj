@@ -90,7 +90,8 @@
   "Take passed-in parameters and merge them with default parameters to construct
    the options hash that gets passed to the other functions."
   [o] (let [defaults {:term-max 1 :term-min -1 :depth-max 2 :depth-min 1
-                      :mutation-rate 0.05 :tournament-size 5}]
+                      :mutation-rate 0.05 :tournament-size 5
+                      :literal-terms [] :term-num false }]
         (merge defaults o)))
 
 ;;; Many of the functions below use the options hash built by the build-options
@@ -100,8 +101,9 @@
 
 (defn terminal
   "Return a random terminal for the source tree. Takes the options hash as parameter."
-  [o] (if (flip 0.5) (rand-nth (:symbols o))
-          (+ (:term-min o) (rand-int (- (:term-max o) (:term-min o))))))
+  [o] (if (and (:term-num o) (flip 0.5))
+        (+ (:term-min o) (rand-int (- (:term-max o) (:term-min o))))
+        (rand-nth (concat (:literal-terms o) (:symbols o)))))
 
 ;;; ### Tree manipulation
 ;;;
