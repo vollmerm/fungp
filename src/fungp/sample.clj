@@ -67,13 +67,13 @@
             {:op + :arity 2 :name '+} 
             {:op - :arity 2 :name '-}
             {:op sdiv :arity 2 :name '/}
-            {:op inc :arity 1 :name 'inc} 
-            {:op dec :arity 1 :name 'dec}
-            {:op inv :arity 1 :name 'inv}
-            {:op abs :arity 1 :name 'abs}
-            {:op sin :arity 1 :name 'Math/sin}
-            {:op cos :arity 1 :name 'Math/cos}
-            {:op tan :arity 1 :name 'Math/tan}
+            ;{:op inc :arity 1 :name 'inc} 
+            ;{:op dec :arity 1 :name 'dec}
+            ;{:op inv :arity 1 :name 'inv}
+            ;{:op abs :arity 1 :name 'abs}
+            ;{:op sin :arity 1 :name 'Math/sin}
+            ;{:op cos :arity 1 :name 'Math/cos}
+            ;{:op tan :arity 1 :name 'Math/tan}
             {:op ifeq :arity 4 :name 'ifeq}
             {:op ifnoteq :arity 4 :name 'ifnoteq}
             {:op gte :arity 4 :name 'gte}
@@ -85,12 +85,13 @@
 
 ;;(def symbtest '(fn [a] (/ Math/E (* Math/PI (+ a (inv (sin a)))))))
 (def symbtest '(fn [a]
-                 (if (= a 0) 100
-                     (- (Math/abs a) (Math/sin a)))))
+                 (if (> a 0)
+                   (+ a 1)
+                   (* a a))))
 
 (def testfit (eval symbtest))
 
-(def rtests (range -20 20))
+(def rtests (range -30 30))
 
 (def testdata (map vector rtests))
 
@@ -116,10 +117,10 @@
   (print symbtest)
   (println "\nLower numbers are better. Results shown are sum of error. Best so far:\n")
   (def results (run-gp {:gens iter :cycles cycle :term [-1 1]
-                        :pop-size 8 :forest-size 150 :depth [2 3]
+                        :pop-size 12 :forest-size 300
                         :symbols symbols :funcs funcs
                         :repfunc repfunc  :reprate 1
-                        :tournament-size 5 :actual actual
+                        :tournament-size 10 :actual actual
                         :tests testdata}))
   (def best-result (:best results))
   (def out-func (list 'fn symbols (conv-code (:tree best-result) funcs)))

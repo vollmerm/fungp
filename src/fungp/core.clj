@@ -42,21 +42,17 @@
 ;;; Functions are defined as a sequence of maps, each having keys :op,
 ;;; :arity, and :name. :op is for the function, :arity is the number
 ;;; of arguments, and :name is the symbol used to print it out if it's
-;;; in the answer at the end (you usually want it to be the same as the
-;;; name of the function). 
+;;; in the answer at the end. You probably want the name to be the same as the
+;;; name of the function.
 ;;;
 ;;; Here's an example:
 ;;;
 ;;;      [{:op *    :arity 2 :name '*}
 ;;;       {:op +    :arity 2 :name '+}
-;;;       {:op sdiv :arity 2 :name '/}
+;;;       {:op -    :arity 2 :name '-}
 ;;;       {:op sin  :arity 1 :name 'sin}]
 ;;;
-;;; For more information on how to use it, see the source code below. The
-;;; code is sometimes dense (it's amazing how a few lines of lisp code can
-;;; do as much or more as a hundred lines of a more verbose language like
-;;; C or Java), but it shouldn't be too hard to understand the general
-;;; concepts, especially if you have some familiarity with lisp.
+;;; For more information on how to use it, see the source code below. 
 
 (ns fungp.core
   "This is the start of the core of the library."
@@ -71,6 +67,10 @@
 ;;; the user's input and merges it with a hash of defaults (the user's options
 ;;; will override the defaults, but the defaults will be used if the user does
 ;;; not specify that option).
+;;;
+;;; Originally, I had a big function that took all these options as arguments, and
+;;; the rest of the functions were closed over those arguments. I decided it was
+;;; better to move them to the top level.
 ;;;
 ;;;The following options keywords are accepted:
 ;;;
@@ -169,6 +169,12 @@
                                      (rand-int n)))
                               (nthrest tree (+ r 1)))))))
 
+(defn truncate
+  "Prevent trees from growing too big by lifting a subtree if the tree height is
+   greater than the max tree height."
+  [o tree] (if (and (:max-height o) (< (max-tree-height tree) (:max-height o)))
+             (rand-subtree tree) tree))
+
 ;;; ### Mutation, crossover, and selection
 ;;;
 ;;; With rand-subtree and replace-subtree out of the way, the rest of the
@@ -180,6 +186,11 @@
 ;;; is taken from nature; when DNA is copied, there is a slight chance of
 ;;; "mistakes" being introduced in the copy. This can lead to beneficial
 ;;; changes and increases genetic diversity.
+;;;
+;;; Mutation happens in two ways (chosen with a 50-50 chance). A node is
+;;; selected at random, and it is either replaced with a random subtree or
+;;; terminal, or it is promoted to the top ("lifted"). The second type of 
+;;; mutation is an attempt to prevent trees from growing too quickly.
 
 (defn mutate
   "Mutate a tree by substituting in a randomly-built tree of code."
@@ -191,11 +202,6 @@
                     (replace-subtree tree (terminal o)))
                   (rand-subtree tree)) ;; subtree lifting
                 tree)))
-
-(defn truncate
-  "Prevent trees from growing too big"
-  [o tree] (if (and (:max-height o) (< (max-tree-height tree) (:max-height o)))
-             (rand-subtree tree) tree))
 
 ;;; **Crossover** is the process of combining two parents to make a child.
 ;;; It involves copying the genetic material (in this case, lisp code) from
