@@ -170,7 +170,7 @@
 (defn mutate-population
   "Apply mutation to every tree in a population. Similar arguments to mutate-tree."
   [population mutation-probability mutation-depth terminals functions]
-  (map population #(mutate-tree % mutation-probability mutation-depth terminals functions)))
+  (map #(mutate-tree % mutation-probability mutation-depth terminals functions) population))
 
 ;;; **Crossover** is the process of combining two parents to make a child.
 ;;; It involves copying the genetic material (in this case, lisp code) from
@@ -207,10 +207,10 @@
    parameter list, fitness function, and test cases, and returns a new population."
   [population tournament-size fitness-zip max-depth]
   (let [child 
-        (fn [] (let [selected 
-                     (map first (sort-by 
-                                  second (repeatedly tournament-size 
-                                                     #(rand-nth fitness-zip))))]
+        (fn [] 
+          (let [selected (map first (sort-by second 
+                                             (repeatedly tournament-size 
+                                                         #(rand-nth fitness-zip))))]
             (truncate (crossover (first selected) 
                                  (second selected)) 
                       max-depth)))]
@@ -250,7 +250,7 @@
       (recur (- n 1)                  ;; else recurse
              (-> population
                  (tournament-selection tournament-size computed-fitness max-depth)
-                 ;;(mutate-population mutation-probability mutation-depth terminals functions)
+                 (mutate-population mutation-probability mutation-depth terminals functions)
                  (elitism best-tree))
              tournament-size mutation-probability mutation-depth max-depth terminals functions fitness))))
  
