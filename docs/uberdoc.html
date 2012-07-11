@@ -3178,7 +3178,7 @@ changes and increases genetic diversity.</p>
     tree)) </pre></td></tr><tr><td class="docs"><p>Apply mutation to every tree in a population. Similar arguments to mutate-tree.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn mutate-population
   [population mutation-probability mutation-depth terminals functions]
-  (map population #(mutate-tree % mutation-probability mutation-depth terminals functions)))</pre></td></tr><tr><td class="docs"><p><strong>Crossover</strong> is the process of combining two parents to make a child.
+  (map #(mutate-tree % mutation-probability mutation-depth terminals functions) population))</pre></td></tr><tr><td class="docs"><p><strong>Crossover</strong> is the process of combining two parents to make a child.
 It involves copying the genetic material (in this case, lisp code) from
 the two parents, combining them, and returning the result of the combination.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>The crossover function is simple to define in terms of replace-subtree
@@ -3207,10 +3207,10 @@ material to the next generation.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn tournament-selection
   [population tournament-size fitness-zip max-depth]
   (let [child 
-        (fn [] (let [selected 
-                     (map first (sort-by 
-                                  second (repeatedly tournament-size 
-                                                     #(rand-nth fitness-zip))))]
+        (fn [] 
+          (let [selected (map first (sort-by second 
+                                             (repeatedly tournament-size 
+                                                         #(rand-nth fitness-zip))))]
             (truncate (crossover (first selected) 
                                  (second selected)) 
                       max-depth)))]
@@ -3243,7 +3243,7 @@ can be passed back in to start the search at the same place</li>
       (recur (- n 1)                  ;; else recurse
              (-&gt; population
                  (tournament-selection tournament-size computed-fitness max-depth)
-                 ;;(mutate-population mutation-probability mutation-depth terminals functions)
+                 (mutate-population mutation-probability mutation-depth terminals functions)
                  (elitism best-tree))
              tournament-size mutation-probability mutation-depth max-depth terminals functions fitness))))</pre></td></tr><tr><td class="docs"><h3>Islands</h3>
 
@@ -3265,12 +3265,11 @@ to have multiple separated populations evolving in parallel, and cross over betw
                                         mutation-depth max-depth terminals functions fitness) islands)
         islands (map first islands-fit)
         [_ best-tree best-fit] (first (sort-by #(nth % 2) islands-fit))]
-    (do (flush) (println (map #(nth % 2) islands-fit))
     (if (or (zero? n1) (zero? best-fit))
       [islands best-tree best-fit]
       (do (report best-tree best-fit)
         (recur (- n1 1) n2 islands tournament-size mutation-probability
-               mutation-depth max-depth terminals functions fitness report))))))</pre></td></tr><tr><td class="docs"><p>This is the entry function. Call this with a map of the parameters to run the genetic programming algorithm.</p>
+               mutation-depth max-depth terminals functions fitness report)))))</pre></td></tr><tr><td class="docs"><p>This is the entry function. Call this with a map of the parameters to run the genetic programming algorithm.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn run-genetic-programming
   [{:keys [iterations migrations num-islands population-size tournament-size mutation-probability
            mutation-depth max-depth terminals functions fitness report]}]
@@ -3307,8 +3306,9 @@ be wrapped in clojure functions.</p>
 </td><td class="codes"><pre class="brush: clojure">(def functions
   '[[+ 2][- 2][* 2][Math/sin 1][Math/cos 1][inc 1]])</pre></td></tr><tr><td class="docs"><p>Terminals to be used as leaves</p>
 </td><td class="codes"><pre class="brush: clojure">(def terminals
-  ['a 'Math/PI])</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn desired-function [x] (- (Math/sin x) (* x x)))</pre></td></tr><tr><td class="docs">
+  ['a])</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def proto-code (list 'fn '[x] '(+ x (- (Math/sin x) (* x x)))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def desired-function (eval proto-code))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def test-range [-5.0 -1.0 -0.5 0 0.5 1.0 5.0])</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def actual (map desired-function test-range))</pre></td></tr><tr><td class="docs"><p>Fitness function. Takes a tree, evals it, and returns a fitness/error score.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn fitness
@@ -3318,14 +3318,17 @@ be wrapped in clojure functions.</p>
     (reduce + (map off-by-sq actual results))))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
 </td><td class="codes"><pre class="brush: clojure">(defn report
   [tree fitness]
-  (flush)
   (print &quot;Code:\t&quot;)(print (list 'fn '[a] tree))(print &quot;\n&quot;)
-  (print &quot;Error:\t&quot;)(print fitness)(print &quot;\n\n&quot;))</pre></td></tr><tr><td class="docs"><p>The main test program. Takes iteration and migration counts as parameters</p>
+  (print &quot;Error:\t&quot;)(print fitness)(print &quot;\n\n&quot;)
+  (flush))</pre></td></tr><tr><td class="docs"><p>The main test program. Takes iteration and migration counts as parameters</p>
 </td><td class="codes"><pre class="brush: clojure">(defn test-genetic-program
   [n1 n2]
-  (println &quot;fungp :: Functional Genetic Programming in Clojure&quot;)
+  (println &quot;\nfungp :: Functional Genetic Programming in Clojure&quot;)
   (println &quot;Mike Vollmer, 2012&quot;)
-  (println &quot;==================================================\n&quot;)
+  (println &quot;\n==================================================\n&quot;)
+  (print &quot;Matching function: &quot;)(print proto-code)(print &quot;\n&quot;)
+  (print &quot;On inputs: &quot;)(print test-range)(print &quot;\n&quot;)
+  (println &quot;\n==================================================\n&quot;)
   (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 250 :tournament-size 5 :mutation-probability 0.1
                  :mutation-depth 4 :max-depth 25 :terminals terminals :fitness fitness :functions functions :report report}
         [tree score] (rest (run-genetic-programming options))]
