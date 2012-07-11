@@ -20,3 +20,13 @@
 (defn off-by
   "Calculate error."
   [x y] (math/abs (- x y)))
+
+(defn off-by-sq
+  "Calculate error squared."
+  [x y] (let [error (off-by x y)]
+          (* error error)))
+
+(defn in? 
+  "true if seq contains elm"
+  [seq elm]  
+  (some #(= elm %) seq))

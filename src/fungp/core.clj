@@ -25,120 +25,76 @@
 ;;; How do I use it?
 ;;; ----------------
 ;;;
-;;; Call the **run-gp** function. See the source code for the full list of 
-;;; keyword parameters.
+;;; Call the **run-genetic-programming** function with a map containing these keyword parameters:
 ;;;
-;;; Here's an example:
-;;;
-;;;     (run-gp {:gens iter :cycles cycle
-;;;              :pop-size 6 :forest-size 50
-;;;              :symbols symbols :funcs funcs
-;;;              :term-max 1 :term-min -1
-;;;              :max-depth 4 :min-depth 2
-;;;              :repfunc repfunc  :reprate 1
-;;;              :mutation-rate 0.1 :tournament-size 5
-;;;              :actual actual :tests testdata})
-;;;
-;;; Functions are defined as a sequence of maps, each having keys :op,
-;;; :arity, and :name. :op is for the function, :arity is the number
-;;; of arguments, and :name is the symbol used to print it out if it's
-;;; in the answer at the end. You probably want the name to be the same as the
-;;; name of the function.
-;;;
-;;; Here's an example:
-;;;
-;;;      [{:op *    :arity 2 :name '*}
-;;;       {:op +    :arity 2 :name '+}
-;;;       {:op -    :arity 2 :name '-}
-;;;       {:op sin  :arity 1 :name 'sin}]
-;;;
-;;; For more information on how to use it, see the source code below. 
+;;; * iterations : number of iterations *between migrations*
+;;; * migrations : number of migrations
+;;; * num-islands : number of islands
+;;; * population-size : size of the populations
+;;; * tournament-size : size of the tournaments
+;;; * mutation-probability : probability of mutation
+;;; * mutation-depth : depth of mutated trees
+;;; * max-depth : maximum depth of trees
+;;; * terminals : terminals used in tree building
+;;; * functions : functions used in tree building, in the form [function arity]
+;;; * fitness : a fitness function that takes a tree and returns an error number, lower is better
+;;; * report : a reporting function passed [best-tree best-fit] at each migration
+;;; 
+;;; * * *
+;;; 
 
 (ns fungp.core
   "This is the start of the core of the library."
   (:use fungp.util))
-
-;;; ### Options
-;;;
-;;; Before I get into the implementation of the algorithm, I need to get this
-;;; out of the way. The options hash has all the information necessary to
-;;; run the rest of the functions, and for sake of simplicity I just lump it
-;;; all together and pass it to any function that needs it. This function takes
-;;; the user's input and merges it with a hash of defaults (the user's options
-;;; will override the defaults, but the defaults will be used if the user does
-;;; not specify that option).
-;;;
-;;; Originally, I had a big function that took all these options as arguments, and
-;;; the rest of the functions were closed over those arguments. I decided it was
-;;; better to move them to the top level.
-;;;
-;;;The following options keywords are accepted:
-;;;
-;;; * *pop-size* --- the number of forests, and the number of top-level threads to run
-;;; * *forest-size* --- the number of trees in each forest
-;;; * *max-height* --- the maximum height of the tree (larger trees will be shrunk)
-;;; * *symbols* --- a sequence of symbols to be placed in the generated code as terminals
-;;; * *funcs* --- a sequence (following a certain format; see core.clj or sample.clj) describing the functions to be used in the generated code
-;;; * *term* --- a vector representing the range of number terminals to be used in generated code (empty for no number terminals)
-;;; * *depth* --- a vector representing the minimum and maximum height of randomly generated trees (defaults to [1 2])
-;;; * *repfunc* --- the reporting function, which gets passed the best-seen individual (a hash with keys :tree and :fitness; see sample.clj for an example)
-;;; * *reprate* --- the reporting rate; every nth cycle repfunc will be called
-;;; * *mutation-rate* --- a number between 0 and 1 that determines the chance of mutation (defaults to 0.05)
-;;; * *tournament-size* --- the number of individuals in each tournament selection (defaults to 5)
-;;; * *tests* --- test inputs for your function, in the form of a sequence of vectors (each should match the length of *symbols* above)
-;;; * *actual* --- the correct outputs for each of the *tests* elements
-
-(defn build-options
-  "Take passed-in parameters and merge them with default parameters to construct
-   the options hash that gets passed to the other functions."
-  [o] (let [defaults {:depth [1 2] :mutation-rate 0.1 :tournament-size 3
-                      :literal-terms [] :term [] :max-height 25}]
-        (merge defaults o)))
-
-;;; Many of the functions below use the options hash built by the build-options
-;;; function. In most cases this is invisible, since run-gp constructs the
-;;; options hash and runs the parallel-generations function, but for purposes
-;;; of testing or modification/extension you can do this manually with build-options.
-
-(defn terminal
-  "Return a random terminal for the source tree. Takes the options hash as parameter."
-  [o] (if (and (not (empty? (:term o))) (flip 0.5))
-        (+ (first (:term o)) (rand-int (- (second (:term o)) (first (:term o)))))
-        (rand-nth (concat (:literal-terms o) (:symbols o)))))
 
 ;;; ### Tree manipulation
 ;;;
 ;;; My method of random tree generation is a combination of the "grow" and "fill"
 ;;; methods of tree building, similar to Koza's "ramped half-and-half" method.
 
-(defn build-tree
-  "Build a random tree of lisp code. The tree will be filled up to the minimum depth,
-   then grown to the maximum depth. Minimum and maximum depth are specified in the
-   options, but can optionally be passed explicitly."
-  ([o] (build-tree o (second (:depth o)) (first (:depth o))))
-  ([o depth-max depth-min]
-     (if (or (zero? depth-max)
-             (and (<= depth-min 0) (flip 0.5)))
-       (terminal o) ;; insert a random terminal
-       (let [f (rand-nth (:funcs o))]
-         (cons (:op f) ;; cons the operation onto a sublist matching the arity of f
-               (repeatedly (:arity f) #(build-tree o (- depth-max 1) (- depth-min 1))))))))
+(defn create-tree
+  "Build a tree of source code, given a mutation depth, terminal sequence, 
+   function sequence, and type keyword. The type can be either :grow or :fill.
+   The terminal sequence should consist of symbols or quoted code, while elements in the
+   function sequence should contain both the function and a number representing
+   its arity, in this form: [function arity]."
+  [mutation-depth terminals functions type]
+  ;; conditions: either return terminal or create function and recurse
+  (cond (zero? mutation-depth) (rand-nth terminals)
+        (and (= type :grow) (flip 0.5)) (rand-nth terminals)
+        :else (let [[func arity] (rand-nth functions)]
+                (cons func (repeatedly arity 
+                                       #(create-tree (- mutation-depth 1)
+                                                     terminals
+                                                     functions
+                                                     type))))))        
 
-;;; First we define a function for creating a collection of trees, then one for
-;;; creating a collection of a collection of trees.
-
-(defn build-forest
-  "Returns a sequence of trees. A bunch of trees is a forest, right? Get it?"
-  [o] (repeatedly (:forest-size o) #(build-tree o)))
-
-(defn build-population
-  "Call build-forest repeatedly to fill a population. A population is a collection
-   of forests."
-  [o] (repeatedly (:pop-size o) #(build-forest o)))
+(defn create-population
+  "Creates a population of trees given a population size, mutation depth, terminal
+   sequence, and function sequence. It uses a variation of Koza's \"ramped half-and-half\"
+   method: a coin flip determines whether to use the \"fill\" or \"grow\" method, and the
+   mutation depth is a randomly chosen number between 1 and the specified max mutation depth."
+  [population-size mutation-depth terminals functions]
+  (if (zero? population-size) []
+    (conj (create-population (- population-size 1) mutation-depth terminals functions)
+          (create-tree (+ 1 (rand-int mutation-depth)) terminals functions 
+                       (if (flip 0.5) :grow :fill)))))
 
 (defn max-tree-height
-  "Find the maximum height of a tree."
-  [tree] (if (not (seq? tree)) 0 (+ 1 (reduce max (map max-tree-height tree)))))
+  "Find the maximum height of a tree. The max height is the distance from the root to the
+   deepest leaf."
+  [tree] 
+  (if (not (seq? tree)) 0 
+    (+ 1 (reduce max (map max-tree-height tree)))))
+
+(defn valid-tree?
+  "Checks the type on a tree to make sure it's a list, symbol, or number."
+  [tree] (or (list? tree) (symbol? tree) (number? tree)))
+
+(defn compile-tree
+  "Compiles a tree into a Clojure function, and thus into JVM bytecode. Takes a tree
+   and the parameters the function should have."
+  [tree parameters] (eval (list 'fn parameters tree)))
 
 ;;; **rand-subtree** and **replace-subtree** are two of the most important functions.
 ;;; They define how the trees are modified.
@@ -152,28 +108,36 @@
 ;;; the tree on its way back up the stack.
 
 (defn rand-subtree
-  "Return a random subtree of a list."
-  ([tree] (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
-  ([tree n] (if (or (zero? n) (not (seq? tree))) tree
-                (recur (rand-nth (rest tree))
-                       (rand-int n)))))
+  "Return a random subtree of a list. Takes an optional second parameter that limits
+   the depth to go before selecting a crossover point."
+  ([tree]
+    (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
+  ([tree n]
+    (if (or (zero? n) (not (seq? tree))) tree
+      (recur (rand-nth (rest tree))
+             (rand-int n)))))
 
 (defn replace-subtree
-  "Replace a random subtree with a given subtree."
-  ([tree sub] (replace-subtree tree sub (rand-int (+ 1 (max-tree-height tree)))))
-  ([tree sub n] (if (or (zero? n) (not (seq? tree))) sub
-                    (let [r (+ 1 (rand-int (count (rest tree))))] 
-                      (concat (take r tree)
-                              (list (replace-subtree
-                                     (nth tree r) sub
-                                     (rand-int n)))
-                              (nthrest tree (+ r 1)))))))
+  "Replace a random subtree with a given subtree. Takes an optional second parameter
+   that limits the depth to go before selecting a crossover point."
+  ([tree sub] 
+    (replace-subtree tree sub (rand-int (+ 1 (max-tree-height tree)))))
+  ([tree sub n]
+    (if (or (zero? n) (not (seq? tree))) sub
+      (let [r (+ 1 (rand-int (count (rest tree))))] 
+        (concat (take r tree)
+                (list (replace-subtree
+                        (nth tree r) sub
+                        (rand-int n)))
+                (nthrest tree (+ r 1)))))))
 
 (defn truncate
   "Prevent trees from growing too big by lifting a subtree if the tree height is
    greater than the max tree height."
-  [o tree] (if (and (:max-height o) (< (max-tree-height tree) (:max-height o)))
-             (rand-subtree tree) tree))
+  [tree height] 
+  (if (< (max-tree-height tree) height) 
+    (rand-subtree tree) 
+    tree))
 
 ;;; ### Mutation, crossover, and selection
 ;;;
@@ -186,22 +150,27 @@
 ;;; is taken from nature; when DNA is copied, there is a slight chance of
 ;;; "mistakes" being introduced in the copy. This can lead to beneficial
 ;;; changes and increases genetic diversity.
-;;;
-;;; Mutation happens in two ways (chosen with a 50-50 chance). A node is
-;;; selected at random, and it is either replaced with a random subtree or
-;;; terminal, or it is promoted to the top ("lifted"). The second type of 
-;;; mutation is an attempt to prevent trees from growing too quickly.
 
-(defn mutate
-  "Mutate a tree by substituting in a randomly-built tree of code."
-  [o tree]
-  (truncate o (if (flip (:mutation-rate o))
-                (if (flip 0.5)
-                  (if (or (flip 0.5) (< (max-tree-height tree) (:max-height o)))
-                    (replace-subtree tree (build-tree o))
-                    (replace-subtree tree (terminal o)))
-                  (rand-subtree tree)) ;; subtree lifting
-                tree)))
+
+(defn mutate-tree
+  "Mutate a tree. Mutation takes one of three forms, chosen randomly: replace a random
+   subtree with a newly generated tree, replace a random subtree with a terminal, or
+   \"lift\" a random subtree to replace the root. The function takes a tree, mutation rate,
+   a mutation depth (max size of new subtrees), terminals, and functions."
+  [tree mutation-probability mutation-depth terminals functions]
+  (if (flip mutation-probability)
+    (let [coin (rand)] ;; random number between 0 and 1
+      (cond (< coin 0.33) 
+            (replace-subtree tree (create-tree mutation-depth terminals functions :grow))
+            (< coin 0.66)
+            (replace-subtree tree (rand-nth terminals))
+            :else (rand-subtree tree)))
+    tree)) 
+
+(defn mutate-population
+  "Apply mutation to every tree in a population. Similar arguments to mutate-tree."
+  [population mutation-probability mutation-depth terminals functions]
+  (map population #(mutate-tree % mutation-probability mutation-depth terminals functions)))
 
 ;;; **Crossover** is the process of combining two parents to make a child.
 ;;; It involves copying the genetic material (in this case, lisp code) from
@@ -213,6 +182,8 @@
    random subtree from one tree, and placing it randomly in the other tree."
   [tree1 tree2] (replace-subtree tree1 (rand-subtree tree2)))
 
+;;; Now it's time to get into functions that operate on populations. 
+;;; 
 ;;; **Selection** is the process in which more fit individuals are "selected," or
 ;;; more likely to breed (be involved in a crossover), while less fit individuals
 ;;; are less likely to breed.
@@ -224,41 +195,37 @@
 ;;; likely to be selected for crossover, and thus pass on their genetic
 ;;; material to the next generation.
 
-(defn find-error
-  "Compares the output of the individual tree with the test data to calculate error."
-  [o tree]
-  (let [func (eval (list 'fn (:symbols o) tree))]
-    (reduce + (map off-by (map (fn [arg] (apply func arg)) (:tests o)) (:actual o)))))
+(defn fitness-zip
+  "Compute the fitness of all the trees in the population, and map the trees to their population in a zipmap."
+  [population fitness]
+  (seq (zipmap population (map fitness population))))
 
-(defn forest-error
-  "Runs find-error on every tree, and returns a map with keys
-   :tree and :fitness in place of each tree. It needs the options hash because
-   find-error needs to extract symbols, tests and actual."
-  [o forest]
-  (map (fn tree-error [tree] {:tree tree :fitness (find-error o tree)}) forest))
+(defn tournament-selection
+  "Use tournament selection to create a new generation. In each tournament the two best individuals
+   in the randomly chosen group will reproduce to form a child tree. A larger tournament size
+   will lead to more selective pressure. The function takes a population, tournament size,
+   parameter list, fitness function, and test cases, and returns a new population."
+  [population tournament-size fitness-zip max-depth]
+  (let [child 
+        (fn [] (let [selected 
+                     (map first (sort-by 
+                                  second (repeatedly tournament-size 
+                                                     #(rand-nth fitness-zip))))]
+            (truncate (crossover (first selected) 
+                                 (second selected)) 
+                      max-depth)))]
+    (repeatedly (count population) child)))
 
-;;; A few of the following functions refer to **ferror**, a sequence returned
-;;; by forest-error. It's a sequence of maps, each with keys for :tree and
-;;; :fitness. The keys correspond to the source tree and the fitness score,
-;;; respectively. It's simple enough to sort the sequence by fitness, for
-;;; example.
+(defn get-best-fitness
+  "Takes the fitness zip and finds the best in the population."
+  [fitness-zip]
+  (first (sort-by second fitness-zip)))
 
-(defn get-best
-  "Returns the best tree, given ferror."
-  [ferror] (first (sort-by :fitness ferror)))
+(defn elitism
+  "Put the best-seen individual back in the population."
+  [population best]
+  (conj (rest population) best))
 
-(defn tournament-select-error
-  "Select out a few individuals (tournament size is in o) and run a
-   tournament amongst them. The two most fit in the tournament are crossed over
-   to produce a child. Larger tournaments lead to more selective pressure."
-  [o ferror]
-  (let [selected (sort-by :fitness (repeatedly (:tournament-size o) #(rand-nth ferror)))]
-    (crossover (:tree (first selected)) (:tree (second selected)))))
-
-(defn tournament-select
-  "Run tournament-select-error enough times to re-populate the forest. The options
-   hash is passed so tournament-select-error can extract tournament-size."
-  [o ferror] (repeatedly (count ferror) #(tournament-select-error o ferror)))
 
 ;;; ### Putting it together
 ;;;
@@ -272,75 +239,58 @@
 ;;;  * be resumable, meaning the search can halt, returning information, and that information
 ;;;    can be passed back in to start the search at the same place
 
+
 (defn generations
-  "Run n generations of a forest. Over the course of one generation, the trees in
-   the forest will go through selection, crossover, and mutation. The best individual
-   seen so far in the forest is saved and passed on as the last parameter (it is nil
-   when no best individual has been found)."
-  [o n forest best]
-  (if (or (zero? n)
-          (and (not (nil? best))
-               (zero? (:fitness best)))) ;; stop early when fitness is zero
-    {:forest forest :best best} ;; return forest and current best
-    (let [ferror (forest-error o forest)
-          cur-best (get-best ferror)
-          new-best (if (nil? best) cur-best
-                       (if (> (:fitness cur-best) (:fitness best)) best cur-best))
-          new-forest (map (fn [tree] (mutate o tree))
-                          (tournament-select o ferror))]
-      ;; the recursive call for the next generation
-      (recur o
-             (- n 1)
-             (if (nil? best) new-forest
-                 (conj (rest new-forest)
-                       (:tree new-best)))
-             new-best))))
-
-;;; ### Populations
+  "Runs n generations of a population, and returns the population and the best tree in the form [population best-tree fitness]."
+  [n population tournament-size mutation-probability mutation-depth max-depth terminals functions fitness]
+  (let [computed-fitness (fitness-zip population fitness)
+        [best-tree best-fit] (get-best-fitness computed-fitness)]
+    (if (or (zero? n) (zero? best-fit)) ;; terminating condition
+      [population best-tree best-fit] ;; return
+      (recur (- n 1)                  ;; else recurse
+             (-> population
+                 (tournament-selection tournament-size computed-fitness max-depth)
+                 ;;(mutate-population mutation-probability mutation-depth terminals functions)
+                 (elitism best-tree))
+             tournament-size mutation-probability mutation-depth max-depth terminals functions fitness))))
+ 
+;;; ### Islands
 ;;;
-;;; After building a single tree, then a single generation, then multiple generations,
-;;; it's one more step to parallel generations. Above there's a function for defining
-;;; a "population" of forests. We can evolve the forests in the population individually
-;;; and cross over between them.
+;;; The above code works for running generations of a single population. The concept of islands is
+;;; to have multiple separated populations evolving in parallel, and cross over between them.
 
-(defn population-crossover
-  "Individual trees migrate between forests."
-  [population]
-  (let [cross (map rand-nth population)]
-    (map (fn [[forest selected]] (conj (rest (shuffle forest)) selected))
-         (zipmap population cross))))
+(defn create-islands
+  "Create a list of populations (islands)."
+  [num-islands population-size mutation-depth terminals functions]
+  (repeatedly num-islands #(create-population population-size mutation-depth terminals functions)))
 
-;;; **parallel-generations** is the function that runs the show. It runs the
-;;; generations function defined above on each of the forests (and does so in
-;;; parallel, thanks to Clojure's convenient parallelism features).
-  
-(defn parallel-generations
-  "Spawn threads to run each of the forests for a specified amount of time, and
-   cross over between the forests at specified intervals. If the search is starting
-   from the beginning, the only necessary parameter is the options hash. The initial
-   values of the other parameters can be inferred from it. If you're resuming a search
-   you can simply pass in the population explicitly and this function will start
-   where it left off."
-  ([o] (parallel-generations o (:cycles o) (:gens o) (build-population o) nil))
-  ([o cycles gens population best]
-     (if (or (zero? cycles) (and (not (nil? best)) (zero? (:fitness best))))
-       {:population population :best best} ;; done
-       (do (when (and (not (nil? best)) (zero? (mod cycles (:reprate o))))
-             ((:repfunc o) best)) ;; report
-           ;; similar pattern to the generations function
-           (let [p (pmap (fn [forest] (generations o gens forest best)) population)
-                 cur-pop (population-crossover (map :forest p))
-                 all-bests (map :best p)
-                 cur-best (first (sort-by :fitness all-bests))
-                 new-best (if (nil? best) cur-best
-                              (if (> (:fitness cur-best) (:fitness best))
-                                best cur-best))]
-             (recur o (- cycles 1) gens cur-pop new-best))))))
+(defn island-crossover
+  "Individuals migrate between islands."
+  [islands]
+  (let [cross (map rand-nth islands)]
+    (map (fn [[island selected]] (conj (rest (shuffle island)) selected))
+         (zipmap islands cross))))
 
+(defn island-generations
+  "Run generations on all the islands and cross over between them. See the documentation for the generations function.
+   Returns with the form [island best-tree best-fit]."
+  [n1 n2 islands tournament-size mutation-probability mutation-depth max-depth terminals functions fitness report] 
+  (let [islands-fit (map #(generations n2 % tournament-size mutation-probability
+                                        mutation-depth max-depth terminals functions fitness) islands)
+        islands (map first islands-fit)
+        [_ best-tree best-fit] (first (sort-by #(nth % 2) islands-fit))]
+    (if (or (zero? n1) (zero? best-fit))
+      [islands best-tree best-fit]
+      (do (report best-tree best-fit)
+        (recur (- n1 1) n2 islands tournament-size mutation-probability
+               mutation-depth max-depth terminals functions fitness report)))))
 
-(defn run-gp
-  "Create a population of source trees and evolve them to fit the test function
-   and data passed in. This is probably the function you'll want to call."
-  [o] (parallel-generations (build-options o)))
-
-;;; And that's it! For the core of the library, anyway. 
+(defn run-genetic-programming
+  "This is the entry function. Call this with a map of the parameters to run the genetic programming algorithm."
+  [{:keys [iterations migrations num-islands population-size tournament-size mutation-probability
+           mutation-depth max-depth terminals functions fitness report]}]
+  (island-generations migrations iterations 
+                      (create-islands num-islands population-size mutation-depth terminals functions)
+                      tournament-size mutation-probability mutation-depth max-depth terminals functions fitness report))
+        
+;;; And that's it! For the core of the library, anyway.
