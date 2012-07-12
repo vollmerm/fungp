@@ -3261,7 +3261,7 @@ to have multiple separated populations evolving in parallel, and cross over betw
    Returns with the form [island best-tree best-fit].</p>
 </td><td class="codes"><pre class="brush: clojure">(defn island-generations
   [n1 n2 islands tournament-size mutation-probability mutation-depth max-depth terminals functions fitness report] 
-  (let [islands-fit (map #(generations n2 % tournament-size mutation-probability
+  (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
                                         mutation-depth max-depth terminals functions fitness) islands)
         islands (map first islands-fit)
         [_ best-tree best-fit] (first (sort-by #(nth % 2) islands-fit))]
@@ -3307,7 +3307,7 @@ be wrapped in clojure functions.</p>
   '[[+ 2][- 2][* 2][Math/sin 1][Math/cos 1][inc 1]])</pre></td></tr><tr><td class="docs"><p>Terminals to be used as leaves</p>
 </td><td class="codes"><pre class="brush: clojure">(def terminals
   ['a])</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def proto-code (list 'fn '[x] '(+ x (- (Math/sin x) (* x x)))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def proto-code (list 'fn '[x] '(- (+ (Math/sin x) (* x x)) x)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def desired-function (eval proto-code))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def test-range [-5.0 -1.0 -0.5 0 0.5 1.0 5.0])</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def actual (map desired-function test-range))</pre></td></tr><tr><td class="docs"><p>Fitness function. Takes a tree, evals it, and returns a fitness/error score.</p>
@@ -3329,7 +3329,7 @@ be wrapped in clojure functions.</p>
   (print &quot;Matching function: &quot;)(print proto-code)(print &quot;\n&quot;)
   (print &quot;On inputs: &quot;)(print test-range)(print &quot;\n&quot;)
   (println &quot;\n==================================================\n&quot;)
-  (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 250 :tournament-size 5 :mutation-probability 0.1
+  (let [options {:iterations n1 :migrations n2 :num-islands 10 :population-size 100 :tournament-size 5 :mutation-probability 0.1
                  :mutation-depth 4 :max-depth 25 :terminals terminals :fitness fitness :functions functions :report report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println &quot;Done!&quot;)
