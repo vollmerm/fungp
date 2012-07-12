@@ -40,7 +40,9 @@
 ;;; * fitness : a fitness function that takes a tree and returns an error number, lower is better
 ;;; * report : a reporting function passed [best-tree best-fit] at each migration
 ;;; 
-;;; * * *
+;;; Most fitness functions will *eval* the trees of code they are passed.
+;;; In Clojure, eval'ing a list of code will compile it to JVM
+;;; bytecode.
 ;;; 
 
 (ns fungp.core
@@ -189,14 +191,15 @@
 ;;; are less likely to breed.
 ;;;
 ;;; To carry out the selection phase, it's necessary to determine how fit the
-;;; individuals are. The following functions use the training data to give the
-;;; individual trees a grade, which is the sum of the error. Lower grades are
+;;; individuals are. The following functions use the fitness function to give the
+;;; individual trees a grade (I sometimes refer to it as "error"). Lower grades are
 ;;; better. Then, in the selection phase, individuals with lower error are more
 ;;; likely to be selected for crossover, and thus pass on their genetic
 ;;; material to the next generation.
 
 (defn fitness-zip
-  "Compute the fitness of all the trees in the population, and map the trees to their population in a zipmap."
+  "Compute the fitness of all the trees in the population, and map the trees to their population in a
+   seq of a zipmap."
   [population fitness]
   (seq (zipmap population (map fitness population))))
 
@@ -204,7 +207,8 @@
   "Use tournament selection to create a new generation. In each tournament the two best individuals
    in the randomly chosen group will reproduce to form a child tree. A larger tournament size
    will lead to more selective pressure. The function takes a population, tournament size,
-   parameter list, fitness function, and test cases, and returns a new population."
+   \"fitness-zip\" or sequence of the zip of trees and fitness scores, and the max depth,
+   and it returns a new population."
   [population tournament-size fitness-zip max-depth]
   (let [child 
         (fn [] 
@@ -241,7 +245,9 @@
 
 
 (defn generations
-  "Runs n generations of a population, and returns the population and the best tree in the form [population best-tree fitness]."
+  "Runs n generations of a population, and returns the population and the best tree in the form [population best-tree fitness].
+   Takes a long list of parameters. This function is meant to be called by island-generations, which in turn is
+   called by run-genetic-programming."
   [n population tournament-size mutation-probability mutation-depth max-depth terminals functions fitness]
   (let [computed-fitness (fitness-zip population fitness)
         [best-tree best-fit] (get-best-fitness computed-fitness)]
