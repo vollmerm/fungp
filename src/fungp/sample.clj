@@ -46,7 +46,7 @@
   "Terminals to be used as leaves"
   ['a])
 
-(def proto-code (list 'fn '[x] '(+ x (- (Math/sin x) (* x x)))))
+(def proto-code (list 'fn '[x] '(- (+ (Math/sin x) (* x x)) x)))
 
 (def desired-function (eval proto-code))
 
@@ -77,7 +77,7 @@
   (print "Matching function: ")(print proto-code)(print "\n")
   (print "On inputs: ")(print test-range)(print "\n")
   (println "\n==================================================\n")
-  (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 250 :tournament-size 5 :mutation-probability 0.1
+  (let [options {:iterations n1 :migrations n2 :num-islands 10 :population-size 100 :tournament-size 5 :mutation-probability 0.1
                  :mutation-depth 4 :max-depth 25 :terminals terminals :fitness fitness :functions functions :report report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")

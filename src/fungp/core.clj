@@ -275,7 +275,7 @@
   "Run generations on all the islands and cross over between them. See the documentation for the generations function.
    Returns with the form [island best-tree best-fit]."
   [n1 n2 islands tournament-size mutation-probability mutation-depth max-depth terminals functions fitness report] 
-  (let [islands-fit (map #(generations n2 % tournament-size mutation-probability
+  (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
                                         mutation-depth max-depth terminals functions fitness) islands)
         islands (map first islands-fit)
         [_ best-tree best-fit] (first (sort-by #(nth % 2) islands-fit))]
