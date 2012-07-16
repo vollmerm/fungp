@@ -17,6 +17,12 @@
     (if (fn? tree) (:name (find-op tree funcs)) tree)
     (map (fn [t] (conv-code t funcs)) tree)))
 
+(defn average
+  [list]
+  (let [sum (reduce + list)
+        length (count list)]
+    (/ sum length)))
+
 (defn off-by
   "Calculate error."
   [x y] (math/abs (- x y)))
@@ -30,3 +36,38 @@
   "true if seq contains elm"
   [seq elm]  
   (some #(= elm %) seq))
+
+;;; ### Examples of functions to use
+;;; 
+
+;;; Safe versions of inverse and divide to avoid divide-by-zero errors.
+
+(defn inv
+  "Inverts a number. If it's 0, return 0"
+  [x]
+  (if (zero? x) 0
+      (/ 1 x)))
+
+(defn sdiv
+  "Divide two numbers. Returns 0 on attempt to divide by 0"
+  [x y]
+  (if (zero? y) 0
+      (/ x y)))
+
+
+(defn sin [x] (Math/sin x))
+(defn cos [x] (Math/cos x))
+(defn tan [x] (Math/tan x))
+(defn abs [x] (if (< x 0) (* -1 x) x))
+(defn dub [x] (* x x))
+(defn half [x] (sdiv x 2))
+(defn sqrt [x] (if (x > 0) (Math/sqrt x) 0))
+
+
+;;; Conditionals can be done in terms of 4 arity functions
+
+(defn ifeq [a b c d] (if (= a b) c d))
+(defn ifnoteq [a b c d] (if (not (= a b)) c d))
+(defn gte [a b c d] (if (>= a b) c d))
+
+(defn gt [x y] (if (> x y) 1 -1))

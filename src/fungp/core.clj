@@ -381,7 +381,7 @@
   "Run generations on all the islands and cross over between them. See the documentation for the generations function.
    Returns with the form [island best-tree best-fit]."
   [n1 n2 islands tournament-size mutation-probability mutation-depth max-depth terminals functions fitness report]
-  (let [islands-fit (map #(generations n2 % tournament-size mutation-probability
+  (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
                                        mutation-depth max-depth terminals functions fitness)
                          islands)
         islands (map first islands-fit)
@@ -396,7 +396,7 @@
   "This is the entry function. Call this with a map of the parameters to run the genetic programming algorithm."
   [{:keys [iterations migrations num-islands population-size tournament-size mutation-probability
            mutation-depth max-depth terminals functions fitness report adf-arity adf-count]
-   :or {tournament-size 5 mutation-rate 0.5 mutation-depth 6 adf-arity 1 adf-count 1}}]
+   :or {tournament-size 5 mutation-probability 0.05 mutation-depth 6 adf-arity 1 adf-count 1}}]
   (island-generations migrations iterations 
                       (create-islands num-islands population-size mutation-depth terminals functions adf-arity adf-count)
                       tournament-size mutation-probability mutation-depth max-depth terminals functions fitness report))
