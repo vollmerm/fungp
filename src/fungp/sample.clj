@@ -22,13 +22,14 @@
   (if (zero? y) 0
       (/ x y)))
 
-;;; java.lang.Math methods cannot be higher-order functions, so they must
-;;; be wrapped in clojure functions.
-
 (defn sin [x] (Math/sin x))
 (defn cos [x] (Math/cos x))
 (defn tan [x] (Math/tan x))
 (defn abs [x] (if (< x 0) (* -1 x) x))
+(defn dub [x] (* x x))
+(defn half [x] (sdiv x 2))
+(defn sqrt [x] (if (x > 0) (Math/sqrt x) 0))
+
 
 ;;; Conditionals can be done in terms of 4 arity functions
 
@@ -36,35 +37,56 @@
 (defn ifnoteq [a b c d] (if (not (= a b)) c d))
 (defn gte [a b c d] (if (>= a b) c d))
 
+(defn gt [x y] (if (> x y) 1 -1))
+
 ;;; ### Test run
 
 (def functions
   "Functions and their arities"
-  '[[+ 2][- 2][* 2][Math/sin 1][Math/cos 1][inc 1]])
+  '[[+ 2][- 2][* 2][fungp.sample/abs 1]
+    [sdiv 2][inc 1][dec 1]])
+
+(def parameters
+  "Parameters to be used to eval the generated functions"
+  ['a])
+
+(def parameter-weight 5)
+
+(def number-literals
+  "Number literals to be used in the code"
+  (map float (range 10)))
+
+(def number-weight 1)
+
+(defn duplicate-symbol
+  [s n] (if (zero? n) s
+            (concat s (duplicate-symbol s (- n 1)))))
 
 (def terminals
   "Terminals to be used as leaves"
-  ['a])
+  (concat (duplicate-symbol number-literals number-weight)
+          (duplicate-symbol parameters parameter-weight)))
 
-(def proto-code (list 'fn '[x] '(- (+ (Math/sin x) (* x x)) x)))
+(def test-range (map #(* 2 (- % 5)) (range 10)))
 
-(def desired-function (eval proto-code))
+;(defn match-func [x] (- (* 0.1 (abs x)) (sin x)))
+(defn match-func [x] (abs (* 3 (* x x))))
 
-(def test-range [-5.0 -1.0 -0.5 0 0.5 1.0 5.0])
-
-(def actual (map desired-function test-range))
+(def actual (map float (map match-func test-range)))
 
 (defn fitness
   "Fitness function. Takes a tree, evals it, and returns a fitness/error score."
   [tree]
-  (let [f (eval (list 'fn '[a] tree))
-        results (map f test-range)]
-    (reduce + (map off-by-sq actual results))))
+  (try
+    (let [f (eval (list 'fn 'testfunc '[a] tree))
+          results (map f test-range)]
+      (reduce + (map off-by-sq actual results)))
+    (catch Exception e (println e) (println tree))))
 
 (defn report
   "Reporting function. Prints out the tree and its score"
   [tree fitness]
-  (print "Code:\t")(print (list 'fn '[a] tree))(print "\n")
+  (clojure.pprint/pprint (list 'fn '[a] tree))(print "\n")
   (print "Error:\t")(print fitness)(print "\n\n")
   (flush))
 
@@ -73,12 +95,11 @@
   [n1 n2]
   (println "\nfungp :: Functional Genetic Programming in Clojure")
   (println "Mike Vollmer, 2012")
-  (println "\n==================================================\n")
-  (print "Matching function: ")(print proto-code)(print "\n")
-  (print "On inputs: ")(print test-range)(print "\n")
-  (println "\n==================================================\n")
-  (let [options {:iterations n1 :migrations n2 :num-islands 10 :population-size 100 :tournament-size 5 :mutation-probability 0.1
-                 :mutation-depth 4 :max-depth 25 :terminals terminals :fitness fitness :functions functions :report report}
+  (print "Test inputs: ")(print test-range)(print "\n")
+  (print "Test outputs: ")(print actual)(print "\n\n")
+  (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 100 :tournament-size 5 :mutation-probability 0.1
+                 :max-depth 35 :terminals terminals :fitness fitness :functions functions :report report
+                 :adf-count 0}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
         (report tree score)
