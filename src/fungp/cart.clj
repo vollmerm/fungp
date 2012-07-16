@@ -4,8 +4,9 @@
 
 (ns fungp.cart
   "Cart problem example from Koza"
-  (use fungp.core)
-  (use fungp.util))
+  (:use fungp.core)
+  (:use fungp.util)
+  (:require clojure.pprint))
 
 ;;; some constants
 

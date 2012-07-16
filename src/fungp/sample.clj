@@ -4,7 +4,8 @@
 (ns fungp.sample
   "Sample use of fungp."
   (:use fungp.core)
-  (:use fungp.util))
+  (:use fungp.util)
+  (:require clojure.pprint))
 
 
 
