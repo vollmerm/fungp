@@ -23,14 +23,15 @@
    thrust. Assuming acceleration is one unit/second^2, and time is in
    steps of 0.02."
   [t v x f]
-  (if (or (<= (Math/abs x) 0.005)
-          (>= t MAX_T))
-    t ;; finished
-    (let [thrust (one-or-neg-one (f v x))
-          velocity (+ v (* thrust 0.02))
-          position (+ x (* velocity 0.02))
-          time (+ t 0.02)]
-      (recur time velocity position f))))
+  (let [v (double v) x (double x) t (double t)]
+    (cond (and (<= (Math/abs x) 0.01) (<= (Math/abs v) 0.01)) t
+          (>= t MAX_T) 100
+          :else
+          (let [thrust (one-or-neg-one (f v x))
+                velocity (+ v (* thrust 0.02))
+                position (+ x (* velocity 0.02))
+                time (+ t 0.02)]
+            (recur time velocity position f)))))
 
 (defn rand-spread
   "Range of starting position or velocity"
@@ -62,9 +63,8 @@
 
 (defn cart-fitness
   "Compute fitness for cart problem."
-  [tree] (let [f (eval (list 'fn '[v x] tree))
-               error (cart-error f)]
-           (/ error TEST_POINTS)))
+  [tree] (let [f (eval (list 'fn '[v x] tree))]
+           (cart-error f)))
 
 (defn cart-report
   "Reporting function. Prints out the tree and its score"
@@ -77,8 +77,10 @@
   "Run the cart problem"
   [n1 n2]
   (println "Koza's Cart Problem")
+  (println "Error is number of seconds taken total across all the tests.")
+  (println "If a program times out it is assigned 100 seconds.")
   (let [options {:iterations n1 :migrations n2 :num-islands 4
-                 :population-size 25 :terminals cart-terminals
+                 :population-size 100 :terminals cart-terminals
                  :tournament-size 3
                  :functions cart-functions :fitness cart-fitness
                  :report cart-report :adf-count 0

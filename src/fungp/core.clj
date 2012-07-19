@@ -62,14 +62,15 @@
    its arity, in this form: [function arity]."
   [mutation-depth terminals functions type]
   ;; conditions: either return terminal or create function and recurse
-  (cond (zero? mutation-depth) (rand-nth terminals)
-        (and (= type :grow) (flip 0.5)) (rand-nth terminals)
-        :else (let [[func arity] (rand-nth functions)]
-                (cons func (repeatedly arity 
-                                       #(create-tree (- mutation-depth 1)
-                                                     terminals
-                                                     functions
-                                                     type))))))
+  (let [mutation-depth (int mutation-depth)]
+    (cond (zero? mutation-depth) (rand-nth terminals)
+          (and (= type :grow) (flip 0.5)) (rand-nth terminals)
+          :else (let [[func arity] (rand-nth functions)]
+                  (cons func (repeatedly arity 
+                                         #(create-tree (- mutation-depth 1)
+                                                       terminals
+                                                       functions
+                                                       type)))))))
 
 (defn gen-adf-arg
   [adf-arity]
@@ -121,12 +122,13 @@
    method: a coin flip determines whether to use the \"fill\" or \"grow\" method, and the
    mutation depth is a randomly chosen number between 1 and the specified max mutation depth."
   [population-size mutation-depth terminals functions adf-arity adf-count]
-  (if (zero? population-size) []
-      (conj (create-population (- population-size 1) mutation-depth terminals functions
-                               adf-arity adf-count)
-            (create-module-tree (+ 1 (rand-int mutation-depth)) terminals functions
-                                adf-arity adf-count
-                                (if (flip 0.5) :grow :fill)))))
+  (let [population-size (int population-size)]
+    (if (zero? population-size) []
+        (conj (create-population (- population-size 1) mutation-depth terminals functions
+                                 adf-arity adf-count)
+              (create-module-tree (+ 1 (rand-int mutation-depth)) terminals functions
+                                  adf-arity adf-count
+                                  (if (flip 0.5) :grow :fill))))))
 
 
 (defn max-tree-height
@@ -348,7 +350,8 @@
    Takes a long list of parameters. This function is meant to be called by island-generations, which in turn is
    called by run-genetic-programming."
   [n population tournament-size mutation-probability mutation-depth max-depth terminals functions fitness]
-  (let [computed-fitness (fitness-zip population fitness)
+  (let [n (int n) ;; optimize loop with primitive type for counter
+        computed-fitness (fitness-zip population fitness)
         [best-tree best-fit] (get-best-fitness computed-fitness)]
     (if (or (zero? n) (zero? best-fit)) ;; terminating condition
       [population best-tree best-fit] ;; return
@@ -381,7 +384,8 @@
   "Run generations on all the islands and cross over between them. See the documentation for the generations function.
    Returns with the form [island best-tree best-fit]."
   [n1 n2 islands tournament-size mutation-probability mutation-depth max-depth terminals functions fitness report]
-  (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
+  (let [n1 (int n1) ;; optimize loop with primitive type for counter
+        islands-fit (pmap #(generations n2 % tournament-size mutation-probability
                                        mutation-depth max-depth terminals functions fitness)
                          islands)
         islands (map first islands-fit)
