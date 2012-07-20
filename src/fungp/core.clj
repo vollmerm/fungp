@@ -54,29 +54,37 @@
 ;;; My method of random tree generation is a combination of the "grow" and "fill"
 ;;; methods of tree building, similar to Koza's "ramped half-and-half" method.
 
+(defn terminal
+  "Return a random terminal or number."
+  [terminals numbers]
+  (if (and (flip 0.5) (not (empty? numbers))) (rand-nth numbers) (rand-nth terminals)))
+
 (defn create-tree
   "Build a tree of source code, given a mutation depth, terminal sequence, 
    function sequence, and type keyword. The type can be either :grow or :fill.
    The terminal sequence should consist of symbols or quoted code, while elements in the
    function sequence should contain both the function and a number representing
    its arity, in this form: [function arity]."
-  [mutation-depth terminals functions type]
+  [mutation-depth terminals numbers functions type]
   ;; conditions: either return terminal or create function and recurse
   (let [mutation-depth (int mutation-depth)]
-    (cond (zero? mutation-depth) (rand-nth terminals)
-          (and (= type :grow) (flip 0.5)) (rand-nth terminals)
+    (cond (zero? mutation-depth) (terminal terminals numbers)
+          (and (= type :grow) (flip 0.5)) (terminal terminals numbers)
           :else (let [[func arity] (rand-nth functions)]
                   (cons func (repeatedly arity 
                                          #(create-tree (- mutation-depth 1)
                                                        terminals
+                                                       numbers
                                                        functions
                                                        type)))))))
 
 (defn gen-adf-arg
+  "Generate arguments for ADF"
   [adf-arity]
   (vec (map #(symbol (str "arg" %)) (range adf-arity))))
 
 (defn gen-adf-func
+  "Generate ADF function names"
   [adf-count adf-arity]
   (when (> adf-arity 0)
     (vec (map (fn [n] [(symbol (str "adf" n))
@@ -84,34 +92,38 @@
               (range adf-count)))))
 
 (defn make-adf
-  [mutation-depth terminals functions adf-arity num]
+  "Build ADF -- Automatically Defined Function"
+  [mutation-depth terminals numbers functions adf-arity num]
   (let [adf-args (gen-adf-arg adf-arity)]
   [(symbol (str "adf" num))
    (list 'fn adf-args
          (create-tree mutation-depth
-                      (concat terminals adf-args adf-args adf-args)
+                      (concat terminals adf-args)
+                      numbers
                       functions :grow))]))
 
 (defn make-adf-branch
-  [mutation-depth terminals functions adf-arity adf-count]
+  "Make the ADF branch"
+  [mutation-depth terminals numbers functions adf-arity adf-count]
   (if (zero? adf-count) []
       (concat (make-adf-branch mutation-depth terminals
                                functions adf-arity (- adf-count 1))
-              (make-adf mutation-depth terminals
+              (make-adf mutation-depth terminals numbers
                         (concat functions
                                 (gen-adf-func (- adf-count 1)
                                               adf-arity))
                         adf-arity (- adf-count 1)))))
 
 (defn create-module-tree
-  "A module-aware version of create-tree"
-  [mutation-depth terminals functions adf-arity adf-count type]
+  "A module-aware version of create-tree. That means it includes Automatically Defined
+   Functions in addition to the ordinary source tree (or the Result Producing Branch)."
+  [mutation-depth terminals numbers functions adf-arity adf-count type]
   (list 'let
         (if (zero? adf-count) []
-            (vec (make-adf-branch mutation-depth terminals
+            (vec (make-adf-branch mutation-depth terminals numbers
                                   functions adf-arity adf-count)))
         (let [adf-func (gen-adf-func adf-count adf-arity)]
-          (create-tree mutation-depth terminals
+          (create-tree mutation-depth terminals numbers
                        (concat functions adf-func adf-func)
                        type))))
 
@@ -121,12 +133,12 @@
    sequence, and function sequence. It uses a variation of Koza's \"ramped half-and-half\"
    method: a coin flip determines whether to use the \"fill\" or \"grow\" method, and the
    mutation depth is a randomly chosen number between 1 and the specified max mutation depth."
-  [population-size mutation-depth terminals functions adf-arity adf-count]
+  [population-size mutation-depth terminals numbers functions adf-arity adf-count]
   (let [population-size (int population-size)]
     (if (zero? population-size) []
-        (conj (create-population (- population-size 1) mutation-depth terminals functions
+        (conj (create-population (- population-size 1) mutation-depth terminals numbers functions
                                  adf-arity adf-count)
-              (create-module-tree (+ 1 (rand-int mutation-depth)) terminals functions
+              (create-module-tree (+ 1 (rand-int mutation-depth)) terminals numbers functions
                                   adf-arity adf-count
                                   (if (flip 0.5) :grow :fill))))))
 
@@ -214,11 +226,11 @@
    subtree with a newly generated tree, replace a random subtree with a terminal, or
    \"lift\" a random subtree to replace the root. The function takes a tree, mutation rate,
    a mutation depth (max size of new subtrees), terminals, and functions."
-  [tree mutation-probability mutation-depth terminals functions]
+  [tree mutation-probability mutation-depth terminals numbers functions]
   (if (flip mutation-probability)
     (let [coin (rand)] ;; random number between 0 and 1
       (cond (< coin 0.33) 
-            (replace-subtree tree (create-tree mutation-depth terminals functions :grow))
+            (replace-subtree tree (create-tree mutation-depth terminals numbers functions :grow))
             (< coin 0.66)
             (replace-subtree tree (rand-nth terminals))
             :else (rand-subtree tree)))
@@ -226,12 +238,12 @@
 
 (defn mutate-module-tree
   "A module-aware version of mutate-tree."
-  [module-tree mutation-probability mutation-depth terminals functions]
+  [module-tree mutation-probability mutation-depth terminals numbers functions]
   (if (or (flip 0.5)
           (zero? (count (second module-tree))))
     (concat (take 2 module-tree)
             (list (mutate-tree (nth module-tree 2) mutation-probability
-                               mutation-depth terminals functions)))
+                               mutation-depth terminals numbers functions)))
     (concat (list (nth module-tree 0))
             (list (vec (map (fn [letf]
                               (if (list? letf) ;; mutate the lists of code
@@ -240,15 +252,15 @@
                                         (mutate-tree (nth letf 2)
                                                      mutation-probability
                                                      mutation-depth terminals
-                                                     functions)))
+                                                     numbers functions)))
                                 letf)) ;; skip symbol names
                             (nth module-tree 1))))
             (list (nth module-tree 2)))))
 
 (defn mutate-population
   "Apply mutation to every tree in a population. Similar arguments to mutate-tree."
-  [population mutation-probability mutation-depth terminals functions]
-  (map #(mutate-module-tree % mutation-probability mutation-depth terminals functions) population))
+  [population mutation-probability mutation-depth terminals numbers functions]
+  (map #(mutate-module-tree % mutation-probability mutation-depth terminals numbers functions) population))
 
 ;;; **Crossover** is the process of combining two parents to make a child.
 ;;; It involves copying the genetic material (in this case, lisp code) from
@@ -296,6 +308,7 @@
 ;;; material to the next generation.
 
 (defn truncate-population
+  "Apply truncate to all individuals in a population."
   [population height]
   (map #(truncate-module % height) population))
 
@@ -349,19 +362,18 @@
   "Runs n generations of a population, and returns the population and the best tree in the form [population best-tree fitness].
    Takes a long list of parameters. This function is meant to be called by island-generations, which in turn is
    called by run-genetic-programming."
-  [n population tournament-size mutation-probability mutation-depth max-depth terminals functions fitness]
-  (let [n (int n) ;; optimize loop with primitive type for counter
-        computed-fitness (fitness-zip population fitness)
-        [best-tree best-fit] (get-best-fitness computed-fitness)]
-    (if (or (zero? n) (zero? best-fit)) ;; terminating condition
-      [population best-tree best-fit] ;; return
-      (recur (- n 1)                  ;; else recurse
-             (-> population
-                 (tournament-selection tournament-size computed-fitness)
-                 (mutate-population mutation-probability mutation-depth terminals functions)
-                 (truncate-population max-depth)
-                 (elitism best-tree))
-             tournament-size mutation-probability mutation-depth max-depth terminals functions fitness))))
+  [n population tournament-size mutation-probability mutation-depth max-depth terminals numbers functions fitness]
+  (loop [n (int n) population population] ;; optimize inner loop
+    (let [computed-fitness (fitness-zip population fitness)
+          [best-tree best-fit] (get-best-fitness computed-fitness)]
+      (if (or (zero? n) (zero? best-fit)) ;; terminating condition
+        [population best-tree best-fit] ;; return
+        (recur (- n 1)                  ;; else recurse
+               (-> population
+                   (tournament-selection tournament-size computed-fitness)
+                   (mutate-population mutation-probability mutation-depth terminals numbers functions)
+                   (truncate-population max-depth)
+                   (elitism best-tree)))))))
  
 ;;; ### Islands
 ;;;
@@ -370,8 +382,9 @@
 
 (defn create-islands
   "Create a list of populations (islands)."
-  [num-islands population-size mutation-depth terminals functions adf-arity adf-count]
-  (repeatedly num-islands #(create-population population-size mutation-depth terminals functions adf-arity adf-count)))
+  [num-islands population-size mutation-depth terminals numbers functions adf-arity adf-count]
+  (repeatedly num-islands #(create-population population-size mutation-depth terminals numbers
+                                              functions adf-arity adf-count)))
 
 (defn island-crossover
   "Individuals migrate between islands."
@@ -383,26 +396,25 @@
 (defn island-generations
   "Run generations on all the islands and cross over between them. See the documentation for the generations function.
    Returns with the form [island best-tree best-fit]."
-  [n1 n2 islands tournament-size mutation-probability mutation-depth max-depth terminals functions fitness report]
-  (let [n1 (int n1) ;; optimize loop with primitive type for counter
-        islands-fit (pmap #(generations n2 % tournament-size mutation-probability
-                                       mutation-depth max-depth terminals functions fitness)
-                         islands)
-        islands (map first islands-fit)
-        [_ best-tree best-fit] (first (sort-by #(nth % 2) islands-fit))]
-    (if (or (zero? n1) (zero? best-fit))
-      [islands best-tree best-fit]
-      (do (report best-tree best-fit)
-        (recur (- n1 1) n2 islands tournament-size mutation-probability
-               mutation-depth max-depth terminals functions fitness report)))))
+  [n1 n2 islands tournament-size mutation-probability mutation-depth max-depth terminals numbers functions fitness report]
+  (loop [n (int n1) islands islands] ;; optimize inner loop
+    (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
+                                          mutation-depth max-depth terminals numbers functions fitness)
+                            islands)
+          islands (map first islands-fit)
+          [_ best-tree best-fit] (first (sort-by #(nth % 2) islands-fit))]
+      (if (or (zero? n) (zero? best-fit))
+        [islands best-tree best-fit]
+        (do (report best-tree best-fit)
+            (recur (- n 1) islands))))))
 
 (defn run-genetic-programming
   "This is the entry function. Call this with a map of the parameters to run the genetic programming algorithm."
   [{:keys [iterations migrations num-islands population-size tournament-size mutation-probability
-           mutation-depth max-depth terminals functions fitness report adf-arity adf-count]
-   :or {tournament-size 5 mutation-probability 0.05 mutation-depth 6 adf-arity 1 adf-count 1}}]
+           mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count]
+   :or {tournament-size 5 mutation-probability 0.05 mutation-depth 6 adf-arity 1 adf-count 1 numbers []}}]
   (island-generations migrations iterations 
-                      (create-islands num-islands population-size mutation-depth terminals functions adf-arity adf-count)
-                      tournament-size mutation-probability mutation-depth max-depth terminals functions fitness report))
+                      (create-islands num-islands population-size mutation-depth terminals numbers functions adf-arity adf-count)
+                      tournament-size mutation-probability mutation-depth max-depth terminals numbers functions fitness report))
         
 ;;; And that's it! For the core of the library, anyway.

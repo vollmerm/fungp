@@ -4,9 +4,6 @@ About this program
 **fungp** is a genetic programming library implemented in the Clojure programming language. It's pronounced 
 fun-gee-pee, for *functional genetic programming*. 
 
-It's written in a literate programming style and is heavily documented. 
-[Read the documentation here](http://gaia.ecs.csus.edu/~vollmerm/gp/).
-
 How do I use it?
 -----------------
 
@@ -25,6 +22,7 @@ The **run-genetic-programming** function accepts the following options keywords:
  * mutation-depth : depth of mutated trees
  * max-depth : maximum depth of trees
  * terminals : terminals used in tree building
+ * numbers : number literals to be used in tree building
  * functions : functions used in tree building, in the form [function arity]
  * fitness : a fitness function that takes a tree and returns an error number, lower is better
  * report : a reporting function passed [best-tree best-fit] at each migration
@@ -40,8 +38,8 @@ Mike Vollmer, 2012
 
 ==================================================
 
-Matching function: (fn [x] (+ x (- (Math/sin x) (* x x))))
-On inputs: [-5.0 -1.0 -0.5 0 0.5 1.0 5.0]
+Inputs: [-5.0 -1.0 -0.5 0 0.5 1.0 5.0]
+Outputs: [-29.04107572533686 -2.8414709848078967 -1.229425538604203 0.0 0.729425538604203 0.8414709848078965 -20.95892427466314]
 
 ==================================================
 

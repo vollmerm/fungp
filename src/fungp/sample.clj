@@ -20,22 +20,9 @@
   "Parameters to be used to eval the generated functions"
   ['a])
 
-(def parameter-weight 5)
-
 (def number-literals
   "Number literals to be used in the code"
   (map float (range 10)))
-
-(def number-weight 1)
-
-(defn duplicate-symbol
-  [s n] (if (zero? n) s
-            (concat s (duplicate-symbol s (- n 1)))))
-
-(def sample-terminals
-  "Terminals to be used as leaves"
-  (concat (duplicate-symbol number-literals number-weight)
-          (duplicate-symbol sample-parameters parameter-weight)))
 
 (def test-range (map #(* 2 (- % 5)) (range 10)))
 
@@ -68,7 +55,8 @@
   (print "Test inputs: ")(print test-range)(print "\n")
   (print "Test outputs: ")(print sample-actual)(print "\n\n")
   (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 100 :tournament-size 5 :mutation-probability 0.1
-                 :max-depth 25 :terminals sample-terminals :fitness sample-fitness :functions sample-functions :report sample-report
+                 :max-depth 25 :terminals sample-parameters :numbers number-literals :fitness sample-fitness
+                 :functions sample-functions :report sample-report
                  :adf-count 0}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")

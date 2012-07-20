@@ -10,36 +10,32 @@
 
 ;;; some constants
 
-(def MAX_T 5)
-(def TEST_POINTS 20)
-
-(defn one-or-neg-one
-  "Wrap the output of the evolved function: positive values are +1 and
-   negative values are -1"
-  [x] (if (> x 0) 1 -1))
+(def MAX_T "Max time limit" 5)
+(def TEST_POINTS "Number of test cases" 20)
 
 (defn move-cart
   "Simulate cart movement with the evolved function used to calculate
    thrust. Assuming acceleration is one unit/second^2, and time is in
    steps of 0.02."
   [t v x f]
-  (let [v (double v) x (double x) t (double t)]
+  (loop [t (float t) v (float v) x (float x)]
     (cond (and (<= (Math/abs x) 0.01) (<= (Math/abs v) 0.01)) t
           (>= t MAX_T) 100
           :else
-          (let [thrust (one-or-neg-one (f v x))
-                velocity (+ v (* thrust 0.02))
-                position (+ x (* velocity 0.02))
-                time (+ t 0.02)]
-            (recur time velocity position f)))))
+          (let [thrust (if (> (f v x) 0) 1.0 -1.0)]
+            (recur (+ t 0.02)
+                   (+ v (* thrust 0.02))
+                   (+ x (* v 0.02)))))))
 
 (defn rand-spread
   "Range of starting position or velocity"
   [l] (repeatedly l #(- (* 1.5 (rand)) 0.75)))
 
-(def cart-functions '[[+ 2][* 2][- 2][fungp.util/sdiv 2]
-                      [fungp.util/abs 1][fungp.util/gt 2]])
-(def cart-terminals '[x v -1])
+(def cart-functions "Functions available to the evolved programs"
+  '[[+ 2][* 2][- 2][fungp.util/abs 1][fungp.util/gt 2]])
+
+(def cart-terminals "Terminals available to the evolved programs"
+  '[x v -1])
 
 (def rand-velocity (rand-spread TEST_POINTS))
 (def rand-position (rand-spread TEST_POINTS))
@@ -53,13 +49,16 @@
 
 ;;; some existing solutions
 
-(defn cart-optimal [v x] (gt (* -1 x) (* v (abs v))))
+(defn cart-optimal "The optimal solution" [v x] (gt (* -1 x) (* v (abs v))))
 
 (defn cart-suboptimal [v x] (gt (* -1 x) (* v v)))
 
-(defn cart-evol [v x] (- (* -1 x) (+ x v)))
-
 (def cart-optimal-error (cart-error cart-optimal))
+
+(def cart-evol (fn [v x] (let [] (fungp.util/gt (- x v) (+ (+ x x) (+ x x))))))
+(def cart-evol2 (fn [v x] (let [] (- (- (- -1 x) (+ x v))
+                                     (- (* (+ -1 v) (* -1 x))
+                                        (fungp.util/gt (fungp.util/abs x) -1))))))
 
 (defn cart-fitness
   "Compute fitness for cart problem."
