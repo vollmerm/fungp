@@ -106,7 +106,7 @@
   "Make the ADF branch"
   [mutation-depth terminals numbers functions adf-arity adf-count]
   (if (zero? adf-count) []
-      (concat (make-adf-branch mutation-depth terminals
+      (concat (make-adf-branch mutation-depth terminals numbers
                                functions adf-arity (- adf-count 1))
               (make-adf mutation-depth terminals numbers
                         (concat functions
