@@ -35,25 +35,57 @@ Here's a sample output from the test function in sample.clj:
 ```
 fungp :: Functional Genetic Programming in Clojure
 Mike Vollmer, 2012
+Test inputs: (-10 -8 -6 -4 -2 0 2 4 6 8)
+Test outputs: (300.0 192.0 108.0 48.0 12.0 0.0 12.0 48.0 108.0 192.0)
 
-==================================================
+(fn
+ [a]
+ (let
+  []
+  (-
+   (+
+    (- (inc (inc 9.0)) (fungp.util/sdiv (dec a) (* a 0.0)))
+    (+ (- (fungp.util/abs a) (- a a)) (inc (* a a))))
+   (dec (* (- (dec a) (inc a)) (+ (+ a 7.0) (* a a)))))))
 
-Inputs: [-5.0 -1.0 -0.5 0 0.5 1.0 5.0]
-Outputs: [-29.04107572533686 -2.8414709848078967 -1.229425538604203 0.0 0.729425538604203 0.8414709848078965 -20.95892427466314]
+Error:	10210.0
 
-==================================================
+(fn
+ [a]
+ (let
+  []
+  (+
+   (- (inc (inc 9.0)) (fungp.util/sdiv (dec a) (* a 0.0)))
+   (+
+    (+
+     (inc (fungp.util/abs a))
+     (+
+      (+
+       (- (inc (inc 9.0)) (fungp.util/sdiv (dec a) (* a 0.0)))
+       (+ (- (fungp.util/abs a) (- a a)) (inc (* a a))))
+      (fungp.util/abs
+       (fungp.util/sdiv (fungp.util/abs 8.0) (dec 3.0)))))
+    (inc (* a a))))))
 
-Code:	(fn [a] (- (+ (+ a (Math/cos a)) (- a a)) (inc (* a a))))
-Error:	5.193811787113044
+Error:	6778.0
 
-Code:	(fn [a] (- (+ a (- (* a a) (* a a))) (- (* a a) (- a a))))
-Error:	3.7149160597554607
+(fn
+ [a]
+ (let
+  []
+  (+
+   (* a a)
+   (+ (+ (- (fungp.util/abs a) (- a a)) (inc (* a a))) (inc (* a a))))))
 
-Code:	(fn [a] (- (* (Math/sin a) (- (* (Math/sin (+ a a)) (inc (+ a a))) (Math/sin (+ a a)))) (* a a)))
-Error:	3.6216421309983704
+Error:	580.0
+
+(fn [a] (let [] (+ (* a a) (+ (* a a) (inc (* a a))))))
+
+Error:	10.0
 
 Done!
-Code:	(fn [a] (- a (- (* a a) (Math/sin a))))
+(fn [a] (let [] (+ (* a a) (+ (* a a) (* a a)))))
+
 Error:	0.0
 ```
 
