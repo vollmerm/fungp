@@ -198,8 +198,8 @@
   "Prevent trees from growing too big by lifting a subtree if the tree height is
    greater than the max tree height."
   [tree height] 
-  (if (< (max-tree-height tree) height) 
-    (rand-subtree tree) 
+  (if (> (max-tree-height tree) height) 
+    (recur (rand-subtree tree) height)
     tree))
 
 (defn truncate-module

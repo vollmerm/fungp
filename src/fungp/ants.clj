@@ -3,14 +3,11 @@
   (:use fungp.util)
   (:require clojure.pprint))
 
-(def MAXSTEPS 200)
-(def STARTFOOD [[0 1][1 0][1 1][1 2][1 3][1 4][1 5][2 5][3 5][3 6][4 6][5 6][6 6][7 6][8 6]
-                [9 6][10 6][11 6][11 5][11 4][12 4][13 4][13 5][13 6][13 7][13 8][13 9]
-                [13 10][13 11]])
+(def MAXSTEPS 40)
+(def STARTFOOD [[1 0][1 1][1 2][1 3][1 4][1 5][2 5][3 5][3 6][4 6]
+                [5 6][6 6][7 7][7 8][8 8][9 8][9 9][10 9][10 10][9 10]
+                [8 10][8 9]])
 (def NUMFOOD (count STARTFOOD))
-
-(defn ant-fitness [tree]
-  (simulate-ants MAXSTEPS tree tree 0 0 0 STARTFOOD 0))
 
 ;;; 0: north, 1: east, 2: south, 3: west
 
@@ -18,55 +15,97 @@
   (cond (= dir 0) (some #(= % [x (inc y)]) food)
         (= dir 1) (some #(= % [(inc x) y]) food)
         (= dir 2) (some #(= % [x (dec y)]) food)
-        (= dir 3) (some #(= % [(dec x) y]) food)))
+        (= dir 3) (some #(= % [(dec x) y]) food)
+        :else (throw (Throwable. "Invalid direction"))))
 
-(defn simulate-ants [iter full-tree tree ant-dir ant-x ant-y food eaten]
-  (cond (zero? iter) (+ MAXSTEPS (* 2 (+ (count food))))
-        (empty? tree) (recur (dec iter) full-tree full-tree ant-dir ant-x ant-y food eaten)
-        (empty? food) iter
-        :else (let [tree (cond (= (first tree) 'sense)
-                               (if (sense-food ant-dir ant-x ant-y food)
-                                 (nth tree 1)
-                                 (nth tree 2))
-                               (= (first tree) 'do)
-                               (rest tree)
-                               :else tree)
-                    cur (if (seq? tree) (first tree) tree)
-                    nex (if (seq? tree) (rest tree) '())]
-        (recur iter full-tree nex
-                     (cond (= cur 'left) (if (= ant-dir 0) 3
-                                                      (dec ant-dir))
-                           (= cur 'right) (if (= ant-dir 3) 0
-                                                       (inc ant-dir))
-                           :else ant-dir)
-                     (if (= cur 'move)
-                       (cond (= ant-dir 1) (inc ant-x)
-                             (= ant-dir 3) (dec ant-x)
-                             :else ant-x)
-                       ant-x)
-                     (if (= cur 'move)
-                       (cond (= ant-dir 0) (inc ant-y)
-                             (= ant-dir 2) (dec ant-y)
-                             :else ant-y)
-                       ant-y)
-                     (remove #(= % [ant-x ant-y]) food)
-                     (if (some #(= % [ant-x ant-y]) food) (inc eaten) eaten)))))
+(defn new-direction [elm ant-dir]
+  (cond (= elm 'left)
+        (cond (= ant-dir 0) 3
+              (= ant-dir 1) 0
+              (= ant-dir 2) 1
+              (= ant-dir 3) 2)
+        (= elm 'right)
+        (cond (= ant-dir 0) 1
+              (= ant-dir 1) 2
+              (= ant-dir 2) 3
+              (= ant-dir 3) 0)
+        :else ant-dir))
+
+(defn new-x [elm ant-dir ant-x]
+  (if (= elm 'move)
+    (cond (= ant-dir 1) (inc ant-x)
+          (= ant-dir 3) (dec ant-x)
+          :else ant-x)
+    ant-x))
+
+(defn new-y [elm ant-dir ant-y]
+  (if (= elm 'move)
+    (cond (= ant-dir 0) (inc ant-y)
+          (= ant-dir 2) (dec ant-y)
+          :else ant-y)
+    ant-y))
+
+(defn new-food [ant-x ant-y food]
+  (remove #(= % [ant-x ant-y]) food))
+
+(defn new-eaten [ant-x ant-y food eaten]
+  (if (some #(= % [ant-x ant-y]) food) (inc eaten) eaten))
+
+(defn simulate-ants
+  "Simulate the ant movements by repeatedly interpreting the movement function. This
+   code isn't pretty; the example from Koza's book relied on destructive updates, so
+   I came up with a quick and dirty functional alternative."
+  [iter full-tree tree ant-dir ant-x ant-y food eaten]
+  (cond (zero? iter) (let [error (+ MAXSTEPS (count food))] (* error error))
+        (and (seq? tree) (empty? tree)) 
+        (recur (dec iter) full-tree full-tree ant-dir ant-x ant-y food eaten)
+        (empty? food) 0 ;; good enough: ant ate all the food
+        :else 
+        (cond (not (seq? tree)) 
+              (recur iter full-tree '()
+                     (new-direction tree ant-dir)
+                     (new-x tree ant-dir ant-x)
+                     (new-y tree ant-dir ant-y)
+                     (new-food ant-x ant-y food)
+                     (new-eaten ant-x ant-y food eaten))
+              (= (first tree) 'sense)
+              (let [tree (if (sense-food ant-dir ant-x ant-y food)
+                           (nth tree 1) (nth tree 2))]
+                (recur iter full-tree tree ant-dir ant-x ant-y food eaten))
+              (= (first tree) 'do)
+              (if (= (count (rest tree)) 1)
+                (recur iter full-tree (nth tree 1) ant-dir ant-x ant-y food eaten)
+                (recur iter full-tree (cons 'do (rest (rest tree)))
+                       (new-direction (nth tree 1) ant-dir)
+                       (new-x (nth tree 1) ant-dir ant-x)
+                       (new-y (nth tree 1) ant-dir ant-y)
+                       (new-food ant-x ant-y food)
+                       (new-eaten ant-x ant-y food eaten)))
+              :else (throw (Throwable. (str "Unexpected element in tree: " tree))))))
+
+
 
 (def ant-terminals '[move left right])
 
 (def ant-functions '[[sense 2][do 2][do 3]])
 
+(defn ant-fitness [tree]
+  (simulate-ants MAXSTEPS (nth tree 2) (nth tree 2) 0 0 0 STARTFOOD 0))
+
+
 (defn ant-report
   "Reporting function. Prints out the tree and its score"
   [tree fitness]
-  (clojure.pprint/pprint (list 'fn '[a] tree))(print "\n")
+  (clojure.pprint/pprint (nth tree 2))(print "\n")
   (print "Error:\t")(print fitness)(print "\n\n")
   (flush))
 
 (defn test-ants [n1 n2]
   (println "Ant problem\n")
+  (println (str "Food count: " NUMFOOD "\n"))
   (let [options {:iterations n1 :migrations n2 :num-islands 2 :population-size 200 :tournament-size 5 :mutation-probability 0.1
-                 :max-depth 25 :terminals ant-terminals :fitness ant-fitness
+                 :max-depth 5 :mutation-depth 1
+                 :terminals ant-terminals :fitness ant-fitness
                  :functions ant-functions :report ant-report
                  :adf-count 0}
         [tree score] (rest (run-genetic-programming options))]
