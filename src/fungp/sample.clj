@@ -56,8 +56,7 @@
   (print "Test outputs: ")(print sample-actual)(print "\n\n")
   (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 100 :tournament-size 5 :mutation-probability 0.1
                  :max-depth 10 :terminals sample-parameters :numbers number-literals :fitness sample-fitness
-                 :functions sample-functions :report sample-report
-                 :adf-count 0}
+                 :functions sample-functions :report sample-report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
         (sample-report tree score)

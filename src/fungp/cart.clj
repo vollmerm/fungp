@@ -82,8 +82,8 @@
                  :population-size 100 :terminals cart-terminals
                  :tournament-size 3
                  :functions cart-functions :fitness cart-fitness
-                 :report cart-report :adf-count 0
-                 :max-depth 8}
+                 :report cart-report
+                 :max-depth 5}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
         (cart-report tree score)

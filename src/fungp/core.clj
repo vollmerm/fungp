@@ -412,7 +412,7 @@
   "This is the entry function. Call this with a map of the parameters to run the genetic programming algorithm."
   [{:keys [iterations migrations num-islands population-size tournament-size mutation-probability
            mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count]
-   :or {tournament-size 5 mutation-probability 0.05 mutation-depth 6 adf-arity 1 adf-count 1 numbers []}}]
+   :or {tournament-size 5 mutation-probability 0.05 mutation-depth 6 adf-arity 1 adf-count 0 numbers []}}]
   (island-generations migrations iterations 
                       (create-islands num-islands population-size mutation-depth terminals numbers functions adf-arity adf-count)
                       tournament-size mutation-probability mutation-depth max-depth terminals numbers functions fitness report))

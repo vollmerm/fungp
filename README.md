@@ -24,6 +24,8 @@ The **run-genetic-programming** function accepts the following options keywords:
  * terminals : terminals used in tree building
  * numbers : number literals to be used in tree building
  * functions : functions used in tree building, in the form [function arity]
+ * adf-count : Number of automatically-defined functions
+ * adf-arity : Number of arguments for automatically-defined functions
  * fitness : a fitness function that takes a tree and returns an error number, lower is better
  * report : a reporting function passed [best-tree best-fit] at each migration
 

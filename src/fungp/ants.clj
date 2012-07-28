@@ -106,8 +106,7 @@
   (let [options {:iterations n1 :migrations n2 :num-islands 2 :population-size 200 :tournament-size 5 :mutation-probability 0.1
                  :max-depth 5 :mutation-depth 1
                  :terminals ant-terminals :fitness ant-fitness
-                 :functions ant-functions :report ant-report
-                 :adf-count 0}
+                 :functions ant-functions :report ant-report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
         (ant-report tree score))))
