@@ -59,5 +59,4 @@
                  :functions sample-functions :report sample-report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
-        (sample-report tree score)
-        (eval (list 'fn '[a] tree)))))
+        (sample-report tree score))))

@@ -86,5 +86,4 @@
                  :max-depth 5}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
-        (cart-report tree score)
-        (eval (list 'fn '[v x] tree)))))
+        (cart-report tree score))))

@@ -7,17 +7,32 @@
   (:use [fungp.core])
   (:use [clojure.test]))
 
-; it would probably be a good idea to move test-gp and
-; the test funcs/symbols to this file
+(defn list-or-cons? [tree] 
+  (or (list? tree)
+      (= clojure.lang.Cons (type tree))))
 
-(def testfuncs [{:op * :arity 2 :name '*}
-                {:op + :arity 2 :name '+} 
-                {:op - :arity 2 :name '-} 
-                {:op inc :arity 1 :name 'inc} 
-                {:op dec :arity 1 :name 'dec}])
+(def test-functions '[[+ 2][- 2][* 2][inc 1][dec 1]])
 
-(deftest test-conv-code
-  (is (= '(* 1 2) (conv-code (list * 1 2) testfuncs))))
+(def test-terminals '[x])
 
-(deftest test-gp-returns-function
-  (is (fn? (test-gp 1 1))))
+(deftest test-create-tree
+         (let [tree-type (type (create-tree 5 test-terminals [] test-functions :grow))]
+           (is (or (= tree-type clojure.lang.Symbol)
+                   (= tree-type clojure.lang.Cons)))))
+
+(deftest test-module-tree
+         (let [tree (create-module-tree 5 test-terminals [] test-functions 1 1 :grow)]
+           (do (is (list-or-cons? tree))
+               (is (= (first tree) 'let))
+               (is (vector? (second tree))))))
+
+(deftest test-tree-operations
+         (let [tree (create-tree 5 test-terminals [] test-functions :fill)
+               subtree (rand-subtree tree)]
+           (do (is (seq? (replace-subtree tree '(+ x x)))))
+               (is (seq? subtree))))
+
+(deftest test-truncate
+         (let [tree (create-tree 5 test-terminals [] test-functions :fill)]
+           (do (is (= tree (truncate tree 10)))
+               (is (not (= tree (truncate tree 2)))))))
