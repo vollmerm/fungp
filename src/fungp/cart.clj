@@ -83,6 +83,7 @@
                  :tournament-size 3
                  :functions cart-functions :fitness cart-fitness
                  :report cart-report
+                 :adf-count 1
                  :max-depth 5}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")

@@ -52,8 +52,10 @@
   [n1 n2]
   (println "\nfungp :: Functional Genetic Programming in Clojure")
   (println "Mike Vollmer, 2012")
-  (print "Test inputs: ")(print test-range)(print "\n")
-  (print "Test outputs: ")(print sample-actual)(print "\n\n")
+  (println (str "Test inputs: " (vec test-range)))
+  (println (str "Test outputs: " (vec sample-actual)))
+  (println (str "Max generations: " (* n1 n2)))
+  (println)
   (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 100 :tournament-size 5 :mutation-probability 0.1
                  :max-depth 10 :terminals sample-parameters :numbers number-literals :fitness sample-fitness
                  :functions sample-functions :report sample-report}
