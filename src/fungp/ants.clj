@@ -6,7 +6,7 @@
 (def MAXSTEPS 40)
 (def STARTFOOD [[1 0][1 1][1 2][1 3][1 4][1 5][2 5][3 5][3 6][4 6]
                 [5 6][6 6][7 7][7 8][8 8][9 8][9 9][10 9][10 10][9 10]
-                [8 10][8 9]])
+                [8 10][8 9][11 9][11 10]])
 (def NUMFOOD (count STARTFOOD))
 
 ;;; 0: north, 1: east, 2: south, 3: west
@@ -59,7 +59,7 @@
   (cond (zero? iter) (let [error (+ MAXSTEPS (count food))] (* error error))
         (and (seq? tree) (empty? tree)) 
         (recur (dec iter) full-tree full-tree ant-dir ant-x ant-y food eaten)
-        (empty? food) 0 ;; good enough: ant ate all the food
+        (empty? food) (- MAXSTEPS iter) ;; ant ate all the food
         :else 
         (cond (not (seq? tree)) 
               (recur iter full-tree '()
