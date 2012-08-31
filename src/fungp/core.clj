@@ -57,7 +57,10 @@
 (defn terminal
   "Return a random terminal or number."
   [terminals numbers]
-  (if (and (flip 0.5) (not (empty? numbers))) (rand-nth numbers) (rand-nth terminals)))
+  (if (and (flip 0.5) 
+           (not (empty? numbers))) 
+    (rand-nth numbers) 
+    (rand-nth terminals)))
 
 (defn create-tree
   "Build a tree of source code, given a mutation depth, terminal sequence, 
@@ -65,23 +68,45 @@
    The terminal sequence should consist of symbols or quoted code, while elements in the
    function sequence should contain both the function and a number representing
    its arity, in this form: [function arity]."
-  [mutation-depth terminals numbers functions type]
+  [mutation-depth terminals numbers functions gtype]
   ;; conditions: either return terminal or create function and recurse
-  (let [mutation-depth (int mutation-depth)]
-    (cond (zero? mutation-depth) (terminal terminals numbers)
-          (and (= type :grow) (flip 0.5)) (terminal terminals numbers)
-          :else (let [[func arity] (rand-nth functions)]
-                  (cons func (repeatedly arity 
-                                         #(create-tree (- mutation-depth 1)
-                                                       terminals
-                                                       numbers
-                                                       functions
-                                                       type)))))))
+  (cond (zero? mutation-depth) (terminal terminals numbers)
+        (and (= type :grow) 
+             (flip 0.5)) 
+        (terminal terminals numbers)
+        :else (let [[func arity] (rand-nth functions)]
+                (cons func (repeatedly arity 
+                                       #(create-tree (- mutation-depth 1)
+                                                     terminals
+                                                     numbers
+                                                     functions
+                                                     gtype))))))
+
+;;; The next few functions handle one of the special cases in tree creation: ADFs,
+;;; or Automatically Defined Functions. This is a good time to introduce one of the
+;;; defining features of the code evolved in fungp: it consists of multiple ordered 
+;;; branches, the last of which is the Result Defining Branch, or the branch that
+;;; actually returns the final result. Other branches in the evolved code are stored
+;;; in a let statement, which in clojure binds and evaluates sequentially.
+;;;
+;;; For example:
+;;;
+;;;     (let [a 5
+;;;           b (fn [x] (* a x))]
+;;;       (b a))
+;;;
+;;; The above code would bind a to 5, and b to the anonymous function. The reference
+;;; to a in b will resolve to 5, because elements in let are evaluated and bound in
+;;; order. Finally, the expression (b a) would evaluate to 25.
+;;;
+;;; Currently, the types of branches evolved in fungp, besides the result defining 
+;;; branch, are automatically defined functions.
 
 (defn gen-adf-arg
   "Generate arguments for ADF"
   [adf-arity]
-  (vec (map #(symbol (str "arg" %)) (range adf-arity))))
+  (vec (map #(symbol (str "arg" %)) 
+            (range adf-arity))))
 
 (defn gen-adf-func
   "Generate ADF function names"
@@ -312,11 +337,44 @@
   [population height]
   (map #(truncate-module % height) population))
 
+;;; Up until this point I haven't touched on mutable memory (nor have I found it necessary to include it in the code).
+;;; Vars in Clojure are a bit hard to understand, so I won't try to explain them. Just imagine the "binding" form
+;;; as similar to "let," but potentially allows the bindings it creates to be altered with "set!"
+
+(defn add-memory-mutators
+  "Generate functions to change the mutable variables using set! and inject them in a tree. I don't really like using set!
+   but it's sometimes necessary."
+  [tree mem-names]
+  (list 'let
+        (vec (concat 
+               (vec (apply concat
+                           (map (fn [s] 
+                                  (list (symbol (str "set-" s "!")) 
+                                        (list 'fn '[arg] 
+                                              (list 'set! s 'arg))))
+                                mem-names)))
+               (second tree)))
+        (nth tree 2)))
+
+(defn add-memory-wrapper
+  "Add mutable local variables to an invididual. Mutable variables are created with dynamic vars and the \"binding\"
+   statement. Unbound global vars should exist for each memory name *before* evaluating the individuals."
+  [tree mem-names]
+  (list 'binding
+        (vec (apply concat 
+                    (map #(list % 0) 
+                         mem-names)))
+        (add-memory-mutators tree mem-names)))
+
+
 (defn fitness-zip
   "Compute the fitness of all the trees in the population, and map the trees to their population in a
    seq of a zipmap."
-  [population fitness]
-  (seq (zipmap population (map fitness population))))
+  [population fitness mem-names]
+  (seq (zipmap population (if (seq? mem-names)
+                            ;; if there are memory names, add the wrapping code before evaluating
+                            (map #(fitness (add-memory-wrapper %)) population)
+                            (map fitness population)))))
 
 (defn tournament-selection
   "Use tournament selection to create a new generation. In each tournament the two best individuals
@@ -344,7 +402,6 @@
   [population best]
   (conj (rest population) best))
 
-
 ;;; ### Putting it together
 ;;;
 ;;; This takes care of all the steps necessary to complete one generation of the algorithm.
@@ -362,9 +419,9 @@
   "Runs n generations of a population, and returns the population and the best tree in the form [population best-tree fitness].
    Takes a long list of parameters. This function is meant to be called by island-generations, which in turn is
    called by run-genetic-programming."
-  [n population tournament-size mutation-probability mutation-depth max-depth terminals numbers functions fitness]
+  [n population tournament-size mutation-probability mutation-depth max-depth terminals numbers functions fitness mem-names]
   (loop [n (int n) population population] ;; optimize inner loop
-    (let [computed-fitness (fitness-zip population fitness)
+    (let [computed-fitness (fitness-zip population fitness mem-names)
           [best-tree best-fit] (get-best-fitness computed-fitness)]
       (if (or (zero? n) (zero? best-fit)) ;; terminating condition
         [population best-tree best-fit] ;; return
@@ -379,6 +436,18 @@
 ;;;
 ;;; The above code works for running generations of a single population. The concept of islands is
 ;;; to have multiple separated populations evolving in parallel, and cross over between them.
+;;;
+;;; Thanks to clojure's parallelism features, the islands actually do run in parallel. To an extent,
+;;; anyway: they're processed with a thread pool of reasonable size ("reasonable size" being the key
+;;; phrase -- clojure decides based on your availabe resources).
+;;;
+;;; So, islands do two things.
+;;;
+;;;  * Better results: by separating individuals for part of their evolution, and recombining them
+;;;    occasionally, we get (hopefully) more diversity.
+;;;
+;;;  * Better performance: by exploiting multiple CPU cores with native threads, the program can
+;;;    process more individuals quickly. 
 
 (defn create-islands
   "Create a list of populations (islands)."
@@ -393,13 +462,17 @@
     (map (fn [[island selected]] (conj (rest (shuffle island)) selected))
          (zipmap islands cross))))
 
+;;; And... *drum roll*
+
 (defn island-generations
   "Run generations on all the islands and cross over between them. See the documentation for the generations function.
    Returns with the form [island best-tree best-fit]."
-  [n1 n2 islands tournament-size mutation-probability mutation-depth max-depth terminals numbers functions fitness report]
+  [n1 n2 islands tournament-size mutation-probability mutation-depth max-depth terminals numbers functions fitness 
+   report mem-names]
   (loop [n (int n1) islands islands] ;; optimize inner loop
     (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
-                                          mutation-depth max-depth terminals numbers functions fitness)
+                                          mutation-depth max-depth terminals numbers 
+                                          functions fitness mem-names)
                             islands)
           islands (map first islands-fit)
           [_ best-tree best-fit] (first (sort-by #(nth % 2) islands-fit))]
@@ -408,13 +481,24 @@
         (do (report best-tree best-fit)
             (recur (- n 1) islands))))))
 
+;;; ### Wrap it up
+;;;
+;;; This is the final function, the one to be called from outside. It takes a key->value hash as a parameter, so the
+;;; options can be provided in any order and some have default values. See the top of this file for a complete
+;;; explanation of each of the keyword parameters.
+
 (defn run-genetic-programming
   "This is the entry function. Call this with a map of the parameters to run the genetic programming algorithm."
   [{:keys [iterations migrations num-islands population-size tournament-size mutation-probability
-           mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count]
-   :or {tournament-size 5 mutation-probability 0.05 mutation-depth 6 adf-arity 1 adf-count 0 numbers []}}]
+           mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count
+           mem-names]
+    ;; the :or block here specifies default values for some of the arguments
+   :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0 
+        numbers [] mem-names []}}]
   (island-generations migrations iterations 
-                      (create-islands num-islands population-size mutation-depth terminals numbers functions adf-arity adf-count)
-                      tournament-size mutation-probability mutation-depth max-depth terminals numbers functions fitness report))
+                      (create-islands num-islands population-size mutation-depth terminals 
+                                      numbers functions adf-arity adf-count)
+                      tournament-size mutation-probability mutation-depth max-depth terminals 
+                      numbers functions fitness report mem-names))
         
 ;;; And that's it! For the core of the library, anyway.
