@@ -42,8 +42,6 @@
 ;;; * report : a reporting function passed [best-tree best-fit] at each migration
 ;;; * adf-count : number of automatically defined functions
 ;;; * adf-arity : number of arguments for automatically defined functions
-;;; * mem-names : names for local mutable variables
-;;; * result-wrapper : a symbol to use as a wrapper for the result defining branch
 ;;; 
 ;;; Most fitness functions will *eval* the trees of code they are passed.
 ;;; In Clojure, eval'ing a list of code will compile it to JVM
@@ -105,9 +103,8 @@
 ;;; to a in b will resolve to 5, because elements in let are evaluated and bound in
 ;;; order. Finally, the expression (b a) would evaluate to 25.
 ;;;
-;;; Currently, the types of branches evolved in fungp, besides the result defining 
-;;; branch, are automatically defined functions. Mutator functions for local variables,
-;;; if any, are also put into the let statement before fitness evaluation.
+;;; Currently, the type of branches evolved in fungp, besides the result defining 
+;;; branch, are automatically defined functions.
 
 (defn gen-adf-arg
   "Generate arguments for ADF"
@@ -208,7 +205,8 @@
   ([tree]
     (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
   ([tree n]
-    (if (or (zero? n) (not (seq? tree))) tree
+    (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) 
+                           (not (seq? tree))) tree
       (recur (rand-nth (rest tree))
              (rand-int n)))))
 
@@ -218,7 +216,8 @@
   ([tree sub] 
     (replace-subtree tree sub (rand-int (+ 1 (max-tree-height tree)))))
   ([tree sub n]
-    (if (or (zero? n) (not (seq? tree))) sub
+    (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) 
+                           (not (seq? tree))) sub
       (let [r (+ 1 (rand-int (count (rest tree))))] 
         (concat (take r tree)
                 (list (replace-subtree
@@ -347,61 +346,11 @@
   [population height]
   (map #(truncate-module % height) population))
 
-;;; Up until this point I haven't touched on mutable memory (nor have I found it necessary to include it in the code).
-;;; Vars in Clojure are a bit hard to understand, so I won't try to explain them. Just imagine the "binding" form
-;;; as similar to "let," but potentially allows the bindings it creates to be altered with "set!"
-
-(defn add-memory-mutators
-  "Generate functions to change the mutable variables using set! and inject them in a tree. I don't really like using set!
-   but it's sometimes necessary."
-  [tree mem-names]
-  (list 'let
-        (vec (concat 
-               (vec (apply concat
-                           (map (fn [s] 
-                                  (list (symbol (str "set-" s "!")) 
-                                        (list 'fn '[arg] 
-                                              (list 'set! s 'arg))))
-                                mem-names)))
-               (second tree)))
-        (nth tree 2)))
-
-(defn add-memory-wrapper
-  "Add mutable local variables to an invididual. Mutable variables are created with dynamic vars and the \"binding\"
-   statement."
-  [tree mem-names]
-  (cons 'do (concat (map (fn [name] `(def ~(with-meta name {:dynamic true}))) mem-names)
-                    (list (list 'binding
-                                (vec (apply concat 
-                                            (map #(list % 0) 
-                                                 mem-names)))
-                                (add-memory-mutators tree mem-names))))))
-
-(defn add-result-wrapper
-  "Sometimes it might be necessary to modify the behavior of the Result Defining Branch, or to interpret its
-   results before returning. The result wrapper adds a single symbol to the root of the RDF, which can be a 
-   macro or a function."
-  [tree result-wrapper]
-  (list (first tree)
-        (second tree)
-        (list result-wrapper (nth tree 2))))
-
 (defn fitness-zip
   "Compute the fitness of all the trees in the population, and map the trees to their population in a
    seq of a zipmap."
-  [population fitness mem-names result-wrapper]
-  (seq (zipmap population (if (not (empty? mem-names))
-                            ;; if there are memory names, add the wrapping code before evaluating
-                            ;; if there is a result wrapper, add it to the RDB
-                            (map (if (symbol? result-wrapper)
-                                   #(fitness (add-memory-wrapper 
-                                               (add-result-wrapper % result-wrapper) 
-                                               mem-names))
-                                   #(fitness (add-memory-wrapper % mem-names)))
-                                 population)
-                            (map (if (symbol? result-wrapper)
-                                   #(fitness (add-result-wrapper % result-wrapper))
-                                   fitness) population)))))
+  [population fitness]
+  (seq (zipmap population (map fitness population))))
 
 (defn tournament-selection
   "Use tournament selection to create a new generation. In each tournament the two best individuals
@@ -447,9 +396,9 @@
    Takes a long list of parameters. This function is meant to be called by island-generations, which in turn is
    called by run-genetic-programming."
   [n population tournament-size mutation-probability mutation-depth max-depth terminals
-   numbers functions fitness mem-names result-wrapper]
+   numbers functions fitness]
   (loop [n (int n) population population] ;; optimize inner loop
-    (let [computed-fitness (fitness-zip population fitness mem-names result-wrapper)
+    (let [computed-fitness (fitness-zip population fitness)
           [best-tree best-fit] (get-best-fitness computed-fitness)]
       (if (or (zero? n) (zero? best-fit)) ;; terminating condition
         [population best-tree best-fit] ;; return
@@ -496,11 +445,11 @@
   "Run generations on all the islands and cross over between them. See the documentation for the generations function.
    Returns with the form [island best-tree best-fit]."
   [n1 n2 islands tournament-size mutation-probability mutation-depth max-depth terminals
-   numbers functions fitness report mem-names result-wrapper]
+   numbers functions fitness report]
   (loop [n (int n1) islands islands] ;; optimize inner loop
-    (let [islands-fit (map #(generations n2 % tournament-size mutation-probability
+    (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
                                           mutation-depth max-depth terminals numbers 
-                                          functions fitness mem-names result-wrapper)
+                                          functions fitness)
                             islands)
           islands (map first islands-fit)
           [_ best-tree best-fit] (first (sort-by #(nth % 2) islands-fit))]
@@ -518,15 +467,14 @@
 (defn run-genetic-programming
   "This is the entry function. Call this with a map of the parameters to run the genetic programming algorithm."
   [{:keys [iterations migrations num-islands population-size tournament-size mutation-probability
-           mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count
-           mem-names result-wrapper]
+           mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count]
     ;; the :or block here specifies default values for some of the arguments
    :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0 
-        numbers [] mem-names [] result-wrapper nil}}]
+        numbers []}}]
   (island-generations migrations iterations 
                       (create-islands num-islands population-size mutation-depth terminals 
                                       numbers functions adf-arity adf-count)
                       tournament-size mutation-probability mutation-depth max-depth terminals 
-                      numbers functions fitness report mem-names result-wrapper))
+                      numbers functions fitness report))
         
 ;;; And that's it! For the core of the library, anyway.

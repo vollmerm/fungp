@@ -1,9 +1,19 @@
 ;;; Sample: Cart problem
 ;;; --------------------
+;;;
+;;; This is an example of evolving a function that takes parameters and
+;;; returns a number. In this case, the function acts as a controller for
+;;; and imaginary cart.
+;;;
+;;; The cart is on a track and has a rocket attached to it. The goal of the
+;;; controller is to aim the rocket either forward and backward and eventually
+;;; center the cart. The controller function takes two parameters: the current
+;;; speed and current direction. It returns either a positive or negative
+;;; number to determine which direction to face. It applies a constant force
+;;; in whichever direction it is facing.
 
 
 (ns fungp.sample.cart
-  "Cart problem example from Koza"
   (:use fungp.core)
   (:use fungp.util)
   (:require clojure.pprint))

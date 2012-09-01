@@ -65,7 +65,7 @@
 (defn simulate-ants
   "Simulate the ant movements by repeatedly interpreting the movement function."
   [iter full-tree tree ant-dir ant-x ant-y food eaten steps]
-  (cond (zero? iter) (let [error (+ MAXSTEPS (count food))] (* error error))
+  (cond (zero? iter) (+ MAXSTEPS (count food))
         (and (seq? tree) (empty? tree)) 
         (recur (dec iter) full-tree full-tree ant-dir ant-x ant-y food eaten (inc steps))
         (empty? food) steps ;; ant ate all the food

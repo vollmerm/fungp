@@ -31,13 +31,3 @@
          (let [tree (create-tree 5 test-terminals [] test-functions :fill)]
            (do (is (= tree (truncate tree 10)))
                (is (not (= tree (truncate tree 2)))))))
-
-(deftest test-memory-wrapper
-         (let [func (add-memory-wrapper 
-                      '(let [a 0 b 0] 
-                         (do (set-c! 6) c)) ['c])]
-           (is (= 6 (eval func)))))                     
-
-(deftest test-result-wrapper
-         (let [func (add-result-wrapper '(let [] (+ 1 2)) 'op)]
-           (is (= func '(let [] (op (+ 1 2)))))))
