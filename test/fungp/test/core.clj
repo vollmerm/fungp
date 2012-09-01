@@ -1,8 +1,3 @@
-(comment
-  [:title (fungp test)
-   :author (Mike Vollmer)
-   :license GPL])
-
 (ns fungp.test.core
   (:use [fungp.core])
   (:use [clojure.test]))
@@ -38,6 +33,11 @@
                (is (not (= tree (truncate tree 2)))))))
 
 (deftest test-memory-wrapper
-         (is (= 5 (eval (add-memory-wrapper 
-                          '(let [a 0 b 0] 
-                             (do (set-c! 6) c)) ['c 'd])))))
+         (let [func (add-memory-wrapper 
+                      '(let [a 0 b 0] 
+                         (do (set-c! 6) c)) ['c])]
+           (is (= 6 (eval func)))))                     
+
+(deftest test-result-wrapper
+         (let [func (add-result-wrapper '(let [] (+ 1 2)) 'op)]
+           (is (= func '(let [] (op (+ 1 2)))))))
