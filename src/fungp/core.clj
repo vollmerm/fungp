@@ -21,6 +21,8 @@
 ;;;  * Custom evaluation and reporting logic
 ;;;  * Parallelism: subpopulations run in native threads
 ;;;  * Evolve and test functions of multiple arities
+;;;  * Evolve subroutines
+;;;  * Evolve code that interacts with Java or other JVM languages
 ;;;
 ;;; How do I use it?
 ;;; ----------------
@@ -48,9 +50,45 @@
 ;;; bytecode.
 ;;; 
 ;;; If you're interested primarily in how to *use* fungp, you can skip to the example files.
+;;;
+;;; Notes on mutable variables and loops
+;;; ------------------------------------
+;;;
+;;; *fungp* is fully capable of evolving code that uses mutable variables, side-effects, and
+;;; loops. Currently it does not support Koza's architecture-altering operations so you have 
+;;; to determine some of the architecture beforehand (like, the names of the variables, whether
+;;; you need a loop, etc). 
+;;; 
+;;; There also is no built-in mechanism for managing loops and variables --- I would like there 
+;;; to be, but there are a few obstacles. Clojure isn't as friendly to destructive updates and 
+;;; side-effects as (for example) CL. That's certainly not a bad thing, but it makes it slightly
+;;; more complicated to create mutable local variables at runtime. Because of this, I decided to leave
+;;; the management of local variables up to the user, which (thanks to dynamic vars) is fairly
+;;; straightforard. See the compile-ants sample for an example of this.
+;;;
+;;; Environment, distribution
+;;; ------------
+;;;
+;;; I highly recommend you use Leiningen. *fungp* is set up as a Leiningen project. By itself
+;;; *fungp* has no "main" method, so running it won't do anything. The samples can be run individually,
+;;; and each has a "test-*" function that launches it. I recommend you run them from the REPL, as
+;;; they have some settable parameters.
+;;;
+;;; Here's how you would run the cart example, starting from the fungp directory:
+;;;
+;;;     > lein repl
+;;;     nREPL server started on port 54110
+;;;     user=> (use 'fungp.sample.cart)
+;;;     nil
+;;;     user=> (test-cart 3 6)
+;;;     ...
+;;;
+;;; At that point the cart example will run.
 
+;;; The code
+;;; --------
 (ns fungp.core
-  "This is the start of the core of the library."
+  "This is the namespace declaration. It is the start of the core of the library."
   (:use fungp.util))
 
 ;;; ### Tree manipulation
@@ -236,7 +274,11 @@
 (defn truncate-module
   "A module-aware version of truncate."
   [tree height]
-  (list (first tree) (second tree)
+  (list (first tree) (vec (map #(if (list? %) 
+                                  (list (first %) (second %)
+                                        (truncate (nth % 2) height)) 
+                                  %)
+                               (second tree)))
         (truncate (nth tree 2) height)))
 
 ;;; ### Mutation, crossover, and selection

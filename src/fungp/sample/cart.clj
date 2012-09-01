@@ -89,7 +89,7 @@
   (println "Error is number of seconds taken total across all the tests.")
   (println "If a program times out it is assigned 100 seconds.")
   (let [options {:iterations n1 :migrations n2 :num-islands 4
-                 :population-size 100 :terminals cart-terminals
+                 :population-size 50 :terminals cart-terminals
                  :tournament-size 3
                  :functions cart-functions :fitness cart-fitness
                  :report cart-report

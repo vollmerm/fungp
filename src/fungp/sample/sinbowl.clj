@@ -50,9 +50,9 @@
   (println (str "Test outputs: " (vec sinbowl-actual)))
   (println (str "Max generations: " (* n1 n2)))
   (println)
-  (let [options {:iterations n1 :migrations n2 :num-islands 6 :population-size 100 :tournament-size 5 :mutation-probability 0.1
+  (let [options {:iterations n1 :migrations n2 :num-islands 6 :population-size 50 :tournament-size 4 :mutation-probability 0.1
                  :max-depth 10 :terminals sinbowl-parameters :numbers sinbowl-numbers :fitness sinbowl-fitness
-                 :functions sinbowl-functions :report sinbowl-report}
+                 :functions sinbowl-functions :report sinbowl-report :adf-count 1}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
         (sinbowl-report tree score))))
