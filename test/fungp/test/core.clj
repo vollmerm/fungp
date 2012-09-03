@@ -16,7 +16,7 @@
                    (= tree-type clojure.lang.Cons)))))
 
 (deftest test-module-tree
-         (let [tree (create-module-tree 5 test-terminals [] test-functions 1 1 :grow)]
+         (let [tree (create-module-tree 5 test-terminals [] test-functions 1 1 0 0 :grow)]
            (do (is (list-or-cons? tree))
                (is (= (first tree) 'let))
                (is (vector? (second tree))))))

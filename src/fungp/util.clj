@@ -1,5 +1,27 @@
-(ns fungp.util
-    (:require [clojure.math [numeric-tower :as math]]))
+(ns fungp.util)
+
+;;; Safe versions of inverse and divide to avoid divide-by-zero errors.
+
+(defn inv
+  "Inverts a number. If it's 0, return 0"
+  [x]
+  (if (zero? x) 0
+      (/ 1 x)))
+
+(defn sdiv
+  "Divide two numbers. Returns 0 on attempt to divide by 0"
+  [x y]
+  (if (zero? y) 0
+      (/ x y)))
+
+
+(defn sin [x] (Math/sin x))
+(defn cos [x] (Math/cos x))
+(defn tan [x] (Math/tan x))
+(defn abs [x] (if (< x 0) (* -1 x) x))
+(defn dub [x] (* x x))
+(defn half [x] (sdiv x 2))
+(defn sqrt [x] (if (x > 0) (Math/sqrt x) 0))
 
 (defn flip
   "Convenience function. Generates true with a probablilty of the
@@ -25,7 +47,7 @@
 
 (defn off-by
   "Calculate error."
-  [x y] (math/abs (- x y)))
+  [x y] (abs(- x y)))
 
 (defn off-by-sq
   "Calculate error squared."
@@ -37,31 +59,17 @@
   [seq elm]  
   (some #(= elm %) seq))
 
-;;; ### Examples of functions to use
-;;; 
-
-;;; Safe versions of inverse and divide to avoid divide-by-zero errors.
-
-(defn inv
-  "Inverts a number. If it's 0, return 0"
-  [x]
-  (if (zero? x) 0
-      (/ 1 x)))
-
-(defn sdiv
-  "Divide two numbers. Returns 0 on attempt to divide by 0"
-  [x y]
-  (if (zero? y) 0
-      (/ x y)))
-
-
-(defn sin [x] (Math/sin x))
-(defn cos [x] (Math/cos x))
-(defn tan [x] (Math/tan x))
-(defn abs [x] (if (< x 0) (* -1 x) x))
-(defn dub [x] (* x x))
-(defn half [x] (sdiv x 2))
-(defn sqrt [x] (if (x > 0) (Math/sqrt x) 0))
+(defmacro do-loop
+  "The macro used to define loops. Used by ADLs. Takes four code branches and one integer."
+  [init break body update limit]
+    `(do ~init
+       (loop [loop-counter# ~limit value# 0]
+         (if (or (zero? loop-counter#)
+                 (< ~break 0)) 
+           value#
+           (let [newvalue# ~body] 
+             (do ~update 
+               (recur (dec loop-counter#) newvalue#)))))))
 
 
 ;;; Conditionals can be done in terms of 4 arity functions

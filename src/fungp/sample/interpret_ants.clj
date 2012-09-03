@@ -4,6 +4,12 @@
 ;;; an s-expression that is treated as a tree rather than as literal
 ;;; Clojure code. It is passed to a function that interprets it by
 ;;; traversing the evolved tree.
+;;;
+;;; This is one of the two examples of the Ant Trail program included with
+;;; fungp. This example shows how you might approach a GP problem by
+;;; constructing a machine and evolving a tree as a data structure to be
+;;; understood by that machine, as opposed to evolving literal Clojure
+;;; code. There are benefits and downsides to both approaches.
 
 (ns fungp.sample.interpret-ants
   (:use fungp.core)
@@ -17,8 +23,6 @@
                 [5 6][6 6][7 7][7 8][8 8][9 8][9 9][10 9][10 10][9 10]
                 [8 10][8 9][11 9][11 10]])
 (def NUMFOOD (count STARTFOOD))
-
-;;; 0: north, 1: east, 2: south, 3: west
 
 ;;; Then some helper functions.
 
