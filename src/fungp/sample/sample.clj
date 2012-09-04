@@ -1,15 +1,13 @@
-;;; Sample use
-;;; ----------
+;;; ### Simple regression sample
+;;; 
+;;; The simplest problem for GP is regression, or coming up
+;;; with a function to map pairs of input and output. 
 
 (ns fungp.sample.sample
   "Sample use of fungp."
   (:use fungp.core)
   (:use fungp.util)
   (:require clojure.pprint))
-
-
-
-;;; ### Test run
 
 (def sample-functions
   "Functions and their arities"
@@ -26,7 +24,6 @@
 
 (def test-range (map #(* 2 (- % 5)) (range 10)))
 
-;(defn match-func [x] (- (* 0.1 (abs x)) (sin x)))
 (defn match-func [x] (abs (* 3 (* x x))))
 
 (def sample-actual (map float (map match-func test-range)))

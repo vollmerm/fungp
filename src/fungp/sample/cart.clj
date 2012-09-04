@@ -1,5 +1,4 @@
-;;; Sample: Cart problem
-;;; --------------------
+;;; ### Cart problem
 ;;;
 ;;; This is an example of evolving a function that takes parameters and
 ;;; returns a number. In this case, the function acts as a controller for

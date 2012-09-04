@@ -26,6 +26,11 @@
 ;;; will be separate versions of these vars in each thread, and so the
 ;;; code that references them will refer to the local copy in the
 ;;; respective thread.
+;;;
+;;; Basically, you can write your application as if these were global
+;;; variables, and they will work in a multithreaded environment
+;;; automatically, like magic, as long as you include the "binding"
+;;; statement below in the fitness function
 
 (def ^:dynamic ant-x)
 (def ^:dynamic ant-y)

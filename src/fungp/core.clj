@@ -84,9 +84,15 @@
 ;;;     ...
 ;;;
 ;;; At that point the cart example will run.
-
+;;;
 ;;; The code
 ;;; --------
+;;;
+;;; The code here in the core.clj file is rather brief (but dense), and it should be readable
+;;; in one sitting. To actually use it, you'll likely have to at least read the sample code, and
+;;; probably read most of this code as well.
+;;;
+
 (ns fungp.core
   "This is the namespace declaration. It is the start of the core of the library."
   (:use fungp.util))
@@ -145,7 +151,7 @@
 ;;; branch, are automatically defined functions.
 
 (defn gen-adf-arg
-  "Generate arguments for ADF"
+  "Generate arguments vector for ADF"
   [adf-arity]
   (vec (map #(symbol (str "arg" %)) 
             (range adf-arity))))
@@ -159,7 +165,7 @@
               (range adf-count)))))
 
 (defn make-adf
-  "Build ADF -- Automatically Defined Function"
+  "Build the ADF code"
   [mutation-depth terminals numbers functions adf-arity num]
   (let [adf-args (gen-adf-arg adf-arity)]
   [(symbol (str "adf" num))
@@ -167,28 +173,61 @@
          (create-tree mutation-depth
                       (concat terminals adf-args)
                       numbers
-                      functions :grow))]))
+                      functions 
+                      :grow))]))
 
 (defn make-adf-branch
   "Make the ADF branch"
   [mutation-depth terminals numbers functions adf-arity adf-count]
   (if (zero? adf-count) []
       (concat (make-adf-branch mutation-depth terminals numbers
-                               functions adf-arity (- adf-count 1))
+                               functions adf-arity (dec adf-count))
               (make-adf mutation-depth terminals numbers
                         (concat functions
-                                (gen-adf-func (- adf-count 1)
+                                (gen-adf-func (dec adf-count)
                                               adf-arity))
-                        adf-arity (- adf-count 1)))))
+                        adf-arity (dec adf-count)))))
+
+(defn make-adl
+  "Build the ADL code"
+  [mutation-depth terminals numbers functions adl-limit num]
+  (let [make-branch #(create-tree mutation-depth
+                                  terminals
+                                  numbers
+                                  functions 
+                                  :grow)]
+    [(symbol (str "adl" num))
+     (list 'do-loop
+           ;; do-loop has 4 branches of code and one number literal
+           (make-branch)
+           (make-branch)
+           (make-branch)
+           (make-branch)
+           adl-limit)]))
+
+(defn make-adl-branch
+  "Make the ADL branch"
+  [mutation-depth terminals numbers functions adl-count adl-limit]
+  (if (zero? adl-count) []
+    (concat (make-adl-branch mutation-depth terminals numbers
+                             functions (dec adl-count) adl-limit)
+            (make-adl mutation-depth terminals numbers
+                      functions ; TODO: include ADFs and previous ADLs, if any
+                      adl-limit (dec adl-count)))))
+
 
 (defn create-module-tree
-  "A module-aware version of create-tree. That means it includes Automatically Defined
-   Functions in addition to the ordinary source tree (or the Result Producing Branch)."
-  [mutation-depth terminals numbers functions adf-arity adf-count type]
+  "A version of create-tree that includes ADFs and ADLs. It builds a let form that has a (potentially empty)
+   vector for automatically defined functions and loops, and it has a main branch that is the result defining
+   branch."
+  [mutation-depth terminals numbers functions adf-arity adf-count adl-count adl-limit type]
   (list 'let
-        (if (zero? adf-count) []
-            (vec (make-adf-branch mutation-depth terminals numbers
-                                  functions adf-arity adf-count)))
+        (vec (concat (if (zero? adf-count) '()
+                       (make-adf-branch mutation-depth terminals numbers
+                                        functions adf-arity adf-count))
+                     (if (zero? adl-count) '()
+                       (make-adl-branch mutation-depth terminals numbers
+                                        functions adl-count adl-limit))))
         (let [adf-func (gen-adf-func adf-count adf-arity)]
           (create-tree mutation-depth terminals numbers
                        (concat functions adf-func adf-func)
@@ -200,14 +239,13 @@
    sequence, and function sequence. It uses a variation of Koza's \"ramped half-and-half\"
    method: a coin flip determines whether to use the \"fill\" or \"grow\" method, and the
    mutation depth is a randomly chosen number between 1 and the specified max mutation depth."
-  [population-size mutation-depth terminals numbers functions adf-arity adf-count]
-  (let [population-size (int population-size)]
-    (if (zero? population-size) []
-        (conj (create-population (- population-size 1) mutation-depth terminals numbers functions
-                                 adf-arity adf-count)
-              (create-module-tree (+ 1 (rand-int mutation-depth)) terminals numbers functions
-                                  adf-arity adf-count
-                                  (if (flip 0.5) :grow :fill))))))
+  [population-size mutation-depth terminals numbers functions adf-arity adf-count adl-count adl-limit]
+  (if (zero? population-size) []
+    (conj (create-population (dec population-size) mutation-depth terminals numbers functions
+                             adf-arity adf-count adl-count adl-limit)
+          (create-module-tree (+ 1 (rand-int mutation-depth)) terminals numbers functions
+                              adf-arity adf-count adl-count adl-limit
+                              (if (flip 0.5) :grow :fill)))))
 
 
 (defn max-tree-height
@@ -243,7 +281,7 @@
   ([tree]
     (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
   ([tree n]
-    (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) 
+    (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) ;; don't split up (leaf)
                            (not (seq? tree))) tree
       (recur (rand-nth (rest tree))
              (rand-int n)))))
@@ -254,7 +292,7 @@
   ([tree sub] 
     (replace-subtree tree sub (rand-int (+ 1 (max-tree-height tree)))))
   ([tree sub n]
-    (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) 
+    (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) ;; don't split up (leaf)
                            (not (seq? tree))) sub
       (let [r (+ 1 (rand-int (count (rest tree))))] 
         (concat (take r tree)
@@ -274,11 +312,22 @@
 (defn truncate-module
   "A module-aware version of truncate."
   [tree height]
-  (list (first tree) (vec (map #(if (list? %) 
-                                  (list (first %) (second %)
-                                        (truncate (nth % 2) height)) 
-                                  %)
-                               (second tree)))
+  (list (first tree) 
+        (vec (map 
+               #(cond (and (list? %)
+                           (= 'fn (first %)))
+                      (list (first %) (second %)
+                            (truncate (nth % 2) height))
+                      (and (list? %)
+                              (= 'do-loop (first %)))
+                      (list (first %) 
+                            (truncate (nth % 1))
+                            (truncate (nth % 2))
+                            (truncate (nth % 3))
+                            (truncate (nth % 4))
+                            (nth % 5))
+                      :else %)
+               (second tree)))
         (truncate (nth tree 2) height)))
 
 ;;; ### Mutation, crossover, and selection
@@ -311,24 +360,49 @@
 
 (defn mutate-module-tree
   "A module-aware version of mutate-tree. It applies the mutation operation not only to the
-   result defining branch but to the automatically defined functions, and it preserves the
-   overall structure of the tree (the let form)."
+   result defining branch but to the automatically defined functions and loops, and it preserve
+   the overall structure of the tree (the let form). This involves mutating each branch of the
+   loop individually."
   [module-tree mutation-probability mutation-depth terminals numbers functions]
   (if (or (flip 0.5)
           (zero? (count (second module-tree))))
+    ;; mutate the main branch
     (concat (take 2 module-tree)
             (list (mutate-tree (nth module-tree 2) mutation-probability
                                mutation-depth terminals numbers functions)))
     (concat (list (nth module-tree 0))
             (list (vec (map (fn [letf]
-                              (if (list? letf) ;; mutate the lists of code
-                                  (list (first letf) (second letf)
-                                        ;; call mutate-tree on the ADF body
-                                        (mutate-tree (nth letf 2)
-                                                     mutation-probability
-                                                     mutation-depth terminals
-                                                     numbers functions))
-                                letf)) ;; skip symbol names
+                              ;; mutate the lists of code
+                              (cond (and (list? letf)
+                                         (= 'fn (first letf)))
+                                    (list (first letf) (second letf)
+                                          ;; call mutate-tree on the ADF body
+                                          (mutate-tree (nth letf 2)
+                                                       mutation-probability
+                                                       mutation-depth terminals
+                                                       numbers functions))
+                                    (and (list? letf)
+                                         (= 'do-loop (first letf)))
+                                    ;; it's a loop! mutate each branch individually
+                                    (list (first letf)
+                                          (mutate-tree (nth letf 1)
+                                                       mutation-probability
+                                                       mutation-depth terminals
+                                                       numbers functions)
+                                          (mutate-tree (nth letf 2)
+                                                       mutation-probability
+                                                       mutation-depth terminals
+                                                       numbers functions)
+                                          (mutate-tree (nth letf 3)
+                                                       mutation-probability
+                                                       mutation-depth terminals
+                                                       numbers functions)
+                                          (mutate-tree (nth letf 4)
+                                                       mutation-probability
+                                                       mutation-depth terminals
+                                                       numbers functions)
+                                          (nth letf 5))
+                                    :else letf)) ;; skip symbol names
                             (nth module-tree 1))))
             (list (nth module-tree 2)))))
 
@@ -351,21 +425,23 @@
 (defn crossover-adf
   "Crossover function for the vectors of automatically defined functions"
   [cross vec1 vec2]
+  (let [tree1 (nth vec2 cross)
+        tree2 (nth vec1 cross)
+        newtree (list (first tree1) (second tree1)
+                      (crossover (nth tree1 2) (nth tree2 2)))]
   (concat (take cross vec1)
-          (list (nth vec2 cross))
-          (drop (+ cross 1) vec1)))
+          (list newtree)
+          (drop (+ cross 1) vec1))))
   
 
 (defn crossover-module
-  "A module-aware version of crossover"
+  "Crossover that preserves the let form and ADFs."
   [tree1 tree2]
   (if (or (flip 0.5)
           (zero? (count (second tree1))))
     (let [new-subtree (crossover (nth tree1 2) (nth tree2 2))]
       (list (first tree1) (vec (second tree1)) new-subtree))
-    (let [cross-adf (+ 1 (* 2 (rand-int (/ (count (second tree1))))))
-          new-subtree (crossover (nth (second tree1) cross-adf)
-                                 (nth (second tree2) cross-adf))]
+    (let [cross-adf (+ 1 (* 2 (rand-int (/ (count (second tree1))))))]
       (list (first tree1)
             (vec (crossover-adf cross-adf (second tree1) (second tree2)))
             (nth tree1 2)))))
@@ -470,9 +546,10 @@
 
 (defn create-islands
   "Create a list of populations (islands)."
-  [num-islands population-size mutation-depth terminals numbers functions adf-arity adf-count]
+  [num-islands population-size mutation-depth terminals numbers functions adf-arity adf-count
+   adl-count adl-limit]
   (repeatedly num-islands #(create-population population-size mutation-depth terminals numbers
-                                              functions adf-arity adf-count)))
+                                              functions adf-arity adf-count adl-count adl-limit)))
 
 (defn island-crossover
   "Individuals migrate between islands."
@@ -509,13 +586,14 @@
 (defn run-genetic-programming
   "This is the entry function. Call this with a map of the parameters to run the genetic programming algorithm."
   [{:keys [iterations migrations num-islands population-size tournament-size mutation-probability
-           mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count]
+           mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count
+           adl-count adl-limit]
     ;; the :or block here specifies default values for some of the arguments
    :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0 
-        numbers []}}]
+        adl-count 0 adl-limit 25 numbers []}}]
   (island-generations migrations iterations 
                       (create-islands num-islands population-size mutation-depth terminals 
-                                      numbers functions adf-arity adf-count)
+                                      numbers functions adf-arity adf-count adl-count adl-limit)
                       tournament-size mutation-probability mutation-depth max-depth terminals 
                       numbers functions fitness report))
         
