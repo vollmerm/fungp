@@ -17,10 +17,12 @@
   (:use fungp.util)
   (:require clojure.pprint))
 
-;;; some constants
+;;; #### Some constants
 
 (def MAX_T "Max time limit" 5)
 (def TEST_POINTS "Number of test cases" 20)
+
+;;; #### The simulation function
 
 (defn move-cart
   "Simulate cart movement with the evolved function used to calculate
@@ -35,6 +37,8 @@
             (recur (+ t 0.02)
                    (+ v (* thrust 0.02))
                    (+ x (* v 0.02)))))))
+
+;;; #### Test data
 
 (defn rand-spread
   "Range of starting position or velocity"
@@ -56,7 +60,7 @@
                  rand-velocity
                  rand-position)))
 
-;;; some existing solutions
+;;; #### Some existing solutions
 
 (defn cart-optimal "The optimal solution" [v x] (gt (* -1 x) (* v (abs v))))
 
@@ -68,6 +72,8 @@
 (def cart-evol2 (fn [v x] (let [] (- (- (- -1 x) (+ x v))
                                      (- (* (+ -1 v) (* -1 x))
                                         (fungp.util/gt (fungp.util/abs x) -1))))))
+
+;;; #### Initializing fungp
 
 (defn cart-fitness
   "Compute fitness for cart problem."

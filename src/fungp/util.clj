@@ -1,6 +1,6 @@
 (ns fungp.util)
 
-;;; Safe versions of inverse and divide to avoid divide-by-zero errors.
+;;; ### Useful functions for evolved code
 
 (defn inv
   "Inverts a number. If it's 0, return 0"
@@ -15,6 +15,14 @@
       (/ x y)))
 
 
+;;; Conditionals can be done in terms of 4 arity functions
+
+(defn ifeq [a b c d] (if (= a b) c d))
+(defn ifnoteq [a b c d] (if (not (= a b)) c d))
+(defn gte [a b c d] (if (>= a b) c d))
+
+(defn gt [x y] (if (> x y) 1 -1))
+
 (defn sin [x] (Math/sin x))
 (defn cos [x] (Math/cos x))
 (defn tan [x] (Math/tan x))
@@ -22,6 +30,25 @@
 (defn dub [x] (* x x))
 (defn half [x] (sdiv x 2))
 (defn sqrt [x] (if (x > 0) (Math/sqrt x) 0))
+
+;;; ### Misc. manipulation/utility functions
+
+(defn max-tree-height
+  "Find the maximum height of a tree. The max height is the distance from the root to the
+   deepest leaf."
+  [tree]
+  (if (not (seq? tree)) 0
+    (+ 1 (reduce max (map max-tree-height tree)))))
+
+(defn valid-tree?
+  "Checks the type on a tree to make sure it's a list, symbol, or number."
+  [tree] (or (list? tree) (symbol? tree) (number? tree)))
+
+(defn compile-tree
+  "Compiles a tree into a Clojure function, and thus into JVM bytecode. Takes a tree
+   and the parameters the function should have."
+  [tree parameters] (eval (list 'fn parameters tree)))
+
 
 (defn flip
   "Convenience function. Generates true with a probablilty of the
@@ -31,13 +58,6 @@
 (defn find-op
   "Find the entry in the function sequence for a given operator."
   [op funcs] (first (filter (fn [x] (= (:op x) op)) funcs)))
-
-(defn conv-code
-  "Take a tree and return a list of symbols based on the :name symbols."
-  [tree funcs]
-  (if (not (seq? tree))
-    (if (fn? tree) (:name (find-op tree funcs)) tree)
-    (map (fn [t] (conv-code t funcs)) tree)))
 
 (defn average
   [list]
@@ -54,9 +74,9 @@
   [x y] (let [error (off-by x y)]
           (* error error)))
 
-(defn in? 
+(defn in?
   "true if seq contains elm"
-  [seq elm]  
+  [seq elm]
   (some #(= elm %) seq))
 
 (defmacro do-loop
@@ -65,17 +85,8 @@
     `(do ~init
        (loop [loop-counter# ~limit value# 0]
          (if (or (zero? loop-counter#)
-                 (< ~break 0)) 
+                 (< ~break 0))
            value#
-           (let [newvalue# ~body] 
-             (do ~update 
+           (let [newvalue# ~body]
+             (do ~update
                (recur (dec loop-counter#) newvalue#)))))))
-
-
-;;; Conditionals can be done in terms of 4 arity functions
-
-(defn ifeq [a b c d] (if (= a b) c d))
-(defn ifnoteq [a b c d] (if (not (= a b)) c d))
-(defn gte [a b c d] (if (>= a b) c d))
-
-(defn gt [x y] (if (> x y) 1 -1))

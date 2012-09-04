@@ -1,6 +1,15 @@
 ;;; Mike Vollmer, 2012, GPL
 ;;;
-;;; [Project hosted on GitHub](https://github.com/probabilityZero/fungp)
+;;; Downloading and Installing
+;;; --------------------------
+;;;
+;;; [This project is hosted on GitHub.](https://github.com/probabilityZero/fungp)
+;;;
+;;; To install it, you can clone the git repository or grab the zip/tar file from
+;;; the above link. You'll need Clojure installed, and you'll probably want
+;;; [Leiningen](https://github.com/technomancy/leiningen) (the latter will take
+;;; care of the former). See below for how to run the samples included with this
+;;; library.
 ;;;
 ;;; What is this?
 ;;; -------------
@@ -14,7 +23,7 @@
 ;;; > naming things, and off-by-one errors.
 ;;; >
 ;;; > --- *Paraphrased from Phil Karlton*
-;;; 
+;;;
 ;;; The library is in its early stages right now, but it's usable. Currently it
 ;;; has the following features:
 ;;;
@@ -44,35 +53,36 @@
 ;;; * report : a reporting function passed [best-tree best-fit] at each migration
 ;;; * adf-count : number of automatically defined functions
 ;;; * adf-arity : number of arguments for automatically defined functions
-;;; 
+;;;
 ;;; Most fitness functions will *eval* the trees of code they are passed.
 ;;; In Clojure, eval'ing a list of code will compile it to JVM
 ;;; bytecode.
-;;; 
+;;;
 ;;; If you're interested primarily in how to *use* fungp, you can skip to the example files.
 ;;;
 ;;; Notes on mutable variables and loops
 ;;; ------------------------------------
 ;;;
 ;;; *fungp* is fully capable of evolving code that uses mutable variables, side-effects, and
-;;; loops. Currently it does not support Koza's architecture-altering operations so you have 
+;;; loops. Currently it does not support Koza's architecture-altering operations so you have
 ;;; to determine some of the architecture beforehand (like, the names of the variables, whether
-;;; you need a loop, etc). 
-;;; 
-;;; There also is no built-in mechanism for managing loops and variables --- I would like there 
-;;; to be, but there are a few obstacles. Clojure isn't as friendly to destructive updates and 
-;;; side-effects as (for example) CL. That's certainly not a bad thing, but it makes it slightly
-;;; more complicated to create mutable local variables at runtime. Because of this, I decided to leave
-;;; the management of local variables up to the user, which (thanks to dynamic vars) is fairly
+;;; you need a loop, etc).
+;;;
+;;; There also is no built-in mechanism for managing mutable variables --- I would like there
+;;; to be, but there are a few obstacles. Clojure doesn't really support mutable local variables.
+;;; That's certainly not a bad thing, but it makes it slightly more complicated to create
+;;; local variables (or something that acts like them) at runtime. Because of this, I decided to leave
+;;; the management of local variables up to the user, which (thanks to dynamic Vars) is fairly
 ;;; straightforard. See the compile-ants sample for an example of this.
 ;;;
 ;;; Environment, distribution
-;;; ------------
+;;; -------------------------
 ;;;
-;;; I highly recommend you use Leiningen. *fungp* is set up as a Leiningen project. By itself
-;;; *fungp* has no "main" method, so running it won't do anything. The samples can be run individually,
-;;; and each has a "test-*" function that launches it. I recommend you run them from the REPL, as
-;;; they have some settable parameters.
+;;; I highly recommend you use Leiningen. *fungp* is set up as a Leiningen project.
+;;;
+;;; By itself *fungp* has no "main" method, so running it won't do anything. The samples can be
+;;; run individually, and each has a "test-*" function that launches it. I recommend you run
+;;; them from the REPL, as they have some settable parameters.
 ;;;
 ;;; Here's how you would run the cart example, starting from the fungp directory:
 ;;;
@@ -95,9 +105,10 @@
 
 (ns fungp.core
   "This is the namespace declaration. It is the start of the core of the library."
-  (:use fungp.util))
+  (:use fungp.util)
+  (:use fungp.defined-branches))
 
-;;; ### Tree manipulation
+;;; ### Tree creation
 ;;;
 ;;; My method of random tree generation is a combination of the "grow" and "fill"
 ;;; methods of tree building, similar to Koza's "ramped half-and-half" method.
@@ -105,13 +116,13 @@
 (defn terminal
   "Return a random terminal or number."
   [terminals numbers]
-  (if (and (flip 0.5) 
-           (not (empty? numbers))) 
-    (rand-nth numbers) 
+  (if (and (flip 0.5)
+           (not (empty? numbers)))
+    (rand-nth numbers)
     (rand-nth terminals)))
 
 (defn create-tree
-  "Build a tree of source code, given a mutation depth, terminal sequence, 
+  "Build a tree of source code, given a mutation depth, terminal sequence,
    function sequence, and type keyword. The type can be either :grow or :fill.
    The terminal sequence should consist of symbols or quoted code, while elements in the
    function sequence should contain both the function and a number representing
@@ -119,23 +130,23 @@
   [mutation-depth terminals numbers functions gtype]
   ;; conditions: either return terminal or create function and recurse
   (cond (zero? mutation-depth) (terminal terminals numbers)
-        (and (= type :grow) 
-             (flip 0.5)) 
+        (and (= type :grow)
+             (flip 0.5))
         (terminal terminals numbers)
         :else (let [[func arity] (rand-nth functions)]
-                (cons func (repeatedly arity 
+                (cons func (repeatedly arity
                                        #(create-tree (- mutation-depth 1)
                                                      terminals
                                                      numbers
                                                      functions
                                                      gtype))))))
-
-;;; The next few functions handle one of the special cases in tree creation: ADFs,
-;;; or Automatically Defined Functions. This is a good time to introduce one of the
-;;; defining features of the code evolved in fungp: it consists of multiple ordered 
-;;; branches, the last of which is the Result Defining Branch, or the branch that
-;;; actually returns the final result. Other branches in the evolved code are stored
-;;; in a let statement, which in clojure binds and evaluates sequentially.
+;;; #### Branches
+;;;
+;;; This is a good time to introduce one of the defining features of the code evolved
+;;; in fungp: it consists of multiple ordered branches, the last of which is the
+;;; Result Defining Branch, or the branch that actually returns the final result.
+;;; Other branches in the evolved code are stored in a let statement, which in
+;;; Clojure binds and evaluates sequentially.
 ;;;
 ;;; For example:
 ;;;
@@ -147,92 +158,41 @@
 ;;; to a in b will resolve to 5, because elements in let are evaluated and bound in
 ;;; order. Finally, the expression (b a) would evaluate to 25.
 ;;;
-;;; Currently, the type of branches evolved in fungp, besides the result defining 
-;;; branch, are automatically defined functions.
-
-(defn gen-adf-arg
-  "Generate arguments vector for ADF"
-  [adf-arity]
-  (vec (map #(symbol (str "arg" %)) 
-            (range adf-arity))))
-
-(defn gen-adf-func
-  "Generate ADF function names"
-  [adf-count adf-arity]
-  (when (> adf-arity 0)
-    (vec (map (fn [n] [(symbol (str "adf" n))
-                       adf-arity])
-              (range adf-count)))))
-
-(defn make-adf
-  "Build the ADF code"
-  [mutation-depth terminals numbers functions adf-arity num]
-  (let [adf-args (gen-adf-arg adf-arity)]
-  [(symbol (str "adf" num))
-   (list 'fn adf-args
-         (create-tree mutation-depth
-                      (concat terminals adf-args)
-                      numbers
-                      functions 
-                      :grow))]))
-
-(defn make-adf-branch
-  "Make the ADF branch"
-  [mutation-depth terminals numbers functions adf-arity adf-count]
-  (if (zero? adf-count) []
-      (concat (make-adf-branch mutation-depth terminals numbers
-                               functions adf-arity (dec adf-count))
-              (make-adf mutation-depth terminals numbers
-                        (concat functions
-                                (gen-adf-func (dec adf-count)
-                                              adf-arity))
-                        adf-arity (dec adf-count)))))
-
-(defn make-adl
-  "Build the ADL code"
-  [mutation-depth terminals numbers functions adl-limit num]
-  (let [make-branch #(create-tree mutation-depth
-                                  terminals
-                                  numbers
-                                  functions 
-                                  :grow)]
-    [(symbol (str "adl" num))
-     (list 'do-loop
-           ;; do-loop has 4 branches of code and one number literal
-           (make-branch)
-           (make-branch)
-           (make-branch)
-           (make-branch)
-           adl-limit)]))
-
-(defn make-adl-branch
-  "Make the ADL branch"
-  [mutation-depth terminals numbers functions adl-count adl-limit]
-  (if (zero? adl-count) []
-    (concat (make-adl-branch mutation-depth terminals numbers
-                             functions (dec adl-count) adl-limit)
-            (make-adl mutation-depth terminals numbers
-                      functions ; TODO: include ADFs and previous ADLs, if any
-                      adl-limit (dec adl-count)))))
+;;; Most likely the type of branch you'll find most useful are Automatically Defined
+;;; Functions. These are branches that are separate functions. They are exposed to
+;;; the main branch, so the main branch can call the separately evolved functions,
+;;; passing arguments to them.
+;;;
+;;; In addition to the ADFs, I implement a couple of other types of architecture
+;;; described by Koza. I don't, however, implement architecture altering operations,
+;;; so whatever architecture your individuals have must be determined beforehand.
+;;;
+;;; I also don't have support for automatically defined memory. See compiled-ants
+;;; for an example of how to support mutable local variables (a feature that doesn't
+;;; really exist in Clojure). For more information on the different types of branches
+;;; in *fungp* see fungp.defined-branches.
 
 
 (defn create-module-tree
-  "A version of create-tree that includes ADFs and ADLs. It builds a let form that has a (potentially empty)
+  "This is a version of create-tree that handles multiple branches. It builds a let form that has a (potentially empty)
    vector for automatically defined functions and loops, and it has a main branch that is the result defining
    branch."
   [mutation-depth terminals numbers functions adf-arity adf-count adl-count adl-limit type]
   (list 'let
-        (vec (concat (if (zero? adf-count) '()
-                       (make-adf-branch mutation-depth terminals numbers
-                                        functions adf-arity adf-count))
-                     (if (zero? adl-count) '()
-                       (make-adl-branch mutation-depth terminals numbers
-                                        functions adl-count adl-limit))))
-        (let [adf-func (gen-adf-func adf-count adf-arity)]
-          (create-tree mutation-depth terminals numbers
-                       (concat functions adf-func adf-func)
-                       type))))
+        ;; create the vector of branches
+        (build-branch-vector create-tree mutation-depth terminals numbers functions
+                             adf-arity adf-count adl-count adl-limit)
+        ;; create the main branch
+        (create-tree mutation-depth terminals numbers
+                     ;; add the branches to the function vector
+                     (concat functions (build-branch-name-list adf-count adf-arity
+                                                               adl-count))
+                     type)))
 
+;;; #### Populations
+;;;
+;;; A population is a list of individuals. Creating the population involves randomly generating a list of individuals
+;;; as a starting point. Islands, which will be implemented further down, are lists of populations
 
 (defn create-population
   "Creates a population of trees given a population size, mutation depth, terminal
@@ -247,26 +207,11 @@
                               adf-arity adf-count adl-count adl-limit
                               (if (flip 0.5) :grow :fill)))))
 
-
-(defn max-tree-height
-  "Find the maximum height of a tree. The max height is the distance from the root to the
-   deepest leaf."
-  [tree] 
-  (if (not (seq? tree)) 0 
-    (+ 1 (reduce max (map max-tree-height tree)))))
-
-(defn valid-tree?
-  "Checks the type on a tree to make sure it's a list, symbol, or number."
-  [tree] (or (list? tree) (symbol? tree) (number? tree)))
-
-(defn compile-tree
-  "Compiles a tree into a Clojure function, and thus into JVM bytecode. Takes a tree
-   and the parameters the function should have."
-  [tree parameters] (eval (list 'fn parameters tree)))
-
+;;; ### Tree manipulation
+;;;
 ;;; **rand-subtree** and **replace-subtree** are two of the most important functions.
 ;;; They define how the trees are modified.
-
+;;;
 ;;; The basic idea for how I implemented both of them is that recursion can be
 ;;; used to reduce the problem at each step: given a tree (or a subtree, all of
 ;;; which have the same form), recurse on a random subtree, along with a
@@ -289,12 +234,12 @@
 (defn replace-subtree
   "Replace a random subtree with a given subtree. Takes an optional second parameter
    that limits the depth to go before selecting a crossover point."
-  ([tree sub] 
+  ([tree sub]
     (replace-subtree tree sub (rand-int (+ 1 (max-tree-height tree)))))
   ([tree sub n]
     (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) ;; don't split up (leaf)
                            (not (seq? tree))) sub
-      (let [r (+ 1 (rand-int (count (rest tree))))] 
+      (let [r (+ 1 (rand-int (count (rest tree))))]
         (concat (take r tree)
                 (list (replace-subtree
                         (nth tree r) sub
@@ -304,30 +249,16 @@
 (defn truncate
   "Prevent trees from growing too big by lifting a subtree if the tree height is
    greater than the max tree height."
-  [tree height] 
-  (if (> (max-tree-height tree) height) 
+  [tree height]
+  (if (> (max-tree-height tree) height)
     (recur (rand-subtree tree) height)
     tree))
 
 (defn truncate-module
-  "A module-aware version of truncate."
+  "A version of truncate that handles branches."
   [tree height]
-  (list (first tree) 
-        (vec (map 
-               #(cond (and (list? %)
-                           (= 'fn (first %)))
-                      (list (first %) (second %)
-                            (truncate (nth % 2) height))
-                      (and (list? %)
-                              (= 'do-loop (first %)))
-                      (list (first %) 
-                            (truncate (nth % 1))
-                            (truncate (nth % 2))
-                            (truncate (nth % 3))
-                            (truncate (nth % 4))
-                            (nth % 5))
-                      :else %)
-               (second tree)))
+  (list (first tree)
+        (truncate-branch tree truncate height)
         (truncate (nth tree 2) height)))
 
 ;;; ### Mutation, crossover, and selection
@@ -351,18 +282,17 @@
   [tree mutation-probability mutation-depth terminals numbers functions]
   (if (flip mutation-probability)
     (let [coin (rand)] ;; random number between 0 and 1
-      (cond (< coin 0.33) 
+      (cond (< coin 0.33)
             (replace-subtree tree (create-tree mutation-depth terminals numbers functions :grow))
             (< coin 0.66)
             (replace-subtree tree (rand-nth terminals))
             :else (rand-subtree tree)))
-    tree)) 
+    tree))
 
 (defn mutate-module-tree
-  "A module-aware version of mutate-tree. It applies the mutation operation not only to the
-   result defining branch but to the automatically defined functions and loops, and it preserve
-   the overall structure of the tree (the let form). This involves mutating each branch of the
-   loop individually."
+  "A version of mutate-tree that handles branches. It applies the mutation operation not only to the
+   result defining branch but to the automatically defined branches in the let statement, and it preserve
+   the overall structure of the tree (the let form)."
   [module-tree mutation-probability mutation-depth terminals numbers functions]
   (if (or (flip 0.5)
           (zero? (count (second module-tree))))
@@ -372,44 +302,17 @@
                                mutation-depth terminals numbers functions)))
     (concat (list (nth module-tree 0))
             (list (vec (map (fn [letf]
-                              ;; mutate the lists of code
-                              (cond (and (list? letf)
-                                         (= 'fn (first letf)))
-                                    (list (first letf) (second letf)
-                                          ;; call mutate-tree on the ADF body
-                                          (mutate-tree (nth letf 2)
-                                                       mutation-probability
-                                                       mutation-depth terminals
-                                                       numbers functions))
-                                    (and (list? letf)
-                                         (= 'do-loop (first letf)))
-                                    ;; it's a loop! mutate each branch individually
-                                    (list (first letf)
-                                          (mutate-tree (nth letf 1)
-                                                       mutation-probability
-                                                       mutation-depth terminals
-                                                       numbers functions)
-                                          (mutate-tree (nth letf 2)
-                                                       mutation-probability
-                                                       mutation-depth terminals
-                                                       numbers functions)
-                                          (mutate-tree (nth letf 3)
-                                                       mutation-probability
-                                                       mutation-depth terminals
-                                                       numbers functions)
-                                          (mutate-tree (nth letf 4)
-                                                       mutation-probability
-                                                       mutation-depth terminals
-                                                       numbers functions)
-                                          (nth letf 5))
-                                    :else letf)) ;; skip symbol names
+                         ;; mutate the branches
+                         (mutate-branch letf mutate-tree
+                                        mutation-probability mutation-depth
+                                        terminals numbers functions))
                             (nth module-tree 1))))
             (list (nth module-tree 2)))))
 
 (defn mutate-population
   "Apply mutation to every tree in a population. Similar arguments to mutate-tree."
   [population mutation-probability mutation-depth terminals numbers functions]
-  (map #(mutate-module-tree % mutation-probability mutation-depth terminals 
+  (map #(mutate-module-tree % mutation-probability mutation-depth terminals
                             numbers functions) population))
 
 ;;; **Crossover** is the process of combining two parents to make a child.
@@ -422,32 +325,21 @@
    random subtree from one tree, and placing it randomly in the other tree."
   [tree1 tree2] (replace-subtree tree1 (rand-subtree tree2)))
 
-(defn crossover-adf
-  "Crossover function for the vectors of automatically defined functions"
-  [cross vec1 vec2]
-  (let [tree1 (nth vec2 cross)
-        tree2 (nth vec1 cross)
-        newtree (list (first tree1) (second tree1)
-                      (crossover (nth tree1 2) (nth tree2 2)))]
-  (concat (take cross vec1)
-          (list newtree)
-          (drop (+ cross 1) vec1))))
-  
-
 (defn crossover-module
-  "Crossover that preserves the let form and ADFs."
+  "Crossover that preserves the let form and branches."
   [tree1 tree2]
   (if (or (flip 0.5)
           (zero? (count (second tree1))))
     (let [new-subtree (crossover (nth tree1 2) (nth tree2 2))]
       (list (first tree1) (vec (second tree1)) new-subtree))
-    (let [cross-adf (+ 1 (* 2 (rand-int (/ (count (second tree1))))))]
+    (let [cross-branch (+ 1 (* 2 (rand-int (/ (count (second tree1))))))]
       (list (first tree1)
-            (vec (crossover-adf cross-adf (second tree1) (second tree2)))
+            (vec (crossover-branch cross-branch crossover
+                                   (second tree1) (second tree2)))
             (nth tree1 2)))))
 
-;;; Now it's time to get into functions that operate on populations. 
-;;; 
+;;; Now it's time to get into functions that operate on populations.
+;;;
 ;;; **Selection** is the process in which more fit individuals are "selected," or
 ;;; more likely to breed (be involved in a crossover), while less fit individuals
 ;;; are less likely to breed.
@@ -477,12 +369,12 @@
    \"fitness-zip\" or sequence of the zip of trees and fitness scores, and the max depth,
    and it returns a new population."
   [population tournament-size fitness-zip]
-  (let [child 
-        (fn [] 
-          (let [selected (map first (sort-by second 
-                                             (repeatedly tournament-size 
+  (let [child
+        (fn []
+          (let [selected (map first (sort-by second
+                                             (repeatedly tournament-size
                                                          #(rand-nth fitness-zip))))]
-            (crossover-module (first selected) 
+            (crossover-module (first selected)
                               (second selected))))]
     (repeatedly (count population) child)))
 
@@ -526,7 +418,7 @@
                    (mutate-population mutation-probability mutation-depth terminals numbers functions)
                    (truncate-population max-depth)
                    (elitism best-tree)))))))
- 
+
 ;;; ### Islands
 ;;;
 ;;; The above code works for running generations of a single population. The concept of islands is
@@ -542,7 +434,7 @@
 ;;;    occasionally, we get (hopefully) more diversity.
 ;;;
 ;;;  * Better performance: by exploiting multiple CPU cores with native threads, the program can
-;;;    process more individuals quickly. 
+;;;    process more individuals quickly.
 
 (defn create-islands
   "Create a list of populations (islands)."
@@ -567,7 +459,7 @@
    numbers functions fitness report]
   (loop [n (int n1) islands islands] ;; optimize inner loop
     (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
-                                          mutation-depth max-depth terminals numbers 
+                                          mutation-depth max-depth terminals numbers
                                           functions fitness)
                             islands)
           islands (map first islands-fit)
@@ -589,12 +481,12 @@
            mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count
            adl-count adl-limit]
     ;; the :or block here specifies default values for some of the arguments
-   :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0 
+   :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0
         adl-count 0 adl-limit 25 numbers []}}]
-  (island-generations migrations iterations 
-                      (create-islands num-islands population-size mutation-depth terminals 
+  (island-generations migrations iterations
+                      (create-islands num-islands population-size mutation-depth terminals
                                       numbers functions adf-arity adf-count adl-count adl-limit)
-                      tournament-size mutation-probability mutation-depth max-depth terminals 
+                      tournament-size mutation-probability mutation-depth max-depth terminals
                       numbers functions fitness report))
-        
+
 ;;; And that's it! For the core of the library, anyway.

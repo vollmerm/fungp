@@ -3028,10 +3028,18 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>fungp -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">fungp</h1><h2 class="project-version">0.1</h2><br /><p>Genetic programming in Clojure</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">org.clojure/math.numeric-tower</td><td class="dotted"><hr /></td><td class="dep-version">0.0.1</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.sample.cart">fungp.sample.cart</a></li><li><a href="#fungp.sample.compile-ants">fungp.sample.compile-ants</a></li><li><a href="#fungp.sample.interpret-ants">fungp.sample.interpret-ants</a></li><li><a href="#fungp.sample.sample">fungp.sample.sample</a></li><li><a href="#fungp.sample.sinbowl">fungp.sample.sinbowl</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
+</script><title>fungp -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">fungp</h1><h2 class="project-version">0.2</h2><br /><p>Genetic programming in Clojure</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.defined-branches">fungp.defined-branches</a></li><li><a href="#fungp.sample.cart">fungp.sample.cart</a></li><li><a href="#fungp.sample.compile-ants">fungp.sample.compile-ants</a></li><li><a href="#fungp.sample.interpret-ants">fungp.sample.interpret-ants</a></li><li><a href="#fungp.sample.sample">fungp.sample.sample</a></li><li><a href="#fungp.sample.sinbowl">fungp.sample.sinbowl</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
 
-<p><a href="https://github.com/probabilityZero/fungp">Project hosted on GitHub</a></p>
+<h2>Downloading and Installing</h2>
+
+<p><a href="https://github.com/probabilityZero/fungp">This project is hosted on GitHub.</a></p>
+
+<p>To install it, you can clone the git repository or grab the zip/tar file from
+the above link. You'll need Clojure installed, and you'll probably want
+<a href="https://github.com/technomancy/leiningen">Leiningen</a> (the latter will take
+care of the former). See below for how to run the samples included with this
+library.</p>
 
 <h2>What is this?</h2>
 
@@ -3089,23 +3097,24 @@ bytecode.</p>
 <h2>Notes on mutable variables and loops</h2>
 
 <p><em>fungp</em> is fully capable of evolving code that uses mutable variables, side-effects, and
-loops. Currently it does not support Koza's architecture-altering operations so you have 
+loops. Currently it does not support Koza's architecture-altering operations so you have
 to determine some of the architecture beforehand (like, the names of the variables, whether
-you need a loop, etc). </p>
+you need a loop, etc).</p>
 
-<p>There also is no built-in mechanism for managing loops and variables --- I would like there 
-to be, but there are a few obstacles. Clojure isn't as friendly to destructive updates and 
-side-effects as (for example) CL. That's certainly not a bad thing, but it makes it slightly
-more complicated to create mutable local variables at runtime. Because of this, I decided to leave
-the management of local variables up to the user, which (thanks to dynamic vars) is fairly
+<p>There also is no built-in mechanism for managing mutable variables --- I would like there
+to be, but there are a few obstacles. Clojure doesn't really support mutable local variables.
+That's certainly not a bad thing, but it makes it slightly more complicated to create
+local variables (or something that acts like them) at runtime. Because of this, I decided to leave
+the management of local variables up to the user, which (thanks to dynamic Vars) is fairly
 straightforard. See the compile-ants sample for an example of this.</p>
 
 <h2>Environment, distribution</h2>
 
-<p>I highly recommend you use Leiningen. <em>fungp</em> is set up as a Leiningen project. By itself
-<em>fungp</em> has no "main" method, so running it won't do anything. The samples can be run individually,
-and each has a "test-*" function that launches it. I recommend you run them from the REPL, as
-they have some settable parameters.</p>
+<p>I highly recommend you use Leiningen. <em>fungp</em> is set up as a Leiningen project.</p>
+
+<p>By itself <em>fungp</em> has no "main" method, so running it won't do anything. The samples can be
+run individually, and each has a "test-*" function that launches it. I recommend you run
+them from the REPL, as they have some settable parameters.</p>
 
 <p>Here's how you would run the cart example, starting from the fungp directory:</p>
 
@@ -3118,21 +3127,26 @@ user=&gt; (test-cart 3 6)
 </code></pre>
 
 <p>At that point the cart example will run.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>This is the namespace declaration. It is the start of the core of the library.</p>
 
 <h2>The code</h2>
+
+<p>The code here in the core.clj file is rather brief (but dense), and it should be readable
+in one sitting. To actually use it, you'll likely have to at least read the sample code, and
+probably read most of this code as well.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>This is the namespace declaration. It is the start of the core of the library.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.core
-  (:use fungp.util))</pre></td></tr><tr><td class="docs"><h3>Tree manipulation</h3>
+  (:use fungp.util)
+  (:use fungp.defined-branches))</pre></td></tr><tr><td class="docs"><h3>Tree creation</h3>
 
 <p>My method of random tree generation is a combination of the "grow" and "fill"
 methods of tree building, similar to Koza's "ramped half-and-half" method.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Return a random terminal or number.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn terminal
   [terminals numbers]
-  (if (and (flip 0.5) 
-           (not (empty? numbers))) 
-    (rand-nth numbers) 
-    (rand-nth terminals)))</pre></td></tr><tr><td class="docs"><p>Build a tree of source code, given a mutation depth, terminal sequence, 
+  (if (and (flip 0.5)
+           (not (empty? numbers)))
+    (rand-nth numbers)
+    (rand-nth terminals)))</pre></td></tr><tr><td class="docs"><p>Build a tree of source code, given a mutation depth, terminal sequence,
    function sequence, and type keyword. The type can be either :grow or :fill.
    The terminal sequence should consist of symbols or quoted code, while elements in the
    function sequence should contain both the function and a number representing
@@ -3141,21 +3155,22 @@ methods of tree building, similar to Koza's "ramped half-and-half" method.</p>
   [mutation-depth terminals numbers functions gtype]
   ;; conditions: either return terminal or create function and recurse
   (cond (zero? mutation-depth) (terminal terminals numbers)
-        (and (= type :grow) 
-             (flip 0.5)) 
+        (and (= type :grow)
+             (flip 0.5))
         (terminal terminals numbers)
         :else (let [[func arity] (rand-nth functions)]
-                (cons func (repeatedly arity 
+                (cons func (repeatedly arity
                                        #(create-tree (- mutation-depth 1)
                                                      terminals
                                                      numbers
                                                      functions
-                                                     gtype))))))</pre></td></tr><tr><td class="docs"><p>The next few functions handle one of the special cases in tree creation: ADFs,
-or Automatically Defined Functions. This is a good time to introduce one of the
-defining features of the code evolved in fungp: it consists of multiple ordered 
-branches, the last of which is the Result Defining Branch, or the branch that
-actually returns the final result. Other branches in the evolved code are stored
-in a let statement, which in clojure binds and evaluates sequentially.</p>
+                                                     gtype))))))</pre></td></tr><tr><td class="docs"><h4>Branches</h4>
+
+<p>This is a good time to introduce one of the defining features of the code evolved
+in fungp: it consists of multiple ordered branches, the last of which is the
+Result Defining Branch, or the branch that actually returns the final result.
+Other branches in the evolved code are stored in a let statement, which in
+Clojure binds and evaluates sequentially.</p>
 
 <p>For example:</p>
 
@@ -3168,73 +3183,54 @@ in a let statement, which in clojure binds and evaluates sequentially.</p>
 to a in b will resolve to 5, because elements in let are evaluated and bound in
 order. Finally, the expression (b a) would evaluate to 25.</p>
 
-<p>Currently, the type of branches evolved in fungp, besides the result defining 
-branch, are automatically defined functions.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Generate arguments for ADF</p>
-</td><td class="codes"><pre class="brush: clojure">(defn gen-adf-arg
-  [adf-arity]
-  (vec (map #(symbol (str &quot;arg&quot; %)) 
-            (range adf-arity))))</pre></td></tr><tr><td class="docs"><p>Generate ADF function names</p>
-</td><td class="codes"><pre class="brush: clojure">(defn gen-adf-func
-  [adf-count adf-arity]
-  (when (&gt; adf-arity 0)
-    (vec (map (fn [n] [(symbol (str &quot;adf&quot; n))
-                       adf-arity])
-              (range adf-count)))))</pre></td></tr><tr><td class="docs"><p>Build ADF -- Automatically Defined Function</p>
-</td><td class="codes"><pre class="brush: clojure">(defn make-adf
-  [mutation-depth terminals numbers functions adf-arity num]
-  (let [adf-args (gen-adf-arg adf-arity)]
-  [(symbol (str &quot;adf&quot; num))
-   (list 'fn adf-args
-         (create-tree mutation-depth
-                      (concat terminals adf-args)
-                      numbers
-                      functions :grow))]))</pre></td></tr><tr><td class="docs"><p>Make the ADF branch</p>
-</td><td class="codes"><pre class="brush: clojure">(defn make-adf-branch
-  [mutation-depth terminals numbers functions adf-arity adf-count]
-  (if (zero? adf-count) []
-      (concat (make-adf-branch mutation-depth terminals numbers
-                               functions adf-arity (- adf-count 1))
-              (make-adf mutation-depth terminals numbers
-                        (concat functions
-                                (gen-adf-func (- adf-count 1)
-                                              adf-arity))
-                        adf-arity (- adf-count 1)))))</pre></td></tr><tr><td class="docs"><p>A module-aware version of create-tree. That means it includes Automatically Defined
-   Functions in addition to the ordinary source tree (or the Result Producing Branch).</p>
+<p>Most likely the type of branch you'll find most useful are Automatically Defined
+Functions. These are branches that are separate functions. They are exposed to
+the main branch, so the main branch can call the separately evolved functions,
+passing arguments to them.</p>
+
+<p>In addition to the ADFs, I implement a couple of other types of architecture
+described by Koza. I don't, however, implement architecture altering operations,
+so whatever architecture your individuals have must be determined beforehand.</p>
+
+<p>I also don't have support for automatically defined memory. See compiled-ants
+for an example of how to support mutable local variables (a feature that doesn't
+really exist in Clojure). For more information on the different types of branches
+in <em>fungp</em> see fungp.defined-branches.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>This is a version of create-tree that handles multiple branches. It builds a let form that has a (potentially empty)
+   vector for automatically defined functions and loops, and it has a main branch that is the result defining
+   branch.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn create-module-tree
-  [mutation-depth terminals numbers functions adf-arity adf-count type]
+  [mutation-depth terminals numbers functions adf-arity adf-count adl-count adl-limit type]
   (list 'let
-        (if (zero? adf-count) []
-            (vec (make-adf-branch mutation-depth terminals numbers
-                                  functions adf-arity adf-count)))
-        (let [adf-func (gen-adf-func adf-count adf-arity)]
-          (create-tree mutation-depth terminals numbers
-                       (concat functions adf-func adf-func)
-                       type))))</pre></td></tr><tr><td class="docs"><p>Creates a population of trees given a population size, mutation depth, terminal
+        ;; create the vector of branches
+        (build-branch-vector create-tree mutation-depth terminals numbers functions
+                             adf-arity adf-count adl-count adl-limit)
+        ;; create the main branch
+        (create-tree mutation-depth terminals numbers
+                     ;; add the branches to the function vector
+                     (concat functions (build-branch-name-list adf-count adf-arity
+                                                               adl-count))
+                     type)))</pre></td></tr><tr><td class="docs"><h4>Populations</h4>
+
+<p>A population is a list of individuals. Creating the population involves randomly generating a list of individuals
+as a starting point. Islands, which will be implemented further down, are lists of populations</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Creates a population of trees given a population size, mutation depth, terminal
    sequence, and function sequence. It uses a variation of Koza's "ramped half-and-half"
    method: a coin flip determines whether to use the "fill" or "grow" method, and the
    mutation depth is a randomly chosen number between 1 and the specified max mutation depth.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn create-population
-  [population-size mutation-depth terminals numbers functions adf-arity adf-count]
-  (let [population-size (int population-size)]
-    (if (zero? population-size) []
-        (conj (create-population (- population-size 1) mutation-depth terminals numbers functions
-                                 adf-arity adf-count)
-              (create-module-tree (+ 1 (rand-int mutation-depth)) terminals numbers functions
-                                  adf-arity adf-count
-                                  (if (flip 0.5) :grow :fill))))))</pre></td></tr><tr><td class="docs"><p>Find the maximum height of a tree. The max height is the distance from the root to the
-   deepest leaf.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn max-tree-height
-  [tree] 
-  (if (not (seq? tree)) 0 
-    (+ 1 (reduce max (map max-tree-height tree)))))</pre></td></tr><tr><td class="docs"><p>Checks the type on a tree to make sure it's a list, symbol, or number.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn valid-tree?
-  [tree] (or (list? tree) (symbol? tree) (number? tree)))</pre></td></tr><tr><td class="docs"><p>Compiles a tree into a Clojure function, and thus into JVM bytecode. Takes a tree
-   and the parameters the function should have.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn compile-tree
-  [tree parameters] (eval (list 'fn parameters tree)))</pre></td></tr><tr><td class="docs"><p><strong>rand-subtree</strong> and <strong>replace-subtree</strong> are two of the most important functions.
+  [population-size mutation-depth terminals numbers functions adf-arity adf-count adl-count adl-limit]
+  (if (zero? population-size) []
+    (conj (create-population (dec population-size) mutation-depth terminals numbers functions
+                             adf-arity adf-count adl-count adl-limit)
+          (create-module-tree (+ 1 (rand-int mutation-depth)) terminals numbers functions
+                              adf-arity adf-count adl-count adl-limit
+                              (if (flip 0.5) :grow :fill)))))</pre></td></tr><tr><td class="docs"><h3>Tree manipulation</h3>
+
+<p><strong>rand-subtree</strong> and <strong>replace-subtree</strong> are two of the most important functions.
 They define how the trees are modified.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>The basic idea for how I implemented both of them is that recursion can be
+
+<p>The basic idea for how I implemented both of them is that recursion can be
 used to reduce the problem at each step: given a tree (or a subtree, all of
 which have the same form), recurse on a random subtree, along with a
 reduced value of n. The base case is when n is zero or the function hits a leaf.</p>
@@ -3247,18 +3243,18 @@ the tree on its way back up the stack.</p>
   ([tree]
     (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
   ([tree n]
-    (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) 
+    (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) ;; don't split up (leaf)
                            (not (seq? tree))) tree
       (recur (rand-nth (rest tree))
              (rand-int n)))))</pre></td></tr><tr><td class="docs"><p>Replace a random subtree with a given subtree. Takes an optional second parameter
    that limits the depth to go before selecting a crossover point.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn replace-subtree
-  ([tree sub] 
+  ([tree sub]
     (replace-subtree tree sub (rand-int (+ 1 (max-tree-height tree)))))
   ([tree sub n]
-    (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) 
+    (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) ;; don't split up (leaf)
                            (not (seq? tree))) sub
-      (let [r (+ 1 (rand-int (count (rest tree))))] 
+      (let [r (+ 1 (rand-int (count (rest tree))))]
         (concat (take r tree)
                 (list (replace-subtree
                         (nth tree r) sub
@@ -3266,17 +3262,14 @@ the tree on its way back up the stack.</p>
                 (nthrest tree (+ r 1)))))))</pre></td></tr><tr><td class="docs"><p>Prevent trees from growing too big by lifting a subtree if the tree height is
    greater than the max tree height.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn truncate
-  [tree height] 
-  (if (&gt; (max-tree-height tree) height) 
+  [tree height]
+  (if (&gt; (max-tree-height tree) height)
     (recur (rand-subtree tree) height)
-    tree))</pre></td></tr><tr><td class="docs"><p>A module-aware version of truncate.</p>
+    tree))</pre></td></tr><tr><td class="docs"><p>A version of truncate that handles branches.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn truncate-module
   [tree height]
-  (list (first tree) (vec (map #(if (list? %) 
-                                  (list (first %) (second %)
-                                        (truncate (nth % 2) height)) 
-                                  %)
-                               (second tree)))
+  (list (first tree)
+        (truncate-branch tree truncate height)
         (truncate (nth tree 2) height)))</pre></td></tr><tr><td class="docs"><h3>Mutation, crossover, and selection</h3>
 
 <p>With rand-subtree and replace-subtree out of the way, the rest of the
@@ -3296,36 +3289,33 @@ changes and increases genetic diversity.</p>
   [tree mutation-probability mutation-depth terminals numbers functions]
   (if (flip mutation-probability)
     (let [coin (rand)] ;; random number between 0 and 1
-      (cond (&lt; coin 0.33) 
+      (cond (&lt; coin 0.33)
             (replace-subtree tree (create-tree mutation-depth terminals numbers functions :grow))
             (&lt; coin 0.66)
             (replace-subtree tree (rand-nth terminals))
             :else (rand-subtree tree)))
-    tree)) </pre></td></tr><tr><td class="docs"><p>A module-aware version of mutate-tree. It applies the mutation operation not only to the
-   result defining branch but to the automatically defined functions, and it preserves the
-   overall structure of the tree (the let form).</p>
+    tree))</pre></td></tr><tr><td class="docs"><p>A version of mutate-tree that handles branches. It applies the mutation operation not only to the
+   result defining branch but to the automatically defined branches in the let statement, and it preserve
+   the overall structure of the tree (the let form).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn mutate-module-tree
   [module-tree mutation-probability mutation-depth terminals numbers functions]
   (if (or (flip 0.5)
           (zero? (count (second module-tree))))
+    ;; mutate the main branch
     (concat (take 2 module-tree)
             (list (mutate-tree (nth module-tree 2) mutation-probability
                                mutation-depth terminals numbers functions)))
     (concat (list (nth module-tree 0))
             (list (vec (map (fn [letf]
-                              (if (list? letf) ;; mutate the lists of code
-                                  (list (first letf) (second letf)
-                                        ;; call mutate-tree on the ADF body
-                                        (mutate-tree (nth letf 2)
-                                                     mutation-probability
-                                                     mutation-depth terminals
-                                                     numbers functions))
-                                letf)) ;; skip symbol names
+                         ;; mutate the branches
+                         (mutate-branch letf mutate-tree
+                                        mutation-probability mutation-depth
+                                        terminals numbers functions))
                             (nth module-tree 1))))
             (list (nth module-tree 2)))))</pre></td></tr><tr><td class="docs"><p>Apply mutation to every tree in a population. Similar arguments to mutate-tree.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn mutate-population
   [population mutation-probability mutation-depth terminals numbers functions]
-  (map #(mutate-module-tree % mutation-probability mutation-depth terminals 
+  (map #(mutate-module-tree % mutation-probability mutation-depth terminals
                             numbers functions) population))</pre></td></tr><tr><td class="docs"><p><strong>Crossover</strong> is the process of combining two parents to make a child.
 It involves copying the genetic material (in this case, lisp code) from
 the two parents, combining them, and returning the result of the combination.</p>
@@ -3333,24 +3323,18 @@ the two parents, combining them, and returning the result of the combination.</p
    and rand-subtree. Basically, crossing over two trees involves selecting a
    random subtree from one tree, and placing it randomly in the other tree.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn crossover
-  [tree1 tree2] (replace-subtree tree1 (rand-subtree tree2)))</pre></td></tr><tr><td class="docs"><p>Crossover function for the vectors of automatically defined functions</p>
-</td><td class="codes"><pre class="brush: clojure">(defn crossover-adf
-  [cross vec1 vec2]
-  (concat (take cross vec1)
-          (list (nth vec2 cross))
-          (drop (+ cross 1) vec1)))</pre></td></tr><tr><td class="docs"><p>A module-aware version of crossover</p>
+  [tree1 tree2] (replace-subtree tree1 (rand-subtree tree2)))</pre></td></tr><tr><td class="docs"><p>Crossover that preserves the let form and branches.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn crossover-module
   [tree1 tree2]
   (if (or (flip 0.5)
           (zero? (count (second tree1))))
     (let [new-subtree (crossover (nth tree1 2) (nth tree2 2))]
       (list (first tree1) (vec (second tree1)) new-subtree))
-    (let [cross-adf (+ 1 (* 2 (rand-int (/ (count (second tree1))))))
-          new-subtree (crossover (nth (second tree1) cross-adf)
-                                 (nth (second tree2) cross-adf))]
+    (let [cross-branch (+ 1 (* 2 (rand-int (/ (count (second tree1))))))]
       (list (first tree1)
-            (vec (crossover-adf cross-adf (second tree1) (second tree2)))
-            (nth tree1 2)))))</pre></td></tr><tr><td class="docs"><p>Now it's time to get into functions that operate on populations. </p>
+            (vec (crossover-branch cross-branch crossover
+                                   (second tree1) (second tree2)))
+            (nth tree1 2)))))</pre></td></tr><tr><td class="docs"><p>Now it's time to get into functions that operate on populations.</p>
 
 <p><strong>Selection</strong> is the process in which more fit individuals are "selected," or
 more likely to breed (be involved in a crossover), while less fit individuals
@@ -3376,12 +3360,12 @@ material to the next generation.</p>
    and it returns a new population.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn tournament-selection
   [population tournament-size fitness-zip]
-  (let [child 
-        (fn [] 
-          (let [selected (map first (sort-by second 
-                                             (repeatedly tournament-size 
+  (let [child
+        (fn []
+          (let [selected (map first (sort-by second
+                                             (repeatedly tournament-size
                                                          #(rand-nth fitness-zip))))]
-            (crossover-module (first selected) 
+            (crossover-module (first selected)
                               (second selected))))]
     (repeatedly (count population) child)))</pre></td></tr><tr><td class="docs"><p>Takes the fitness zip and finds the best in the population.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-best-fitness
@@ -3433,13 +3417,14 @@ phrase -- clojure decides based on your availabe resources).</p>
 <li><p>Better results: by separating individuals for part of their evolution, and recombining them
 occasionally, we get (hopefully) more diversity.</p></li>
 <li><p>Better performance: by exploiting multiple CPU cores with native threads, the program can
-process more individuals quickly. </p></li>
+process more individuals quickly.</p></li>
 </ul>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Create a list of populations (islands).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn create-islands
-  [num-islands population-size mutation-depth terminals numbers functions adf-arity adf-count]
+  [num-islands population-size mutation-depth terminals numbers functions adf-arity adf-count
+   adl-count adl-limit]
   (repeatedly num-islands #(create-population population-size mutation-depth terminals numbers
-                                              functions adf-arity adf-count)))</pre></td></tr><tr><td class="docs"><p>Individuals migrate between islands.</p>
+                                              functions adf-arity adf-count adl-count adl-limit)))</pre></td></tr><tr><td class="docs"><p>Individuals migrate between islands.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn island-crossover
   [islands]
   (let [cross (map rand-nth islands)]
@@ -3452,7 +3437,7 @@ process more individuals quickly. </p></li>
    numbers functions fitness report]
   (loop [n (int n1) islands islands] ;; optimize inner loop
     (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
-                                          mutation-depth max-depth terminals numbers 
+                                          mutation-depth max-depth terminals numbers
                                           functions fitness)
                             islands)
           islands (map first islands-fit)
@@ -3468,16 +3453,173 @@ explanation of each of the keyword parameters.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>This is the entry function. Call this with a map of the parameters to run the genetic programming algorithm.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn run-genetic-programming
   [{:keys [iterations migrations num-islands population-size tournament-size mutation-probability
-           mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count]
+           mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count
+           adl-count adl-limit]
     ;; the :or block here specifies default values for some of the arguments
-   :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0 
-        numbers []}}]
-  (island-generations migrations iterations 
-                      (create-islands num-islands population-size mutation-depth terminals 
-                                      numbers functions adf-arity adf-count)
-                      tournament-size mutation-probability mutation-depth max-depth terminals 
+   :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0
+        adl-count 0 adl-limit 25 numbers []}}]
+  (island-generations migrations iterations
+                      (create-islands num-islands population-size mutation-depth terminals
+                                      numbers functions adf-arity adf-count adl-count adl-limit)
+                      tournament-size mutation-probability mutation-depth max-depth terminals
                       numbers functions fitness report))</pre></td></tr><tr><td class="docs"><p>And that's it! For the core of the library, anyway.</p>
-</td><td class="codes"></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.cart" name="fungp.sample.cart"><h1 class="project-name">fungp.sample.cart</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Sample: Cart problem</h2>
+</td><td class="codes"></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.defined-branches" name="fungp.defined-branches"><h1 class="project-name">fungp.defined-branches</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Branches and Modular Structure</h2>
+
+<p><em>fungp</em> is capable of evolving multiple branches in an individual. In addition to the main branch,
+or the "Result Defining Branch," it can evolve functions (Automatically Defined Functions, or ADFs),
+loops (Automatically Defined Loops, or ADLs), and iterators (Automatically Defined Iterators, or ADIs).</p>
+
+<p>Some of the handling for these branches was covered in fungp.core, but the details are handled here.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns fungp.defined-branches)</pre></td></tr><tr><td class="docs"><h3>Automatically Defined Functions</h3>
+
+<p>ADFs are functions of arbitrary arity that can be called from the main branch. The following functions
+are helper functions for creating individuals with ADF branches.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Generate arguments vector for ADF</p>
+</td><td class="codes"><pre class="brush: clojure">(defn gen-adf-arg
+  [adf-arity]
+  (vec (map #(symbol (str &quot;arg&quot; %))
+            (range adf-arity))))</pre></td></tr><tr><td class="docs"><p>Generate ADF function names</p>
+</td><td class="codes"><pre class="brush: clojure">(defn gen-adf-func
+  [adf-count adf-arity]
+  (when (&gt; adf-arity 0)
+    (vec (map (fn [n] [(symbol (str &quot;adf&quot; n))
+                       adf-arity])
+              (range adf-count)))))</pre></td></tr><tr><td class="docs"><p>Build the ADF code</p>
+</td><td class="codes"><pre class="brush: clojure">(defn make-adf
+  [create-tree mutation-depth terminals numbers functions adf-arity num]
+  (let [adf-args (gen-adf-arg adf-arity)]
+  [(symbol (str &quot;adf&quot; num))
+   (list 'fn adf-args
+         (create-tree mutation-depth
+                      (concat terminals adf-args)
+                      numbers
+                      functions
+                      :grow))]))</pre></td></tr><tr><td class="docs"><p>Make the ADF branch</p>
+</td><td class="codes"><pre class="brush: clojure">(defn make-adf-branch
+  [create-tree mutation-depth terminals numbers functions adf-arity adf-count]
+  (if (zero? adf-count) []
+      (concat (make-adf-branch create-tree mutation-depth terminals numbers
+                               functions adf-arity (dec adf-count))
+              (make-adf create-tree mutation-depth terminals numbers
+                        (concat functions
+                                (gen-adf-func (dec adf-count)
+                                              adf-arity))
+                        adf-arity (dec adf-count)))))</pre></td></tr><tr><td class="docs"><h3>Automatically Defined Loops</h3>
+
+<p>ADLs are loops that evolve the different stages of the loop as distinct branches. The following
+functions are helper functions for creating individuals with ADL branches.</p>
+
+<p>Currently, ADLs are only partially implemented and not tested or stable.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Build the ADL code</p>
+</td><td class="codes"><pre class="brush: clojure">(defn make-adl
+  [create-tree mutation-depth terminals numbers functions adl-limit num]
+  (let [make-branch #(create-tree mutation-depth
+                                  terminals
+                                  numbers
+                                  functions
+                                  :grow)]
+    [(symbol (str &quot;adl&quot; num))
+     (list 'do-loop
+           ;; do-loop has 4 branches of code and one number literal
+           (make-branch)
+           (make-branch)
+           (make-branch)
+           (make-branch)
+           adl-limit)]))</pre></td></tr><tr><td class="docs"><p>Make the ADL branch</p>
+</td><td class="codes"><pre class="brush: clojure">(defn make-adl-branch
+  [create-tree mutation-depth terminals numbers functions adl-count adl-limit]
+  (if (zero? adl-count) []
+    (concat (make-adl-branch create-tree mutation-depth terminals numbers
+                             functions (dec adl-count) adl-limit)
+            (make-adl create-tree mutation-depth terminals numbers
+                      functions ; TODO: include ADFs and previous ADLs, if any
+                      adl-limit (dec adl-count)))))</pre></td></tr><tr><td class="docs"><p>Generate a vector of adl name symbols.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn gen-adl-func
+  [adl-count]
+  (vec (map #(symbol (str &quot;adl&quot; %)) (range adl-count))))</pre></td></tr><tr><td class="docs"><h3>Putting it together</h3>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>This function builds the vector that goes into the let statement for each individual. It is intended to
+   be called by create-module-tree.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn build-branch-vector
+  [create-tree mutation-depth terminals numbers functions adf-arity adf-count adl-count adl-limit]
+  (vec (concat (if (zero? adf-count) '()
+                   (make-adf-branch create-tree mutation-depth terminals numbers
+                                    functions adf-arity adf-count))
+               (if (zero? adl-count) '()
+                   (make-adl-branch create-tree mutation-depth terminals numbers
+                                    functions adl-count adl-limit)))))</pre></td></tr><tr><td class="docs"><p>Returns a vector of symbols that will be concatenated onto the functions vector in create-module-tree. The
+   returned vector should have things like 'adf0 in it</p>
+</td><td class="codes"><pre class="brush: clojure">(defn build-branch-name-list
+  [adf-count adf-arity adl-count]
+  (concat (gen-adf-func adf-count adf-arity) (gen-adl-func adl-count)))</pre></td></tr><tr><td class="docs"><p>Takes an element of the branch vector, a mutation function, and the tunable parameters
+   the mutation function needs, and applies mutation to each of the branches.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn mutate-branch
+  [letf mutate-tree mutation-probability mutation-depth terminals numbers functions]
+  (cond (and (list? letf)
+             (= 'fn (first letf)))
+        (list (first letf) (second letf)
+              ;; call mutate-tree on the ADF body
+              (mutate-tree (nth letf 2)
+                           mutation-probability
+                           mutation-depth terminals
+                           numbers functions))
+        (and (list? letf)
+             (= 'do-loop (first letf)))
+        ;; it's a loop! mutate each branch individually
+        (list (first letf)
+              (mutate-tree (nth letf 1)
+                           mutation-probability
+                           mutation-depth terminals
+                           numbers functions)
+              (mutate-tree (nth letf 2)
+                           mutation-probability
+                           mutation-depth terminals
+                           numbers functions)
+              (mutate-tree (nth letf 3)
+                           mutation-probability
+                           mutation-depth terminals
+                           numbers functions)
+              (mutate-tree (nth letf 4)
+                           mutation-probability
+                           mutation-depth terminals
+                           numbers functions)
+              (nth letf 5))
+        :else letf))</pre></td></tr><tr><td class="docs"><p>Call truncate on branches. Takes a tree, truncate function, and a height.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn truncate-branch
+  [tree truncate height]
+  (vec (map
+        #(cond (and (list? %)
+                    (= 'fn (first %)))
+               (list (first %) (second %)
+                     (truncate (nth % 2) height))
+               (and (list? %)
+                    (= 'do-loop (first %)))
+               (list (first %)
+                     (truncate (nth % 1) height)
+                     (truncate (nth % 2) height)
+                     (truncate (nth % 3) height)
+                     (truncate (nth % 4) height)
+                     (nth % 5))
+               :else %)
+        (second tree))))</pre></td></tr><tr><td class="docs"><p>Crossover function for the vectors of branches. Takes the cross point, the crossover function,
+   and the two vectors.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn crossover-branch
+  [cross crossover vec1 vec2]
+  (let [tree1 (nth vec2 cross)
+        tree2 (nth vec1 cross)
+        newtree (cond (= (first tree1) 'fn)
+                      (list (first tree1) (second tree1)
+                            (crossover (nth tree1 2) (nth tree2 2)))
+                      (= (first tree1) 'do-loop)
+                      (list (nth tree1 0)
+                            (crossover (nth tree1 1) (nth tree2 1))
+                            (crossover (nth tree1 2) (nth tree2 2))
+                            (crossover (nth tree1 3) (nth tree2 2))
+                            (crossover (nth tree1 4) (nth tree2 4))
+                            (nth tree1 5)))]
+    (concat (take cross vec1)
+            (list newtree)
+            (drop (+ cross 1) vec1))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.cart" name="fungp.sample.cart"><h1 class="project-name">fungp.sample.cart</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Cart problem</h3>
 
 <p>This is an example of evolving a function that takes parameters and
 returns a number. In this case, the function acts as a controller for
@@ -3493,12 +3635,13 @@ in whichever direction it is facing.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.cart
   (:use fungp.core)
   (:use fungp.util)
-  (:require clojure.pprint))</pre></td></tr><tr><td class="docs"><p>some constants</p>
+  (:require clojure.pprint))</pre></td></tr><tr><td class="docs"><h4>Some constants</h4>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Max time limit</p>
 
 <p>Number of test cases</p>
 </td><td class="codes"><pre class="brush: clojure">(def MAX_T  5)
-(def TEST_POINTS  20)</pre></td></tr><tr><td class="docs"><p>Simulate cart movement with the evolved function used to calculate
+(def TEST_POINTS  20)</pre></td></tr><tr><td class="docs"><h4>The simulation function</h4>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Simulate cart movement with the evolved function used to calculate
    thrust. Assuming acceleration is one unit/second^2, and time is in
    steps of 0.02.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn move-cart
@@ -3510,7 +3653,8 @@ in whichever direction it is facing.</p>
           (let [thrust (if (&gt; (f v x) 0) 1.0 -1.0)]
             (recur (+ t 0.02)
                    (+ v (* thrust 0.02))
-                   (+ x (* v 0.02)))))))</pre></td></tr><tr><td class="docs"><p>Range of starting position or velocity</p>
+                   (+ x (* v 0.02)))))))</pre></td></tr><tr><td class="docs"><h4>Test data</h4>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Range of starting position or velocity</p>
 </td><td class="codes"><pre class="brush: clojure">(defn rand-spread
   [l] (repeatedly l #(- (* 1.5 (rand)) 0.75)))</pre></td></tr><tr><td class="docs"><p>Functions available to the evolved programs</p>
 </td><td class="codes"><pre class="brush: clojure">(def cart-functions 
@@ -3523,7 +3667,7 @@ in whichever direction it is facing.</p>
   [f]
   (reduce + (map (fn [v x] (move-cart 0 v x f))
                  rand-velocity
-                 rand-position)))</pre></td></tr><tr><td class="docs"><p>some existing solutions</p>
+                 rand-position)))</pre></td></tr><tr><td class="docs"><h4>Some existing solutions</h4>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>The optimal solution</p>
 </td><td class="codes"><pre class="brush: clojure">(defn cart-optimal  [v x] (gt (* -1 x) (* v (abs v))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn cart-suboptimal [v x] (gt (* -1 x) (* v v)))</pre></td></tr><tr><td class="docs">
@@ -3531,7 +3675,8 @@ in whichever direction it is facing.</p>
 </td><td class="codes"><pre class="brush: clojure">(def cart-evol (fn [v x] (let [] (fungp.util/gt (- x v) (+ (+ x x) (+ x x))))))
 (def cart-evol2 (fn [v x] (let [] (- (- (- -1 x) (+ x v))
                                      (- (* (+ -1 v) (* -1 x))
-                                        (fungp.util/gt (fungp.util/abs x) -1))))))</pre></td></tr><tr><td class="docs"><p>Compute fitness for cart problem.</p>
+                                        (fungp.util/gt (fungp.util/abs x) -1))))))</pre></td></tr><tr><td class="docs"><h4>Initializing fungp</h4>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Compute fitness for cart problem.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn cart-fitness
   [tree] (let [f (eval (list 'fn '[v x] tree))]
            (cart-error f)))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
@@ -3577,6 +3722,11 @@ the rest of the code in this file. Once fungp has been started, there
 will be separate versions of these vars in each thread, and so the
 code that references them will refer to the local copy in the
 respective thread.</p>
+
+<p>Basically, you can write your application as if these were global
+variables, and they will work in a multithreaded environment
+automatically, like magic, as long as you include the "binding"
+statement below in the fitness function</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def ^:dynamic ant-x)
 (def ^:dynamic ant-y)
@@ -3662,6 +3812,12 @@ respective thread.</p>
 an s-expression that is treated as a tree rather than as literal
 Clojure code. It is passed to a function that interprets it by
 traversing the evolved tree.</p>
+
+<p>This is one of the two examples of the Ant Trail program included with
+fungp. This example shows how you might approach a GP problem by
+constructing a machine and evolving a tree as a data structure to be
+understood by that machine, as opposed to evolving literal Clojure
+code. There are benefits and downsides to both approaches.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.interpret-ants
   (:use fungp.core)
@@ -3672,8 +3828,7 @@ traversing the evolved tree.</p>
 (def STARTFOOD [[1 0][1 1][1 2][1 3][1 4][1 5][2 5][3 5][3 6][4 6]
                 [5 6][6 6][7 7][7 8][8 8][9 8][9 9][10 9][10 10][9 10]
                 [8 10][8 9][11 9][11 10]])
-(def NUMFOOD (count STARTFOOD))</pre></td></tr><tr><td class="docs"><p>0: north, 1: east, 2: south, 3: west</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Then some helper functions.</p>
+(def NUMFOOD (count STARTFOOD))</pre></td></tr><tr><td class="docs"><p>Then some helper functions.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn sense-food [dir x y food]
   (cond (= dir 0) (some #(= % [x (inc y)]) food)
@@ -3757,13 +3912,15 @@ traversing the evolved tree.</p>
                  :functions ant-functions :report ant-report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println &quot;Done!&quot;)
-        (ant-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.sample" name="fungp.sample.sample"><h1 class="project-name">fungp.sample.sample</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Sample use</h2>
+        (ant-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.sample" name="fungp.sample.sample"><h1 class="project-name">fungp.sample.sample</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Simple regression sample</h3>
+
+<p>The simplest problem for GP is regression, or coming up
+with a function to map pairs of input and output. </p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Sample use of fungp.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.sample
   (:use fungp.core)
   (:use fungp.util)
-  (:require clojure.pprint))</pre></td></tr><tr><td class="docs"><h3>Test run</h3>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Functions and their arities</p>
+  (:require clojure.pprint))</pre></td></tr><tr><td class="docs"><p>Functions and their arities</p>
 </td><td class="codes"><pre class="brush: clojure">(def sample-functions
   '[[+ 2][- 2][* 2][fungp.util/abs 1]
     [fungp.util/sdiv 2][inc 1][dec 1]])</pre></td></tr><tr><td class="docs"><p>Parameters to be used to eval the generated functions</p>
@@ -3771,7 +3928,7 @@ traversing the evolved tree.</p>
   ['a])</pre></td></tr><tr><td class="docs"><p>Number literals to be used in the code</p>
 </td><td class="codes"><pre class="brush: clojure">(def number-literals
   (map float (range 10)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def test-range (map #(* 2 (- % 5)) (range 10)))</pre></td></tr><tr><td class="docs"><p>(defn match-func [x] (- (* 0.1 (abs x)) (sin x)))</p>
+</td><td class="codes"><pre class="brush: clojure">(def test-range (map #(* 2 (- % 5)) (range 10)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn match-func [x] (abs (* 3 (* x x))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def sample-actual (map float (map match-func test-range)))</pre></td></tr><tr><td class="docs"><p>Fitness function. Takes a tree, evals it, and returns a fitness/error score.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sample-fitness
@@ -3799,7 +3956,8 @@ traversing the evolved tree.</p>
                  :functions sample-functions :report sample-report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println &quot;Done!&quot;)
-        (sample-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.sinbowl" name="fungp.sample.sinbowl"><h1 class="project-name">fungp.sample.sinbowl</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+        (sample-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.sinbowl" name="fungp.sample.sinbowl"><h1 class="project-name">fungp.sample.sinbowl</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Sinbowl regression problem</h3>
+</td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.sinbowl
   (:use fungp.core)
   (:use fungp.util)
@@ -3840,32 +3998,7 @@ traversing the evolved tree.</p>
         [tree score] (rest (run-genetic-programming options))]
     (do (println &quot;Done!&quot;)
         (sinbowl-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.util" name="fungp.util"><h1 class="project-name">fungp.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(ns fungp.util
-    (:require [clojure.math [numeric-tower :as math]]))</pre></td></tr><tr><td class="docs"><p>Convenience function. Generates true with a probablilty of the
-   given parameter (a number between 0 and 1)</p>
-</td><td class="codes"><pre class="brush: clojure">(defn flip
-  [chance] (&lt; (rand) chance))</pre></td></tr><tr><td class="docs"><p>Find the entry in the function sequence for a given operator.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn find-op
-  [op funcs] (first (filter (fn [x] (= (:op x) op)) funcs)))</pre></td></tr><tr><td class="docs"><p>Take a tree and return a list of symbols based on the :name symbols.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn conv-code
-  [tree funcs]
-  (if (not (seq? tree))
-    (if (fn? tree) (:name (find-op tree funcs)) tree)
-    (map (fn [t] (conv-code t funcs)) tree)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn average
-  [list]
-  (let [sum (reduce + list)
-        length (count list)]
-    (/ sum length)))</pre></td></tr><tr><td class="docs"><p>Calculate error.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn off-by
-  [x y] (math/abs (- x y)))</pre></td></tr><tr><td class="docs"><p>Calculate error squared.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn off-by-sq
-  [x y] (let [error (off-by x y)]
-          (* error error)))</pre></td></tr><tr><td class="docs"><p>true if seq contains elm</p>
-</td><td class="codes"><pre class="brush: clojure">(defn in? 
-  [seq elm]  
-  (some #(= elm %) seq))</pre></td></tr><tr><td class="docs"><h3>Examples of functions to use</h3>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Safe versions of inverse and divide to avoid divide-by-zero errors.</p>
+</td><td class="codes"><pre class="brush: clojure">(ns fungp.util)</pre></td></tr><tr><td class="docs"><h3>Useful functions for evolved code</h3>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Inverts a number. If it's 0, return 0</p>
 </td><td class="codes"><pre class="brush: clojure">(defn inv
   [x]
@@ -3874,17 +4007,56 @@ traversing the evolved tree.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sdiv
   [x y]
   (if (zero? y) 0
-      (/ x y)))</pre></td></tr><tr><td class="docs">
+      (/ x y)))</pre></td></tr><tr><td class="docs"><p>Conditionals can be done in terms of 4 arity functions</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ifeq [a b c d] (if (= a b) c d))
+(defn ifnoteq [a b c d] (if (not (= a b)) c d))
+(defn gte [a b c d] (if (&gt;= a b) c d))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn gt [x y] (if (&gt; x y) 1 -1))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn sin [x] (Math/sin x))
 (defn cos [x] (Math/cos x))
 (defn tan [x] (Math/tan x))
 (defn abs [x] (if (&lt; x 0) (* -1 x) x))
 (defn dub [x] (* x x))
 (defn half [x] (sdiv x 2))
-(defn sqrt [x] (if (x &gt; 0) (Math/sqrt x) 0))</pre></td></tr><tr><td class="docs"><p>Conditionals can be done in terms of 4 arity functions</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn ifeq [a b c d] (if (= a b) c d))
-(defn ifnoteq [a b c d] (if (not (= a b)) c d))
-(defn gte [a b c d] (if (&gt;= a b) c d))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn gt [x y] (if (&gt; x y) 1 -1))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+(defn sqrt [x] (if (x &gt; 0) (Math/sqrt x) 0))</pre></td></tr><tr><td class="docs"><h3>Misc. manipulation/utility functions</h3>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Find the maximum height of a tree. The max height is the distance from the root to the
+   deepest leaf.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn max-tree-height
+  [tree]
+  (if (not (seq? tree)) 0
+    (+ 1 (reduce max (map max-tree-height tree)))))</pre></td></tr><tr><td class="docs"><p>Checks the type on a tree to make sure it's a list, symbol, or number.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn valid-tree?
+  [tree] (or (list? tree) (symbol? tree) (number? tree)))</pre></td></tr><tr><td class="docs"><p>Compiles a tree into a Clojure function, and thus into JVM bytecode. Takes a tree
+   and the parameters the function should have.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn compile-tree
+  [tree parameters] (eval (list 'fn parameters tree)))</pre></td></tr><tr><td class="docs"><p>Convenience function. Generates true with a probablilty of the
+   given parameter (a number between 0 and 1)</p>
+</td><td class="codes"><pre class="brush: clojure">(defn flip
+  [chance] (&lt; (rand) chance))</pre></td></tr><tr><td class="docs"><p>Find the entry in the function sequence for a given operator.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn find-op
+  [op funcs] (first (filter (fn [x] (= (:op x) op)) funcs)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn average
+  [list]
+  (let [sum (reduce + list)
+        length (count list)]
+    (/ sum length)))</pre></td></tr><tr><td class="docs"><p>Calculate error.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn off-by
+  [x y] (abs(- x y)))</pre></td></tr><tr><td class="docs"><p>Calculate error squared.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn off-by-sq
+  [x y] (let [error (off-by x y)]
+          (* error error)))</pre></td></tr><tr><td class="docs"><p>true if seq contains elm</p>
+</td><td class="codes"><pre class="brush: clojure">(defn in?
+  [seq elm]
+  (some #(= elm %) seq))</pre></td></tr><tr><td class="docs"><p>The macro used to define loops. Used by ADLs. Takes four code branches and one integer.</p>
+</td><td class="codes"><pre class="brush: clojure">(defmacro do-loop
+  [init break body update limit]
+    `(do ~init
+       (loop [loop-counter# ~limit value# 0]
+         (if (or (zero? loop-counter#)
+                 (&lt; ~break 0))
+           value#
+           (let [newvalue# ~body]
+             (do ~update
+               (recur (dec loop-counter#) newvalue#)))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
