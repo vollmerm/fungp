@@ -3155,12 +3155,12 @@ methods of tree building, similar to Koza's "ramped half-and-half" method.</p>
   [mutation-depth terminals numbers functions gtype]
   ;; conditions: either return terminal or create function and recurse
   (cond (zero? mutation-depth) (terminal terminals numbers)
-        (and (= type :grow)
+        (and (= gtype :grow)
              (flip 0.5))
         (terminal terminals numbers)
         :else (let [[func arity] (rand-nth functions)]
                 (cons func (repeatedly arity
-                                       #(create-tree (- mutation-depth 1)
+                                       #(create-tree (dec mutation-depth)
                                                      terminals
                                                      numbers
                                                      functions
@@ -3259,7 +3259,7 @@ the tree on its way back up the stack.</p>
                 (list (replace-subtree
                         (nth tree r) sub
                         (rand-int n)))
-                (nthrest tree (+ r 1)))))))</pre></td></tr><tr><td class="docs"><p>Prevent trees from growing too big by lifting a subtree if the tree height is
+                (nthrest tree (inc r)))))))</pre></td></tr><tr><td class="docs"><p>Prevent trees from growing too big by lifting a subtree if the tree height is
    greater than the max tree height.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn truncate
   [tree height]
