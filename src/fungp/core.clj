@@ -130,12 +130,12 @@
   [mutation-depth terminals numbers functions gtype]
   ;; conditions: either return terminal or create function and recurse
   (cond (zero? mutation-depth) (terminal terminals numbers)
-        (and (= type :grow)
+        (and (= gtype :grow)
              (flip 0.5))
         (terminal terminals numbers)
         :else (let [[func arity] (rand-nth functions)]
                 (cons func (repeatedly arity
-                                       #(create-tree (- mutation-depth 1)
+                                       #(create-tree (dec mutation-depth)
                                                      terminals
                                                      numbers
                                                      functions
@@ -244,7 +244,7 @@
                 (list (replace-subtree
                         (nth tree r) sub
                         (rand-int n)))
-                (nthrest tree (+ r 1)))))))
+                (nthrest tree (inc r)))))))
 
 (defn truncate
   "Prevent trees from growing too big by lifting a subtree if the tree height is
