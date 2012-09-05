@@ -203,7 +203,7 @@
   (if (zero? population-size) []
     (conj (create-population (dec population-size) mutation-depth terminals numbers functions
                              adf-arity adf-count adl-count adl-limit)
-          (create-module-tree (+ 1 (rand-int mutation-depth)) terminals numbers functions
+          (create-module-tree (inc (rand-int mutation-depth)) terminals numbers functions
                               adf-arity adf-count adl-count adl-limit
                               (if (flip 0.5) :grow :fill)))))
 
@@ -224,7 +224,7 @@
   "Return a random subtree of a list. Takes an optional second parameter that limits
    the depth to go before selecting a crossover point."
   ([tree]
-    (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
+    (rand-subtree tree (rand-int (inc (max-tree-height tree)))))
   ([tree n]
     (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) ;; don't split up (leaf)
                            (not (seq? tree))) tree
