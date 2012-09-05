@@ -31,6 +31,14 @@
   [hmap keys f]
   (map #(replace-key-value hmap % f) keys))
 
+;;; In order for the strategy of "strings to symbols of static methods" to work, we need to
+;;; execute the proper import statements. So the API allows for the user to submit a sequence
+;;; of strings representing classes to import. The key for this is "java-imports."
+(defn eval-import-statements
+  "Generate and eval import statements passed in via the Java API."
+  [imports]
+  (map eval (map #(list 'import (list 'quote (symbol %))) imports)))
+
 ;;; The idea is to have strings representing keywords and symbols. First all the string
 ;;; keys are replaced with keywords, and then the instances where symbols were used
 ;;; in the values are replaced with symbols. To include (for example) a fitness function
@@ -51,10 +59,11 @@
 ;;; Actually running the trees is complicated, as Java has no support for anonymous
 ;;; functions. As I said above, none of this code is tested so don't expect it to
 ;;; work yet.
-(defn -runSearch 
+(defn -runSearch
   "The static method for running the search, which takes a HashMap as a parameter."
   [hmap]
-  (run-genetic-programming (translate-hmap hmap)))
+  (do (eval-import-statements (hmap :java-imports))
+      (run-genetic-programming (translate-hmap hmap))))
 
 (defn -compileTree
   "Attempt to compile and run a tree of code."
