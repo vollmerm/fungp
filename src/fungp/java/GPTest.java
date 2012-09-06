@@ -50,9 +50,9 @@ public class GPTest {
           for (args[0] = 0; args[0] < 10; args[0]++) {
               tmp = GPSearch.applyTree(compiledTree, args);
               if (tmp instanceof Long) {
-                error += Math.abs((long) tmp - (args[0] * args[0] + (args[0] * 5)));
+                error += Math.abs((Long) tmp - (args[0] * args[0] + (args[0] * 5)));
               } else if (tmp instanceof Integer) {
-                error += Math.abs((int) tmp - (args[0] * args[0] + (args[0] * 5)));
+                error += Math.abs((Integer) tmp - (args[0] * args[0] + (args[0] * 5)));
               } else { throw new Exception("Unknown number type."); }
           }
         } catch (Exception e) { System.out.println(e); }

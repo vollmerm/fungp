@@ -45,8 +45,8 @@
 ;;; The following code is used to test the evolved functions.
 
 (def test-range
-  "This defines the range of input to use as test input. The first argument for map is a shortcut for
-   anonymous functions in Clojure"
+  "This defines the range of input to use as test input. The first argument for map here uses a shortcut for
+   single-variable anonymous functions in Clojure."
   (map #(* 2 (- % 5)) (range 10)))
 
 (defn match-func
