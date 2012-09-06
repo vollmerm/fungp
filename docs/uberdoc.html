@@ -3029,7 +3029,7 @@ net.brehaut.ClojureTools = (function (SH) {
   };
 })(SyntaxHighlighter);
 </script><title>fungp -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">fungp</h1><h2 class="project-version">0.2</h2><br /><p>Genetic programming in Clojure</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.1</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.defined-branches">fungp.defined-branches</a></li><li><a href="#fungp.sample.cart">fungp.sample.cart</a></li><li><a href="#fungp.sample.compile-ants">fungp.sample.compile-ants</a></li><li><a href="#fungp.sample.interpret-ants">fungp.sample.interpret-ants</a></li><li><a href="#fungp.sample.sinbowl">fungp.sample.sinbowl</a></li><li><a href="#fungp.tutorial">fungp.tutorial</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.1</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.defined-branches">fungp.defined-branches</a></li><li><a href="#fungp.java-api">fungp.java-api</a></li><li><a href="#fungp.sample.cart">fungp.sample.cart</a></li><li><a href="#fungp.sample.compile-ants">fungp.sample.compile-ants</a></li><li><a href="#fungp.sample.interpret-ants">fungp.sample.interpret-ants</a></li><li><a href="#fungp.sample.sinbowl">fungp.sample.sinbowl</a></li><li><a href="#fungp.tutorial">fungp.tutorial</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
 
 <h2>Downloading and Installing</h2>
 
@@ -3223,7 +3223,7 @@ as a starting point. Islands, which will be implemented further down, are lists 
   (if (zero? population-size) []
     (conj (create-population (dec population-size) mutation-depth terminals numbers functions
                              adf-arity adf-count adl-count adl-limit)
-          (create-module-tree (+ 1 (rand-int mutation-depth)) terminals numbers functions
+          (create-module-tree (inc (rand-int mutation-depth)) terminals numbers functions
                               adf-arity adf-count adl-count adl-limit
                               (if (flip 0.5) :grow :fill)))))</pre></td></tr><tr><td class="docs"><h3>Tree manipulation</h3>
 
@@ -3241,7 +3241,7 @@ the tree on its way back up the stack.</p>
    the depth to go before selecting a crossover point.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn rand-subtree
   ([tree]
-    (rand-subtree tree (rand-int (+ 1 (max-tree-height tree)))))
+    (rand-subtree tree (rand-int (inc (max-tree-height tree)))))
   ([tree n]
     (if (or (zero? n) (and (seq? tree) (= (count tree) 1)) ;; don't split up (leaf)
                            (not (seq? tree))) tree
@@ -3619,7 +3619,89 @@ functions are helper functions for creating individuals with ADL branches.</p>
                             (nth tree1 5)))]
     (concat (take cross vec1)
             (list newtree)
-            (drop (+ cross 1) vec1))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.cart" name="fungp.sample.cart"><h1 class="project-name">fungp.sample.cart</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Cart problem</h3>
+            (drop (+ cross 1) vec1))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.java-api" name="fungp.java-api"><h1 class="project-name">fungp.java-api</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>A Simple Java API</h2>
+
+<p>This is a very basic attempt at a Java API for <em>fungp</em> based around using strings
+like symbols. It is not even close to idiomatic Java but should be enough to get
+<em>fungp</em> running in a Java program.</p>
+
+<p>That said, none of this code is tested at all and you shouldn't expect any of it
+to work.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>This declares not only the current namespace but the class to be generated as
+   the external Java API.</p>
+</td><td class="codes"><pre class="brush: clojure">(ns fungp.java-api
+  (:use fungp.core)
+  (:use fungp.util)
+  (:use clojure.walk)
+  (:use clojure.pprint)
+  (:use [clojure.string :only (split)])
+  (:import (java.util HashMap))
+  (:gen-class
+    :name fungp.GPSearch
+    :methods [^{:static true} [runSearch [java.util.HashMap] Object]
+              ^{:static true} [compileTree [Object Object] 
+                               clojure.lang.IFn]
+              ^{:static true} [applyTree [clojure.lang.IFn Object] Object]]))</pre></td></tr><tr><td class="docs"><p>Apply a function to a value in a map and assoc the result.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn replace-key-value
+  [hmap key f]
+  (assoc hmap key (f (get hmap key))))</pre></td></tr><tr><td class="docs"><p>Apply replace-key-value for multiple keys.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn replace-values-for-keys
+  [hmap keys f]
+  (if (empty? keys) hmap
+    (recur (replace-key-value hmap (first keys) f)
+           (rest keys)
+           f)))</pre></td></tr><tr><td class="docs"><p>Generate and eval import statements passed in via the Java API.</p>
+
+<p>In order for the strategy of "strings to symbols of static methods" to work, we need to
+execute the proper import statements. So the API allows for the user to submit a sequence
+of strings representing classes to import. The key for this is "java-imports."</p>
+</td><td class="codes"><pre class="brush: clojure">(defn eval-import-statements
+  [imports]
+  (map eval (map #(list 'import (list 'quote (symbol %))) imports)))</pre></td></tr><tr><td class="docs"><p>Takes a string like "+ 2" and converts it to [+ 2]</p>
+</td><td class="codes"><pre class="brush: clojure">(defn function-string-to-vector
+  [s]
+  (let [s (seq (split s #&quot;\s+&quot;))]
+    [(symbol (first s)) (Integer/parseInt (second s))]))</pre></td></tr><tr><td class="docs"><p>Translate the hash map passed in from (presumably) Java into something usable by fungp.</p>
+
+<p>The idea is to have strings representing keywords and symbols. First all the string
+keys are replaced with keywords, and then the instances where symbols were used
+in the values are replaced with symbols. To include (for example) a fitness function
+written in Java, you could provide a string containing the fully qualified path to
+a static Java method for the "fitness" value in the HashMap.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn translate-hmap
+  [hmap]
+  (-&gt; hmap
+      (keywordize-keys)
+      (replace-key-value
+       :terminals
+       #(map symbol %))
+      (replace-key-value
+       :functions
+       #(vec (map function-string-to-vector %)))
+      (replace-key-value
+       :numbers
+       #(let [nums (seq %)] (if (nil? nums) [] nums)))
+      (replace-key-value
+       :report
+       #(fn report [a b] (eval `(~(symbol %) (quote ~a) ~b))))
+      (replace-key-value
+       :fitness
+       #(fn fitness [a] (eval `(~(symbol %) (quote ~a)))))))</pre></td></tr><tr><td class="docs"><p>The static method for running the search, which takes a HashMap as a parameter.</p>
+
+<p>Actually running the trees is complicated, as Java has no support for anonymous
+functions. </p>
+</td><td class="codes"><pre class="brush: clojure">(defn -runSearch
+  [hmap]
+  (let [hmap (into {} hmap)]
+    (do (eval-import-statements (get hmap :java-imports))
+      (let [hmap (translate-hmap hmap)]
+        (run-genetic-programming hmap)))))</pre></td></tr><tr><td class="docs"><p>Attempt to compile and run a tree of code.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn -compileTree
+  [tree parameters]
+  (eval (list 'fn (vec (map symbol parameters)) tree)))</pre></td></tr><tr><td class="docs"><p>Use apply to run a function that was compiled with compileTree.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn -applyTree
+  [func args]
+  (apply func args))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.cart" name="fungp.sample.cart"><h1 class="project-name">fungp.sample.cart</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Cart problem</h3>
 
 <p>This is an example of evolving a function that takes parameters and
 returns a number. In this case, the function acts as a controller for
@@ -4000,7 +4082,7 @@ terminals.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sample-fitness
   [tree]
   (try
-    (let [f (compile-tree tree parameters) ;; compile using compile-tree
+    (let [f (compile-tree tree sample-parameters) ;; compile using compile-tree
           results (map f test-range)] ;; map the function to the test range
       ;; then we compare the test results to the actual expected output
       ;; off-by-sq is a utility function that calculates difference squared
@@ -4036,5 +4118,71 @@ terminals.</p>
    nil
    user=> (test-genetic-program 15 15)
    ...</p>
-</td><td class="codes"></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+</td><td class="codes"></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.util" name="fungp.util"><h1 class="project-name">fungp.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns fungp.util)</pre></td></tr><tr><td class="docs"><h3>Useful functions for evolved code</h3>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Inverts a number. If it's 0, return 0</p>
+</td><td class="codes"><pre class="brush: clojure">(defn inv
+  [x]
+  (if (zero? x) 0
+      (/ 1 x)))</pre></td></tr><tr><td class="docs"><p>Divide two numbers. Returns 0 on attempt to divide by 0</p>
+</td><td class="codes"><pre class="brush: clojure">(defn sdiv
+  [x y]
+  (if (zero? y) 0
+      (/ x y)))</pre></td></tr><tr><td class="docs"><p>Conditionals can be done in terms of 4 arity functions</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn ifeq [a b c d] (if (= a b) c d))
+(defn ifnoteq [a b c d] (if (not (= a b)) c d))
+(defn gte [a b c d] (if (&gt;= a b) c d))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn gt [x y] (if (&gt; x y) 1 -1))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn sin [x] (Math/sin x))
+(defn cos [x] (Math/cos x))
+(defn tan [x] (Math/tan x))
+(defn abs [x] (if (&lt; x 0) (* -1 x) x))
+(defn dub [x] (* x x))
+(defn half [x] (sdiv x 2))
+(defn sqrt [x] (if (x &gt; 0) (Math/sqrt x) 0))</pre></td></tr><tr><td class="docs"><h3>Misc. manipulation/utility functions</h3>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Find the maximum height of a tree. The max height is the distance from the root to the
+   deepest leaf.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn max-tree-height
+  [tree]
+  (if (not (seq? tree)) 0
+    (+ 1 (reduce max (map max-tree-height tree)))))</pre></td></tr><tr><td class="docs"><p>Checks the type on a tree to make sure it's a list, symbol, or number.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn valid-tree?
+  [tree] (or (list? tree) (symbol? tree) (number? tree)))</pre></td></tr><tr><td class="docs"><p>Compiles a tree into a Clojure function, and thus into JVM bytecode. Takes a tree
+   and the parameters the function should have.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn compile-tree
+  [tree parameters] (eval (list 'fn parameters tree)))</pre></td></tr><tr><td class="docs"><p>Convenience function. Generates true with a probablilty of the
+   given parameter (a number between 0 and 1)</p>
+</td><td class="codes"><pre class="brush: clojure">(defn flip
+  [chance] (&lt; (rand) chance))</pre></td></tr><tr><td class="docs"><p>Find the entry in the function sequence for a given operator.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn find-op
+  [op funcs] (first (filter (fn [x] (= (:op x) op)) funcs)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn average
+  [list]
+  (let [sum (reduce + list)
+        length (count list)]
+    (/ sum length)))</pre></td></tr><tr><td class="docs"><p>Calculate error.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn off-by
+  [x y] (abs(- x y)))</pre></td></tr><tr><td class="docs"><p>Calculate error squared.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn off-by-sq
+  [x y] (let [error (off-by x y)]
+          (* error error)))</pre></td></tr><tr><td class="docs"><p>true if seq contains elm</p>
+</td><td class="codes"><pre class="brush: clojure">(defn in?
+  [seq elm]
+  (some #(= elm %) seq))</pre></td></tr><tr><td class="docs"><p>The macro used to define loops. Used by ADLs. Takes four code branches and one integer.</p>
+</td><td class="codes"><pre class="brush: clojure">(defmacro do-loop
+  [init break body update limit]
+    `(do ~init
+       (loop [loop-counter# ~limit value# 0]
+         (if (or (zero? loop-counter#)
+                 (&lt; ~break 0))
+           value#
+           (let [newvalue# ~body]
+             (do ~update
+               (recur (dec loop-counter#) newvalue#)))))))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
+</td><td class="codes"><pre class="brush: clojure">(defn generic-report
+  [tree fitness]
+  (println tree)
+  (println (str &quot;Error:\t&quot; fitness &quot;\n&quot;))
+  (flush))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
        SyntaxHighlighter.all()</script></body></html>
