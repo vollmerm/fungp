@@ -14,22 +14,28 @@
   (:use fungp.core)
   (:use fungp.util)
   (:use clojure.walk)
+  (:use clojure.pprint)
+  (:use [clojure.string :only (split)])
   (:import (java.util HashMap))
   (:gen-class
     :name fungp.GPSearch
     :methods [^{:static true} [runSearch [java.util.HashMap] Object]
-              ^{:static true} [compileTree [Object Object] Object]
-              ^{:static true} [applyTree [Object Object] Object]]))
+              ^{:static true} [compileTree [Object Object] 
+                               clojure.lang.IFn]
+              ^{:static true} [applyTree [clojure.lang.IFn Object] Object]]))
 
 (defn replace-key-value
   "Apply a function to a value in a map and assoc the result."
-  [hmap key value f]
-  (assoc hmap key (f (hmap key))))
+  [hmap key f]
+  (assoc hmap key (f (get hmap key))))
 
 (defn replace-values-for-keys
   "Apply replace-key-value for multiple keys."
   [hmap keys f]
-  (map #(replace-key-value hmap % f) keys))
+  (if (empty? keys) hmap
+    (recur (replace-key-value hmap (first keys) f)
+           (rest keys)
+           f)))
 
 ;;; In order for the strategy of "strings to symbols of static methods" to work, we need to
 ;;; execute the proper import statements. So the API allows for the user to submit a sequence
@@ -38,6 +44,13 @@
   "Generate and eval import statements passed in via the Java API."
   [imports]
   (map eval (map #(list 'import (list 'quote (symbol %))) imports)))
+
+(defn function-string-to-vector
+  "Takes a string like \"+ 2\" and converts it to [+ 2]"
+  [s]
+  (let [s (seq (split s #"\s+"))]
+    [(symbol (first s)) (Integer/parseInt (second s))]))
+
 
 ;;; The idea is to have strings representing keywords and symbols. First all the string
 ;;; keys are replaced with keywords, and then the instances where symbols were used
@@ -49,26 +62,36 @@
   [hmap]
   (-> hmap
       (keywordize-keys)
-      (replace-values-for-keys
-       [:functions :terminals :numbers]
-       #(map symbol (seq %)))
-      (replace-values-for-keys
-       [:fitness :report]
-       #(symbol %))))
+      (replace-key-value
+       :terminals
+       #(map symbol %))
+      (replace-key-value
+       :functions
+       #(vec (map function-string-to-vector %)))
+      (replace-key-value
+       :numbers
+       #(let [nums (seq %)] (if (nil? nums) [] nums)))
+      (replace-key-value
+       :report
+       #(fn report [a b] (eval `(~(symbol %) (quote ~a) ~b))))
+      (replace-key-value
+       :fitness
+       #(fn fitness [a] (eval `(~(symbol %) (quote ~a)))))))
 
 ;;; Actually running the trees is complicated, as Java has no support for anonymous
-;;; functions. As I said above, none of this code is tested so don't expect it to
-;;; work yet.
+;;; functions. 
 (defn -runSearch
   "The static method for running the search, which takes a HashMap as a parameter."
   [hmap]
-  (do (eval-import-statements (hmap :java-imports))
-      (run-genetic-programming (translate-hmap hmap))))
+  (let [hmap (into {} hmap)]
+    (do (eval-import-statements (get hmap :java-imports))
+      (let [hmap (translate-hmap hmap)]
+        (run-genetic-programming hmap)))))
 
 (defn -compileTree
   "Attempt to compile and run a tree of code."
   [tree parameters]
-  (compile-tree tree parameters))
+  (eval (list 'fn (vec (map symbol parameters)) tree)))
 
 (defn -applyTree
   "Use apply to run a function that was compiled with compileTree."

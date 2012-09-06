@@ -90,3 +90,10 @@
            (let [newvalue# ~body]
              (do ~update
                (recur (dec loop-counter#) newvalue#)))))))
+
+(defn generic-report
+  "Reporting function. Prints out the tree and its score"
+  [tree fitness]
+  (println tree)
+  (println (str "Error:\t" fitness "\n"))
+  (flush))
