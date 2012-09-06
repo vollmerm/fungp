@@ -63,7 +63,7 @@
   "The fitness function; it takes a tree, evals it, and returns a fitness/error score."
   [tree]
   (try
-    (let [f (compile-tree tree parameters) ;; compile using compile-tree
+    (let [f (compile-tree tree sample-parameters) ;; compile using compile-tree
           results (map f test-range)] ;; map the function to the test range
       ;; then we compare the test results to the actual expected output
       ;; off-by-sq is a utility function that calculates difference squared
