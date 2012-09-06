@@ -4,12 +4,15 @@ About this program
 **fungp** is a genetic programming library implemented in the Clojure programming language. It's pronounced 
 fun-gee-pee, for *functional genetic programming*.
 
-A far more detailed explanation can be found in the core.clj source code. It is thoroughly documented. 
+A far more detailed explanation can be found in the core.clj source code. It is thoroughly documented. An
+HTML document generated from the source is in the docs/ folder, and is available hosted on my school's
+web server [here](http://gaia.ecs.csus.edu/~vollmerm/gp). It's a good place to start and it includes a 
+getting started tutoral (the source of which is of course available under src/fungp).
 
 How do I use it?
 -----------------
 
-See the samples for example usage. The general idea is to pass in a fitness function, a terminal set,
+See the samples for example usage (located in src/fungp/samples). The general idea is to pass in a fitness function, a terminal set,
 a function set, and other various options, and the algorithm will attempt to evolve code out of 
 the functions and terminals.
 
