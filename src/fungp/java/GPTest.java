@@ -35,27 +35,27 @@ public class GPTest {
         hmap.put("fitness", "fungp.GPTest/fitnessTest");
         hmap.put("report", "fungp.util/generic-report");
         hmap.put("java-imports",javaImports);
-				hmap.put("mutation-depth", 3);
+        hmap.put("mutation-depth", 3);
 
         return GPSearch.runSearch(hmap);
     }
 
     public static long fitnessTest(Object tree) {
-				Object tmp;
-			 	long error = 0;
-				int[] args = new int[1];
+        Object tmp;
+        long error = 0;
+        int[] args = new int[1];
         String[] terminals = {"x"};
         IFn compiledTree = (IFn) GPSearch.compileTree(tree, terminals);
-				try {
-					for (args[0] = 0; args[0] < 10; args[0]++) {
-							tmp = GPSearch.applyTree(compiledTree, args);
-							if (tmp instanceof Long) {
-								error += Math.abs((long) tmp - (args[0] * args[0] + (args[0] * 5)));
-							} else if (tmp instanceof Integer) {
-								error += Math.abs((int) tmp - (args[0] * args[0] + (args[0] * 5)));
-							} else { throw new Exception("Unknown number type."); }
-					}
-				} catch (Exception e) { System.out.println(e); }
+        try {
+          for (args[0] = 0; args[0] < 10; args[0]++) {
+              tmp = GPSearch.applyTree(compiledTree, args);
+              if (tmp instanceof Long) {
+                error += Math.abs((long) tmp - (args[0] * args[0] + (args[0] * 5)));
+              } else if (tmp instanceof Integer) {
+                error += Math.abs((int) tmp - (args[0] * args[0] + (args[0] * 5)));
+              } else { throw new Exception("Unknown number type."); }
+          }
+        } catch (Exception e) { System.out.println(e); }
         return error;
     }
 }
