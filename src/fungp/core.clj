@@ -397,6 +397,7 @@
 ;;; There are some extra considerations here. The function should:
 ;;;
 ;;;  * stop when a perfect individual has been found, meaning fitness is zero
+;;;
 ;;;  * be resumable, meaning the search can halt, returning information, and that information
 ;;;    can be passed back in to start the search at the same place
 
