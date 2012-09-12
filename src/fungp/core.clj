@@ -183,10 +183,9 @@
         (build-branch-vector create-tree mutation-depth terminals numbers functions
                              adf-arity adf-count adl-count adl-limit)
         ;; create the main branch
-        (create-tree mutation-depth terminals numbers
+        (create-tree mutation-depth (concat terminals (gen-adl-terminals adl-count)) numbers
                      ;; add the branches to the function vector
-                     (concat functions (build-branch-name-list adf-count adf-arity
-                                                               adl-count))
+                     (concat functions (gen-adf-func adf-count adf-arity))
                      type)))
 
 ;;; #### Populations

@@ -2,8 +2,7 @@
 ;;; ------------------------------
 ;;;
 ;;; *fungp* is capable of evolving multiple branches in an individual. In addition to the main branch,
-;;; or the "Result Defining Branch," it can evolve functions (Automatically Defined Functions, or ADFs),
-;;; loops (Automatically Defined Loops, or ADLs), and iterators (Automatically Defined Iterators, or ADIs).
+;;; or the "Result Defining Branch," it can evolve functions (Automatically Defined Functions, or ADFs).
 ;;;
 ;;; Some of the handling for these branches was covered in fungp.core, but the details are handled here.
 
@@ -70,7 +69,7 @@
                                   functions
                                   :grow)]
     [(symbol (str "adl" num))
-     (list 'do-loop
+     (list 'fungp.util/do-loop
            ;; do-loop has 4 branches of code and one number literal
            (make-branch)
            (make-branch)
@@ -88,8 +87,8 @@
                       functions ; TODO: include ADFs and previous ADLs, if any
                       adl-limit (dec adl-count)))))
 
-(defn gen-adl-func
-  "Generate a vector of adl name symbols."
+(defn gen-adl-terminals
+  "Generate a vector of symbols to reference the result of the ADLs."
   [adl-count]
   (vec (map #(symbol (str "adl" %)) (range adl-count))))
 
@@ -106,12 +105,6 @@
                    (make-adl-branch create-tree mutation-depth terminals numbers
                                     functions adl-count adl-limit)))))
 
-(defn build-branch-name-list
-  "Returns a vector of symbols that will be concatenated onto the functions vector in create-module-tree. The
-   returned vector should have things like 'adf0 in it"
-  [adf-count adf-arity adl-count]
-  (concat (gen-adf-func adf-count adf-arity) (gen-adl-func adl-count)))
-
 (defn mutate-branch
   "Takes an element of the branch vector, a mutation function, and the tunable parameters
    the mutation function needs, and applies mutation to each of the branches."
@@ -125,7 +118,7 @@
                            mutation-depth terminals
                            numbers functions))
         (and (list? letf)
-             (= 'do-loop (first letf)))
+             (= 'fungp.util/do-loop (first letf)))
         ;; it's a loop! mutate each branch individually
         (list (first letf)
               (mutate-tree (nth letf 1)
@@ -156,7 +149,7 @@
                (list (first %) (second %)
                      (truncate (nth % 2) height))
                (and (list? %)
-                    (= 'do-loop (first %)))
+                    (= 'fungp.util/do-loop (first %)))
                (list (first %)
                      (truncate (nth % 1) height)
                      (truncate (nth % 2) height)
@@ -175,7 +168,7 @@
         newtree (cond (= (first tree1) 'fn)
                       (list (first tree1) (second tree1)
                             (crossover (nth tree1 2) (nth tree2 2)))
-                      (= (first tree1) 'do-loop)
+                      (= (first tree1) 'fungp.util/do-loop)
                       (list (nth tree1 0)
                             (crossover (nth tree1 1) (nth tree2 1))
                             (crossover (nth tree1 2) (nth tree2 2))

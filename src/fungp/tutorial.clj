@@ -9,7 +9,7 @@
   "Sample use of fungp."
   (:use fungp.core)
   (:use fungp.util)
-  (:require clojure.pprint))
+  (:use clojure.pprint))
 
 ;;; ### Choosing functions and terminals
 ;;;
@@ -74,7 +74,7 @@
 (defn sample-report
   "Reporting function. Prints out the tree and its score"
   [tree fitness]
-  (clojure.pprint/pprint tree)
+  (pprint tree)
   (println (str "Error:\t" fitness "\n"))
   (flush))
 
@@ -91,11 +91,11 @@
   (println)
   ;; These keyword arguments specify the options for fungp. They should be self-explanatory,
   ;; but you can read more about them in fungp.core
-  (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 100
+  (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 50
                  :tournament-size 5 :mutation-probability 0.1
                  :max-depth 10 :terminals sample-parameters
                  :numbers number-literals :fitness sample-fitness
-                 :functions sample-functions :report sample-report}
+                 :functions sample-functions :report sample-report }
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
         (sample-report tree score))))
