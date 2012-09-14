@@ -14,7 +14,7 @@
 <p>If you’re reading this as HTML, it was automatically generated from the README.md file in the root of the <a href="https://github.com/probabilityZero/fungp">source repository</a>.</p>
 <h2 id="about-this-program">About this program</h2>
 <p><strong>fungp</strong> is a genetic programming library implemented in the Clojure programming language. It’s pronounced fun-gee-pee, for <em>functional genetic programming</em>.</p>
-<p>A far more detailed explanation can be found in the core.clj source code. It is thoroughly documented. An HTML document generated from the source is in the <code>docs/</code> folder, and is available hosted on my school’s web server <a href="http://gaia.ecs.csus.edu/~vollmerm/gp/uberdoc.html">here</a>. It’s a good place to start and it includes a getting started tutoral (the source of which is of course available under src/fungp).</p>
+<p>A far more detailed explanation can be found in the core.clj source code. It is thoroughly documented. An HTML document generated from the source is in the <code>docs/</code> folder, and <a href="http://gaia.ecs.csus.edu/~vollmerm/gp/uberdoc.html">is available hosted on my school’s web server here</a>. It’s a good place to start and it includes a getting started tutoral (the source of which is of course available under src/fungp).</p>
 <h2 id="how-do-i-set-it-up">How do I set it up?</h2>
 <p>You’ll need Clojure first, but that’s easy. You can be up and running in seconds if you already have Java installed.</p>
 <p><a href="https://github.com/technomancy/leiningen#installation">First you install Leiningen.</a> This is how you’d do that in a Unix-like system.</p>
@@ -28,6 +28,13 @@ lein</code></pre>
 <p>Once you have Clojure and Lein running you can grab fungp:</p>
 <pre><code>git clone https://github.com/probabilityZero/fungp.git
 cd fungp</code></pre>
+<p>You can also list <strong>fungp</strong> as a dependency in your <code>project.clj</code> and make lein install it for you:</p>
+<pre><code>(defproject testfungp &quot;0.1.0-SNAPSHOT&quot;
+  :description &quot;FIXME: write description&quot;
+  :url &quot;http://example.com/FIXME&quot;
+  :dependencies [[org.clojure/clojure &quot;1.3.0&quot;]
+                 [fungp &quot;0.3.1&quot;]])</code></pre>
+<p>Then run <code>lein deps</code> and lein will download the library.</p>
 <h2 id="how-do-i-use-it">How do I use it?</h2>
 <p>See the samples for example usage (located in src/fungp/samples). The general idea is to pass in a fitness function, a terminal set, a function set, and other various options, and the algorithm will attempt to evolve code out of the functions and terminals.</p>
 <p>The <strong>run-genetic-programming</strong> function accepts the following options keywords:</p>

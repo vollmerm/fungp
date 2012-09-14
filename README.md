@@ -12,8 +12,8 @@ About this program
 fun-gee-pee, for *functional genetic programming*.
 
 A far more detailed explanation can be found in the core.clj source code. It is thoroughly documented. An
-HTML document generated from the source is in the ```docs/``` folder, and is available hosted on my school's
-web server [here](http://gaia.ecs.csus.edu/~vollmerm/gp/uberdoc.html). It's a good place to start and it includes a
+HTML document generated from the source is in the ```docs/``` folder, and [is available hosted on my school's
+web server here](http://gaia.ecs.csus.edu/~vollmerm/gp/uberdoc.html). It's a good place to start and it includes a
 getting started tutoral (the source of which is of course available under src/fungp).
 
 How do I set it up?
@@ -41,6 +41,18 @@ Once you have Clojure and Lein running you can grab fungp:
 git clone https://github.com/probabilityZero/fungp.git
 cd fungp
 ```
+
+You can also list **fungp** as a dependency in your ```project.clj``` and make lein install it for you:
+
+```
+(defproject testfungp "0.1.0-SNAPSHOT"
+  :description "FIXME: write description"
+  :url "http://example.com/FIXME"
+  :dependencies [[org.clojure/clojure "1.3.0"]
+                 [fungp "0.3.1"]])
+```
+
+Then run ```lein deps``` and lein will download the library.
 
 How do I use it?
 ----------------
