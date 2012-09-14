@@ -14,7 +14,7 @@
 (ns fungp.sample.interpret-ants
   (:use fungp.core)
   (:use fungp.util)
-  (:require clojure.pprint))
+  (:use clojure.pprint))
 
 ;;; First some constants need to be established.
 
@@ -70,11 +70,11 @@
   "Simulate the ant movements by repeatedly interpreting the movement function."
   [iter full-tree tree ant-dir ant-x ant-y food eaten steps]
   (cond (zero? iter) (+ MAXSTEPS (count food))
-        (and (seq? tree) (empty? tree)) 
+        (and (seq? tree) (empty? tree))
         (recur (dec iter) full-tree full-tree ant-dir ant-x ant-y food eaten (inc steps))
         (empty? food) steps ;; ant ate all the food
-        :else 
-        (cond (not (seq? tree)) 
+        :else
+        (cond (not (seq? tree))
               (recur iter full-tree '()
                      (new-direction tree ant-dir)
                      (new-x tree ant-dir ant-x)
@@ -111,17 +111,18 @@
 (defn ant-report
   "Reporting function. Prints out the tree and its score"
   [tree fitness]
-  (clojure.pprint/pprint (nth tree 2))(print "\n")
-  (print "Error:\t")(print fitness)(print "\n\n")
+  (pprint (nth tree 2))
+  (print (str "Error:\t" fitness "\n\n"))
   (flush))
 
 (defn test-ants [n1 n2]
   (println "Ant problem\n")
   (println (str "Food count: " NUMFOOD "\n"))
-  (let [options {:iterations n1 :migrations n2 :num-islands 2 :population-size 200 :tournament-size 5 :mutation-probability 0.1
+  (let [options {:iterations n1 :migrations n2 :num-islands 8 :population-size 50
                  :max-depth 5 :mutation-depth 1
                  :terminals ant-terminals :fitness ant-fitness
                  :functions ant-functions :report ant-report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
         (ant-report tree score))))
+

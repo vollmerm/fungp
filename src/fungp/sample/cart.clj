@@ -15,7 +15,7 @@
 (ns fungp.sample.cart
   (:use fungp.core)
   (:use fungp.util)
-  (:require clojure.pprint))
+  (:use clojure.pprint))
 
 ;;; #### Some constants
 
@@ -62,16 +62,10 @@
 
 ;;; #### Some existing solutions
 
-(defn cart-optimal "The optimal solution" [v x] (gt (* -1 x) (* v (abs v))))
+(defn cart-optimal "The solution according to physics"
+  [v x] (gt (* -1 x) (* v (abs v))))
 
 (defn cart-suboptimal [v x] (gt (* -1 x) (* v v)))
-
-(def cart-optimal-error (cart-error cart-optimal))
-
-(def cart-evol (fn [v x] (let [] (fungp.util/gt (- x v) (+ (+ x x) (+ x x))))))
-(def cart-evol2 (fn [v x] (let [] (- (- (- -1 x) (+ x v))
-                                     (- (* (+ -1 v) (* -1 x))
-                                        (fungp.util/gt (fungp.util/abs x) -1))))))
 
 ;;; #### Initializing fungp
 
@@ -83,8 +77,8 @@
 (defn cart-report
   "Reporting function. Prints out the tree and its score"
   [tree fitness]
-  (clojure.pprint/pprint (list 'fn '[v x] tree))(print "\n")
-  (print "Error:\t")(print fitness)(print "\n\n")
+  (pprint (list 'fn '[v x] tree))
+  (print (str "Error:\t" fitness "\n\n"))
   (flush))
 
 (defn test-cart
@@ -103,3 +97,4 @@
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
         (cart-report tree score))))
+

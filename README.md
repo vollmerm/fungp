@@ -1,19 +1,47 @@
 About this program
 ------------------
 
-**fungp** is a genetic programming library implemented in the Clojure programming language. It's pronounced 
+**fungp** is a genetic programming library implemented in the Clojure programming language. It's pronounced
 fun-gee-pee, for *functional genetic programming*.
 
 A far more detailed explanation can be found in the core.clj source code. It is thoroughly documented. An
 HTML document generated from the source is in the docs/ folder, and is available hosted on my school's
-web server [here](http://gaia.ecs.csus.edu/~vollmerm/gp). It's a good place to start and it includes a 
+web server [here](http://gaia.ecs.csus.edu/~vollmerm/gp). It's a good place to start and it includes a
 getting started tutoral (the source of which is of course available under src/fungp).
 
+How do I set it up?
+-------------------
+
+You'll need Clojure first, but that's easy. You can be up and running in seconds if you already have Java installed.
+
+First you install Leiningen:
+
+```
+mkdir ~/bin
+wget https://raw.github.com/technomancy/leiningen/preview/bin/lein
+mv lein ~/bin
+chmod 755 ~/bin/lein
+lein
+```
+
+This assumes ~/bin is on your $PATH. The lein executable could go anywhere as long as it's
+on your path, but I'd recommend you put it somewhere in your user's home directory.
+
+Because you don't need root/sudo access to do this, it works fine on limited user accounts
+(to my friends at CSUS, that means it runs fine on Athena).
+
+Once you have Clojure and Lein running you can grab fungp:
+
+```
+git clone https://github.com/probabilityZero/fungp.git
+cd fungp
+```
+
 How do I use it?
------------------
+----------------
 
 See the samples for example usage (located in src/fungp/samples). The general idea is to pass in a fitness function, a terminal set,
-a function set, and other various options, and the algorithm will attempt to evolve code out of 
+a function set, and other various options, and the algorithm will attempt to evolve code out of
 the functions and terminals.
 
 The **run-genetic-programming** function accepts the following options keywords:
@@ -37,7 +65,12 @@ The **run-genetic-programming** function accepts the following options keywords:
 What does it do?
 ----------------
 
-Here's a sample output from the test function in sample.clj:
+Basically, fungp uses a process of evolution (mimicing natural selection in nature) to create and rewrite
+Clojure code. Again, for a complete explanation look to fungp.core, or read [Wikipedia's explanation of 
+Genetic Programming](http://en.wikipedia.org/wiki/Genetic_programming).
+
+Here's a sample output from a symbolic regression problem. Reports are printed to the screen periodically, 
+not every generation.
 
 ```
 fungp :: Functional Genetic Programming in Clojure
@@ -99,4 +132,4 @@ Error:	0.0
 License
 -------
 
-Project created by Mike Vollmer and released under GPL. See the LICENCE file distributed with this code. 
+Project created by Mike Vollmer and released under GPL. See the LICENCE file distributed with this code.

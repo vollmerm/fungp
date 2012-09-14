@@ -3,7 +3,7 @@
 (ns fungp.sample.sinbowl
   (:use fungp.core)
   (:use fungp.util)
-  (:require clojure.pprint))
+  (:use clojure.pprint))
 
 (defn sinbowl-function
   "The function to match"
@@ -25,7 +25,7 @@
 
 (def test-range
   "The input test cases"
-  (map #(- % 20) (range 40)))
+  (map #(float (* (- % 7) 3)) (range 14)))
 
 (def sinbowl-actual
   "The output test cases"
@@ -43,8 +43,8 @@
 (defn sinbowl-report
   "Reporting function. Prints out the tree and its score"
   [tree fitness]
-  (clojure.pprint/pprint (list 'fn '[a] tree))(print "\n")
-  (print "Error:\t")(print fitness)(print "\n\n")
+  (pprint (list 'fn '[a] tree))
+  (print (str "Error:\t" fitness "\n\n"))
   (flush))
 
 (defn test-sinbowl [n1 n2]
@@ -52,10 +52,12 @@
   (println (str "Test outputs: " (vec sinbowl-actual)))
   (println (str "Max generations: " (* n1 n2)))
   (println)
-  (let [options {:iterations n1 :migrations n2 :num-islands 6 :population-size 50 :tournament-size 4 :mutation-probability 0.1
-                 :max-depth 10 :terminals sinbowl-parameters :numbers sinbowl-numbers :fitness sinbowl-fitness
-                 :functions sinbowl-functions :report sinbowl-report :adf-count 1}
+  (let [options {:iterations n1 :migrations n2 :num-islands 6 
+                 :population-size 30
+                 :max-depth 5 :terminals sinbowl-parameters 
+                 :numbers sinbowl-numbers :fitness sinbowl-fitness
+                 :functions sinbowl-functions :report sinbowl-report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
         (sinbowl-report tree score))))
-  
+

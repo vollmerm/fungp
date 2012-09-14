@@ -42,17 +42,17 @@
 ;;; * migrations : number of migrations
 ;;; * num-islands : number of islands
 ;;; * population-size : size of the populations
-;;; * tournament-size : size of the tournaments
-;;; * mutation-probability : probability of mutation
-;;; * mutation-depth : depth of mutated trees
+;;; * tournament-size : size of the tournaments (default 5)
+;;; * mutation-probability : probability of mutation (default 0.2)
+;;; * mutation-depth : depth of mutated trees (default 6)
 ;;; * max-depth : maximum depth of trees
 ;;; * terminals : terminals used in tree building
-;;; * numbers : number literals to use as terminals
+;;; * numbers : number literals to use as terminals (default [])
 ;;; * functions : functions used in tree building, in the form [function arity]
 ;;; * fitness : a fitness function that takes a tree and returns an error number, lower is better
 ;;; * report : a reporting function passed [best-tree best-fit] at each migration
-;;; * adf-count : number of automatically defined functions
-;;; * adf-arity : number of arguments for automatically defined functions
+;;; * adf-count : number of automatically defined functions (default 0)
+;;; * adf-arity : number of arguments for automatically defined functions (default 1)
 ;;;
 ;;; Most fitness functions will *eval* the trees of code they are passed.
 ;;; In Clojure, eval'ing a list of code will compile it to JVM
@@ -78,7 +78,9 @@
 ;;; Environment, distribution
 ;;; -------------------------
 ;;;
-;;; I highly recommend you use Leiningen. *fungp* is set up as a Leiningen project.
+;;; I highly recommend you use Leiningen. *fungp* is set up as a Leiningen project. 
+;;; [Leiningen](https://github.com/technomancy/leiningen#installation) (or "lein") is available 
+;;; for all major operating systems and is trivial to install.
 ;;;
 ;;; By itself *fungp* has no "main" method, so running it won't do anything. The samples can be
 ;;; run individually, and each has a "test-*" function that launches it. I recommend you run
@@ -349,6 +351,9 @@
 ;;; better. Then, in the selection phase, individuals with lower error are more
 ;;; likely to be selected for crossover, and thus pass on their genetic
 ;;; material to the next generation.
+;;;
+;;; Note that the fitness function is expected to return *lower* numbers for better results,
+;;; with 0 being "perfect." Execution will stop once 0 is reached.
 
 (defn truncate-population
   "Apply truncate to all individuals in a population."
@@ -411,8 +416,8 @@
     (let [computed-fitness (fitness-zip population fitness)
           [best-tree best-fit] (get-best-fitness computed-fitness)]
       (if (or (zero? n) (zero? best-fit)) ;; terminating condition
-        [population best-tree best-fit] ;; return
-        (recur (- n 1)                  ;; else recurse
+        [population best-tree best-fit]   ;; return
+        (recur (- n 1)                    ;; else recurse
                (-> population
                    (tournament-selection tournament-size computed-fitness)
                    (mutate-population mutation-probability mutation-depth terminals numbers functions)
@@ -461,7 +466,7 @@
     (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
                                           mutation-depth max-depth terminals numbers
                                           functions fitness)
-                            islands)
+                            (if (> (count islands) 1) (island-crossover islands) islands))
           islands (map first islands-fit)
           [_ best-tree best-fit] (first (sort-by #(nth % 2) islands-fit))]
       (if (or (zero? n) (zero? best-fit))
@@ -483,6 +488,12 @@
     ;; the :or block here specifies default values for some of the arguments
    :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0
         adl-count 0 adl-limit 25 numbers []}}]
+  ;; some basic type checking: most of the parameters must be integers
+  (map #(assert (integer? %)) [iterations migrations num-islands population-size tournament-size mutation-probability
+                               mutation-depth max-depth adf-arity adf-count adl-count adl-limit])
+  ;; report and fitness should be functions
+  (map #(assert (fn? %)) [report fitness])
+  ;; call island generations
   (island-generations migrations iterations
                       (create-islands num-islands population-size mutation-depth terminals
                                       numbers functions adf-arity adf-count adl-count adl-limit)

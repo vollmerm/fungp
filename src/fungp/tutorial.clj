@@ -4,12 +4,16 @@
 ;;; The simplest problem for GP is regression, or coming up
 ;;; with a function to map pairs of input and output. This tutorial goes through
 ;;; how to set up *fungp* to evolve a function to match a series of points.
+;;;
+;;; If you don't already have *fungp* set up, look at the explanation at the top
+;;; of fungp.core. Basically, all you need to do is install lein and download the
+;;; *fungp* code.
 
 (ns fungp.tutorial
   "Sample use of fungp."
-  (:use fungp.core)
-  (:use fungp.util)
-  (:use clojure.pprint))
+  (:use fungp.core) ;; include the core framework
+  (:use fungp.util) ;; include utility functions
+  (:use clojure.pprint)) ;; include pretty printer
 
 ;;; ### Choosing functions and terminals
 ;;;
@@ -30,6 +34,14 @@
    that function takes."
   '[[+ 2][- 2][* 2][fungp.util/abs 1]
     [fungp.util/sdiv 2][inc 1][dec 1]])
+
+;;; We also need to pick the terminals. In the above expression, a b and c were terminals.
+;;; Terminals can be anything, but *fungp* separates them into two groups: numbers and
+;;; everything else. This is just a suggestion, though, not a requirement. You can
+;;; put anything you want in your ordinary terminals list, including numbers.
+;;;
+;;; For this example, the only terminals are the function parameter (which I'll call a)
+;;; and a range of numbers.
 
 (def sample-parameters
   "This defines the parameters (or, in this case, parameter) to be used to eval the
@@ -91,12 +103,17 @@
   (println)
   ;; These keyword arguments specify the options for fungp. They should be self-explanatory,
   ;; but you can read more about them in fungp.core
-  (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 50
+  (let [options {:iterations n1 :migrations n2 :num-islands 6 :population-size 40
                  :tournament-size 5 :mutation-probability 0.1
                  :max-depth 10 :terminals sample-parameters
                  :numbers number-literals :fitness sample-fitness
                  :functions sample-functions :report sample-report }
+        ;; the data returned by run-genetic-programming is as follows:
+        ;; [population [best-tree score]]
+        ;; since we don't care about keeping the whole population
+        ;; around, we can save off the tree and score like this
         [tree score] (rest (run-genetic-programming options))]
+    ;; that's it!
     (do (println "Done!")
         (sample-report tree score))))
 
@@ -106,3 +123,8 @@
 ;;;    nil
 ;;;    user=> (test-genetic-program 15 15)
 ;;;    ...
+;;;
+;;; The two parameters correspond to the iterations between migrations and the number of
+;;; migrations. This also results in the reporting rate -- results are printed to the
+;;; screen at each migration. The total number of generations is the result of these
+;;; two numbers multiplied together.
