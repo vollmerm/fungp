@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <link rel="stylesheet" href="http://gaia.ecs.csus.edu/~vollmerm/type.css" type="text/css" />
+  <link rel="stylesheet" href="http://gaia.ecs.csus.edu/~vollmerm/page.css" type="text/css" />
+</head>
+<body>
+<h1 id="fungp">fungp</h1>
+<p>This is the README for <strong>fungp,</strong> the genetic programming library I am working on as a student at <a href="http://csus.edu">CSUS</a>.</p>
+<p>If you’re reading this as HTML, it was automatically generated from the README.md file in the root of the <a href="https://github.com/probabilityZero/fungp">source repository</a>.</p>
+<h2 id="about-this-program">About this program</h2>
+<p><strong>fungp</strong> is a genetic programming library implemented in the Clojure programming language. It’s pronounced fun-gee-pee, for <em>functional genetic programming</em>.</p>
+<p>A far more detailed explanation can be found in the core.clj source code. It is thoroughly documented. An HTML document generated from the source is in the <code>docs/</code> folder, and is available hosted on my school’s web server <a href="http://gaia.ecs.csus.edu/~vollmerm/gp/uberdoc.html">here</a>. It’s a good place to start and it includes a getting started tutoral (the source of which is of course available under src/fungp).</p>
+<h2 id="how-do-i-set-it-up">How do I set it up?</h2>
+<p>You’ll need Clojure first, but that’s easy. You can be up and running in seconds if you already have Java installed.</p>
+<p><a href="https://github.com/technomancy/leiningen#installation">First you install Leiningen.</a> This is how you’d do that in a Unix-like system.</p>
+<pre><code>mkdir ~/bin
+wget https://raw.github.com/technomancy/leiningen/preview/bin/lein
+mv lein ~/bin
+chmod 755 ~/bin/lein
+lein</code></pre>
+<p>This assumes <code>~/bin</code> is on your <code>$PATH</code>. The lein executable could go anywhere as long as it’s on your path, but I’d recommend you put it somewhere in your user’s home directory. Use <code>echo $PATH</code> to see what directories are on your path, or read <a href="http://www.cs.purdue.edu/homes/cs348/unix_path.html">this article</a> to learn how to edit Unix environment variables.</p>
+<p>Because you don’t need root/sudo access to do this, it works fine on limited user accounts. To my friends at CSUS, that means it runs fine on Athena.</p>
+<p>Once you have Clojure and Lein running you can grab fungp:</p>
+<pre><code>git clone https://github.com/probabilityZero/fungp.git
+cd fungp</code></pre>
+<h2 id="how-do-i-use-it">How do I use it?</h2>
+<p>See the samples for example usage (located in src/fungp/samples). The general idea is to pass in a fitness function, a terminal set, a function set, and other various options, and the algorithm will attempt to evolve code out of the functions and terminals.</p>
+<p>The <strong>run-genetic-programming</strong> function accepts the following options keywords:</p>
+<ul>
+<li>iterations : number of iterations <em>between migrations</em></li>
+<li>migrations : number of migrations</li>
+<li>num-islands : number of islands</li>
+<li>population-size : size of the populations</li>
+<li>tournament-size : size of the tournaments</li>
+<li>mutation-probability : probability of mutation</li>
+<li>mutation-depth : depth of mutated trees</li>
+<li>max-depth : maximum depth of trees</li>
+<li>terminals : terminals used in tree building</li>
+<li>numbers : number literals to be used in tree building</li>
+<li>functions : functions used in tree building, in the form [function arity]</li>
+<li>adf-count : Number of automatically-defined functions</li>
+<li>adf-arity : Number of arguments for automatically-defined functions</li>
+<li>fitness : a fitness function that takes a tree and returns an error number, lower is better</li>
+<li>report : a reporting function passed [best-tree best-fit] at each migration</li>
+</ul>
+<p>Some minimal knowledge of Clojure is probably necessary to use this library well. There is an experimental (undocumented and untested) Java API, and a file demonstrating its use, but right now I wouldn’t recommend that route. Clojure is a rather nice language, with excellent documentation and many great tutorials (like <a href="http://java.ociweb.com/mark/clojure/article.html">this one</a>).</p>
+<h2 id="what-does-it-do">What does it do?</h2>
+<p>Basically, fungp uses a process of evolution (mimicing natural selection in nature) to create and rewrite Clojure code. Again, for a complete explanation look to fungp.core, or read <a href="http://en.wikipedia.org/wiki/Genetic_programming">Wikipedia’s explanation of Genetic Programming</a>.</p>
+<p>Here’s a sample output from a symbolic regression problem. Reports are printed to the screen periodically, not every generation.</p>
+<pre><code>fungp :: Functional Genetic Programming in Clojure
+Mike Vollmer, 2012
+Test inputs: (-10 -8 -6 -4 -2 0 2 4 6 8)
+Test outputs: (300.0 192.0 108.0 48.0 12.0 0.0 12.0 48.0 108.0 192.0)
+
+(fn
+ [a]
+ (let
+  []
+  (-
+   (+
+    (- (inc (inc 9.0)) (fungp.util/sdiv (dec a) (* a 0.0)))
+    (+ (- (fungp.util/abs a) (- a a)) (inc (* a a))))
+   (dec (* (- (dec a) (inc a)) (+ (+ a 7.0) (* a a)))))))
+
+Error:  10210.0
+
+(fn
+ [a]
+ (let
+  []
+  (+
+   (- (inc (inc 9.0)) (fungp.util/sdiv (dec a) (* a 0.0)))
+   (+
+    (+
+     (inc (fungp.util/abs a))
+     (+
+      (+
+       (- (inc (inc 9.0)) (fungp.util/sdiv (dec a) (* a 0.0)))
+       (+ (- (fungp.util/abs a) (- a a)) (inc (* a a))))
+      (fungp.util/abs
+       (fungp.util/sdiv (fungp.util/abs 8.0) (dec 3.0)))))
+    (inc (* a a))))))
+
+Error:  6778.0
+
+(fn
+ [a]
+ (let
+  []
+  (+
+   (* a a)
+   (+ (+ (- (fungp.util/abs a) (- a a)) (inc (* a a))) (inc (* a a))))))
+
+Error:  580.0
+
+(fn [a] (let [] (+ (* a a) (+ (* a a) (inc (* a a))))))
+
+Error:  10.0
+
+Done!
+(fn [a] (let [] (+ (* a a) (+ (* a a) (* a a)))))
+
+Error:  0.0</code></pre>
+<h2 id="links-and-references">Links and References</h2>
+<ul>
+<li><a href="http://www.genetic-programming.org/">Koza’s GP Website</a></li>
+<li><a href="http://gaia.ecs.csus.edu/~gordonvs/">Dr. Gordon’s Website at CSUS</a></li>
+<li><a href="http://www.gp-field-guide.org.uk/">A Field Guide to Genetic Programming</a></li>
+</ul>
+<h2 id="license">License</h2>
+<p>Project created by Mike Vollmer and released under GPL. See the LICENCE file distributed with this code.</p>
+</body>
+</html>
