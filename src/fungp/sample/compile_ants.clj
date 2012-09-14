@@ -16,9 +16,11 @@
 
 (def MAXSTEPS "Maximum number of iterations before penalty"
   30)
+
 (def STARTFOOD "Location of food to be eaten."
   [[1 1][1 2][1 3][1 4][1 5][2 5][3 5][4 5][5 5][5 4]
    [5 3][6 3][7 3][8 3][8 4][7 4][6 4][6 2][7 2][8 3]])
+
 (def NUMFOOD "Number of food items."
   (count STARTFOOD))
 

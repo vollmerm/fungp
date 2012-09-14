@@ -10,11 +10,16 @@
 ;;; *fungp* code.
 
 (ns fungp.tutorial
-  "Sample use of fungp."
+  "Namespace for sample use of fungp."
   (:use fungp.core) ;; include the core framework
   (:use fungp.util) ;; include utility functions
-  (:use clojure.pprint)) ;; include pretty printer
+  (:use clojure.pprint))
 
+;;; The general structure here is very simple, and probably similar to what you'll want
+;;; if you're using *fungp.* We define a bunch of values and use them at the bottom
+;;; when invoking the library. In creating these values we have to think a little bit
+;;; about the problem we're trying to solve.
+;;;
 ;;; ### Choosing functions and terminals
 ;;;
 ;;; The trees evolved in *fungp* consist of functions and terminals. The functions
@@ -119,10 +124,10 @@
 
 ;;; To run *test-genetic-program* you can load this file in the repl and run the function:
 ;;;
-;;;    user=> (use 'fungp.tutorial)
-;;;    nil
-;;;    user=> (test-genetic-program 15 15)
-;;;    ...
+;;;     user=> (use 'fungp.tutorial)
+;;;     nil
+;;;     user=> (test-genetic-program 15 15)
+;;;     ...
 ;;;
 ;;; The two parameters correspond to the iterations between migrations and the number of
 ;;; migrations. This also results in the reporting rate -- results are printed to the

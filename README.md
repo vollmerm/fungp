@@ -1,3 +1,10 @@
+fungp
+=====
+
+This is the README for **fungp,** the genetic programming library I am working on as a student at [CSUS](http://csus.edu).
+
+If you're reading this as HTML, it was automatically generated from the README.md file in the root of the [source repository](https://github.com/probabilityZero/fungp).
+
 About this program
 ------------------
 
@@ -5,8 +12,8 @@ About this program
 fun-gee-pee, for *functional genetic programming*.
 
 A far more detailed explanation can be found in the core.clj source code. It is thoroughly documented. An
-HTML document generated from the source is in the docs/ folder, and is available hosted on my school's
-web server [here](http://gaia.ecs.csus.edu/~vollmerm/gp). It's a good place to start and it includes a
+HTML document generated from the source is in the ```docs/``` folder, and is available hosted on my school's
+web server [here](http://gaia.ecs.csus.edu/~vollmerm/gp/). It's a good place to start and it includes a
 getting started tutoral (the source of which is of course available under src/fungp).
 
 How do I set it up?
@@ -14,7 +21,7 @@ How do I set it up?
 
 You'll need Clojure first, but that's easy. You can be up and running in seconds if you already have Java installed.
 
-First you install Leiningen:
+[First you install Leiningen.](https://github.com/technomancy/leiningen#installation) This is how you'd do that in a Unix-like system.
 
 ```
 mkdir ~/bin
@@ -24,11 +31,9 @@ chmod 755 ~/bin/lein
 lein
 ```
 
-This assumes ~/bin is on your $PATH. The lein executable could go anywhere as long as it's
-on your path, but I'd recommend you put it somewhere in your user's home directory.
+This assumes ```~/bin``` is on your ```$PATH```. The lein executable could go anywhere as long as it's on your path, but I'd recommend you put it somewhere in your user's home directory. Use ```echo $PATH``` to see what directories are on your path, or read [this article](http://www.cs.purdue.edu/homes/cs348/unix_path.html) to learn how to edit Unix environment variables.
 
-Because you don't need root/sudo access to do this, it works fine on limited user accounts
-(to my friends at CSUS, that means it runs fine on Athena).
+Because you don't need root/sudo access to do this, it works fine on limited user accounts. To my friends at CSUS, that means it runs fine on Athena.
 
 Once you have Clojure and Lein running you can grab fungp:
 
@@ -40,8 +45,7 @@ cd fungp
 How do I use it?
 ----------------
 
-See the samples for example usage (located in src/fungp/samples). The general idea is to pass in a fitness function, a terminal set,
-a function set, and other various options, and the algorithm will attempt to evolve code out of
+See the samples for example usage (located in src/fungp/samples). The general idea is to pass in a fitness function, a terminal set, a function set, and other various options, and the algorithm will attempt to evolve code out of
 the functions and terminals.
 
 The **run-genetic-programming** function accepts the following options keywords:
@@ -61,6 +65,8 @@ The **run-genetic-programming** function accepts the following options keywords:
  * adf-arity : Number of arguments for automatically-defined functions
  * fitness : a fitness function that takes a tree and returns an error number, lower is better
  * report : a reporting function passed [best-tree best-fit] at each migration
+
+Some minimal knowledge of Clojure is probably necessary to use this library well. There is an experimental (undocumented and untested) Java API, and a file demonstrating its use, but right now I wouldn't recommend that route. Clojure is a rather nice language, with excellent documentation and many great tutorials (like [this one](http://java.ociweb.com/mark/clojure/article.html)).
 
 What does it do?
 ----------------
@@ -128,6 +134,13 @@ Done!
 
 Error:	0.0
 ```
+
+Links and References
+--------------------
+
+ * [Koza's GP Website](http://www.genetic-programming.org/)
+ * [Dr. Gordon's Website at CSUS](http://gaia.ecs.csus.edu/~gordonvs/)
+ * [A Field Guide to Genetic Programming](http://www.gp-field-guide.org.uk/)
 
 License
 -------

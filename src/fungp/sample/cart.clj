@@ -20,6 +20,7 @@
 ;;; #### Some constants
 
 (def MAX_T "Max time limit" 5)
+
 (def TEST_POINTS "Number of test cases" 20)
 
 ;;; #### The simulation function

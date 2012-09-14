@@ -3028,8 +3028,8 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>fungp -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">fungp</h1><h2 class="project-version">0.2</h2><br /><p>Genetic programming in Clojure</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr></table></div><div class="dependencies"><h3>dev dependencies</h3><table><tr><td class="dep-name">lein-marginalia</td><td class="dotted"><hr /></td><td class="dep-version">0.7.1</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.defined-branches">fungp.defined-branches</a></li><li><a href="#fungp.java-api">fungp.java-api</a></li><li><a href="#fungp.sample.cart">fungp.sample.cart</a></li><li><a href="#fungp.sample.compile-ants">fungp.sample.compile-ants</a></li><li><a href="#fungp.sample.interpret-ants">fungp.sample.interpret-ants</a></li><li><a href="#fungp.sample.sinbowl">fungp.sample.sinbowl</a></li><li><a href="#fungp.tutorial">fungp.tutorial</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
+</script><title>fungp -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">fungp</h1><h2 class="project-version">0.3</h2><br /><p>Genetic programming in Clojure</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.defined-branches">fungp.defined-branches</a></li><li><a href="#fungp.java-api">fungp.java-api</a></li><li><a href="#fungp.sample.cart">fungp.sample.cart</a></li><li><a href="#fungp.sample.compile-ants">fungp.sample.compile-ants</a></li><li><a href="#fungp.sample.interpret-ants">fungp.sample.interpret-ants</a></li><li><a href="#fungp.sample.sinbowl">fungp.sample.sinbowl</a></li><li><a href="#fungp.tutorial">fungp.tutorial</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
 
 <h2>Downloading and Installing</h2>
 
@@ -3075,17 +3075,17 @@ has the following features:</p>
 <li>migrations : number of migrations</li>
 <li>num-islands : number of islands</li>
 <li>population-size : size of the populations</li>
-<li>tournament-size : size of the tournaments</li>
-<li>mutation-probability : probability of mutation</li>
-<li>mutation-depth : depth of mutated trees</li>
+<li>tournament-size : size of the tournaments (default 5)</li>
+<li>mutation-probability : probability of mutation (default 0.2)</li>
+<li>mutation-depth : depth of mutated trees (default 6)</li>
 <li>max-depth : maximum depth of trees</li>
 <li>terminals : terminals used in tree building</li>
-<li>numbers : number literals to use as terminals</li>
+<li>numbers : number literals to use as terminals (default [])</li>
 <li>functions : functions used in tree building, in the form [function arity]</li>
 <li>fitness : a fitness function that takes a tree and returns an error number, lower is better</li>
 <li>report : a reporting function passed [best-tree best-fit] at each migration</li>
-<li>adf-count : number of automatically defined functions</li>
-<li>adf-arity : number of arguments for automatically defined functions</li>
+<li>adf-count : number of automatically defined functions (default 0)</li>
+<li>adf-arity : number of arguments for automatically defined functions (default 1)</li>
 </ul>
 
 <p>Most fitness functions will <em>eval</em> the trees of code they are passed.
@@ -3110,7 +3110,9 @@ straightforard. See the compile-ants sample for an example of this.</p>
 
 <h2>Environment, distribution</h2>
 
-<p>I highly recommend you use Leiningen. <em>fungp</em> is set up as a Leiningen project.</p>
+<p>I highly recommend you use Leiningen. <em>fungp</em> is set up as a Leiningen project. 
+<a href="https://github.com/technomancy/leiningen#installation">Leiningen</a> (or "lein") is available 
+for all major operating systems and is trivial to install.</p>
 
 <p>By itself <em>fungp</em> has no "main" method, so running it won't do anything. The samples can be
 run individually, and each has a "test-*" function that launches it. I recommend you run
@@ -3206,10 +3208,9 @@ in <em>fungp</em> see fungp.defined-branches.</p>
         (build-branch-vector create-tree mutation-depth terminals numbers functions
                              adf-arity adf-count adl-count adl-limit)
         ;; create the main branch
-        (create-tree mutation-depth terminals numbers
+        (create-tree mutation-depth (concat terminals (gen-adl-terminals adl-count)) numbers
                      ;; add the branches to the function vector
-                     (concat functions (build-branch-name-list adf-count adf-arity
-                                                               adl-count))
+                     (concat functions (gen-adf-func adf-count adf-arity))
                      type)))</pre></td></tr><tr><td class="docs"><h4>Populations</h4>
 
 <p>A population is a list of individuals. Creating the population involves randomly generating a list of individuals
@@ -3346,6 +3347,9 @@ individual trees a grade (I sometimes refer to it as "error"). Lower grades are
 better. Then, in the selection phase, individuals with lower error are more
 likely to be selected for crossover, and thus pass on their genetic
 material to the next generation.</p>
+
+<p>Note that the fitness function is expected to return <em>lower</em> numbers for better results,
+with 0 being "perfect." Execution will stop once 0 is reached.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Apply truncate to all individuals in a population.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn truncate-population
   [population height]
@@ -3382,9 +3386,9 @@ function.</p>
 <p>There are some extra considerations here. The function should:</p>
 
 <ul>
-<li>stop when a perfect individual has been found, meaning fitness is zero</li>
-<li>be resumable, meaning the search can halt, returning information, and that information
-can be passed back in to start the search at the same place</li>
+<li><p>stop when a perfect individual has been found, meaning fitness is zero</p></li>
+<li><p>be resumable, meaning the search can halt, returning information, and that information
+can be passed back in to start the search at the same place</p></li>
 </ul>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Runs n generations of a population, and returns the population and the best tree in the form [population best-tree fitness].
    Takes a long list of parameters. This function is meant to be called by island-generations, which in turn is
@@ -3396,8 +3400,8 @@ can be passed back in to start the search at the same place</li>
     (let [computed-fitness (fitness-zip population fitness)
           [best-tree best-fit] (get-best-fitness computed-fitness)]
       (if (or (zero? n) (zero? best-fit)) ;; terminating condition
-        [population best-tree best-fit] ;; return
-        (recur (- n 1)                  ;; else recurse
+        [population best-tree best-fit]   ;; return
+        (recur (- n 1)                    ;; else recurse
                (-&gt; population
                    (tournament-selection tournament-size computed-fitness)
                    (mutate-population mutation-probability mutation-depth terminals numbers functions)
@@ -3439,7 +3443,7 @@ process more individuals quickly.</p></li>
     (let [islands-fit (pmap #(generations n2 % tournament-size mutation-probability
                                           mutation-depth max-depth terminals numbers
                                           functions fitness)
-                            islands)
+                            (if (&gt; (count islands) 1) (island-crossover islands) islands))
           islands (map first islands-fit)
           [_ best-tree best-fit] (first (sort-by #(nth % 2) islands-fit))]
       (if (or (zero? n) (zero? best-fit))
@@ -3458,6 +3462,12 @@ explanation of each of the keyword parameters.</p>
     ;; the :or block here specifies default values for some of the arguments
    :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0
         adl-count 0 adl-limit 25 numbers []}}]
+  ;; some basic type checking: most of the parameters must be integers
+  (map #(assert (integer? %)) [iterations migrations num-islands population-size tournament-size mutation-probability
+                               mutation-depth max-depth adf-arity adf-count adl-count adl-limit])
+  ;; report and fitness should be functions
+  (map #(assert (fn? %)) [report fitness])
+  ;; call island generations
   (island-generations migrations iterations
                       (create-islands num-islands population-size mutation-depth terminals
                                       numbers functions adf-arity adf-count adl-count adl-limit)
@@ -3466,8 +3476,7 @@ explanation of each of the keyword parameters.</p>
 </td><td class="codes"></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.defined-branches" name="fungp.defined-branches"><h1 class="project-name">fungp.defined-branches</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Branches and Modular Structure</h2>
 
 <p><em>fungp</em> is capable of evolving multiple branches in an individual. In addition to the main branch,
-or the "Result Defining Branch," it can evolve functions (Automatically Defined Functions, or ADFs),
-loops (Automatically Defined Loops, or ADLs), and iterators (Automatically Defined Iterators, or ADIs).</p>
+or the "Result Defining Branch," it can evolve functions (Automatically Defined Functions, or ADFs).</p>
 
 <p>Some of the handling for these branches was covered in fungp.core, but the details are handled here.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
@@ -3520,7 +3529,7 @@ functions are helper functions for creating individuals with ADL branches.</p>
                                   functions
                                   :grow)]
     [(symbol (str &quot;adl&quot; num))
-     (list 'do-loop
+     (list 'fungp.util/do-loop
            ;; do-loop has 4 branches of code and one number literal
            (make-branch)
            (make-branch)
@@ -3534,8 +3543,8 @@ functions are helper functions for creating individuals with ADL branches.</p>
                              functions (dec adl-count) adl-limit)
             (make-adl create-tree mutation-depth terminals numbers
                       functions ; TODO: include ADFs and previous ADLs, if any
-                      adl-limit (dec adl-count)))))</pre></td></tr><tr><td class="docs"><p>Generate a vector of adl name symbols.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn gen-adl-func
+                      adl-limit (dec adl-count)))))</pre></td></tr><tr><td class="docs"><p>Generate a vector of symbols to reference the result of the ADLs.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn gen-adl-terminals
   [adl-count]
   (vec (map #(symbol (str &quot;adl&quot; %)) (range adl-count))))</pre></td></tr><tr><td class="docs"><h3>Putting it together</h3>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>This function builds the vector that goes into the let statement for each individual. It is intended to
@@ -3547,11 +3556,7 @@ functions are helper functions for creating individuals with ADL branches.</p>
                                     functions adf-arity adf-count))
                (if (zero? adl-count) '()
                    (make-adl-branch create-tree mutation-depth terminals numbers
-                                    functions adl-count adl-limit)))))</pre></td></tr><tr><td class="docs"><p>Returns a vector of symbols that will be concatenated onto the functions vector in create-module-tree. The
-   returned vector should have things like 'adf0 in it</p>
-</td><td class="codes"><pre class="brush: clojure">(defn build-branch-name-list
-  [adf-count adf-arity adl-count]
-  (concat (gen-adf-func adf-count adf-arity) (gen-adl-func adl-count)))</pre></td></tr><tr><td class="docs"><p>Takes an element of the branch vector, a mutation function, and the tunable parameters
+                                    functions adl-count adl-limit)))))</pre></td></tr><tr><td class="docs"><p>Takes an element of the branch vector, a mutation function, and the tunable parameters
    the mutation function needs, and applies mutation to each of the branches.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn mutate-branch
   [letf mutate-tree mutation-probability mutation-depth terminals numbers functions]
@@ -3564,7 +3569,7 @@ functions are helper functions for creating individuals with ADL branches.</p>
                            mutation-depth terminals
                            numbers functions))
         (and (list? letf)
-             (= 'do-loop (first letf)))
+             (= 'fungp.util/do-loop (first letf)))
         ;; it's a loop! mutate each branch individually
         (list (first letf)
               (mutate-tree (nth letf 1)
@@ -3593,7 +3598,7 @@ functions are helper functions for creating individuals with ADL branches.</p>
                (list (first %) (second %)
                      (truncate (nth % 2) height))
                (and (list? %)
-                    (= 'do-loop (first %)))
+                    (= 'fungp.util/do-loop (first %)))
                (list (first %)
                      (truncate (nth % 1) height)
                      (truncate (nth % 2) height)
@@ -3610,7 +3615,7 @@ functions are helper functions for creating individuals with ADL branches.</p>
         newtree (cond (= (first tree1) 'fn)
                       (list (first tree1) (second tree1)
                             (crossover (nth tree1 2) (nth tree2 2)))
-                      (= (first tree1) 'do-loop)
+                      (= (first tree1) 'fungp.util/do-loop)
                       (list (nth tree1 0)
                             (crossover (nth tree1 1) (nth tree2 1))
                             (crossover (nth tree1 2) (nth tree2 2))
@@ -3717,12 +3722,10 @@ in whichever direction it is facing.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.cart
   (:use fungp.core)
   (:use fungp.util)
-  (:require clojure.pprint))</pre></td></tr><tr><td class="docs"><h4>Some constants</h4>
+  (:use clojure.pprint))</pre></td></tr><tr><td class="docs"><h4>Some constants</h4>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Max time limit</p>
-
-<p>Number of test cases</p>
-</td><td class="codes"><pre class="brush: clojure">(def MAX_T  5)
-(def TEST_POINTS  20)</pre></td></tr><tr><td class="docs"><h4>The simulation function</h4>
+</td><td class="codes"><pre class="brush: clojure">(def MAX_T  5)</pre></td></tr><tr><td class="docs"><p>Number of test cases</p>
+</td><td class="codes"><pre class="brush: clojure">(def TEST_POINTS  20)</pre></td></tr><tr><td class="docs"><h4>The simulation function</h4>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Simulate cart movement with the evolved function used to calculate
    thrust. Assuming acceleration is one unit/second^2, and time is in
    steps of 0.02.</p>
@@ -3750,22 +3753,18 @@ in whichever direction it is facing.</p>
   (reduce + (map (fn [v x] (move-cart 0 v x f))
                  rand-velocity
                  rand-position)))</pre></td></tr><tr><td class="docs"><h4>Some existing solutions</h4>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>The optimal solution</p>
-</td><td class="codes"><pre class="brush: clojure">(defn cart-optimal  [v x] (gt (* -1 x) (* v (abs v))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn cart-suboptimal [v x] (gt (* -1 x) (* v v)))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def cart-optimal-error (cart-error cart-optimal))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def cart-evol (fn [v x] (let [] (fungp.util/gt (- x v) (+ (+ x x) (+ x x))))))
-(def cart-evol2 (fn [v x] (let [] (- (- (- -1 x) (+ x v))
-                                     (- (* (+ -1 v) (* -1 x))
-                                        (fungp.util/gt (fungp.util/abs x) -1))))))</pre></td></tr><tr><td class="docs"><h4>Initializing fungp</h4>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>The solution according to physics</p>
+</td><td class="codes"><pre class="brush: clojure">(defn cart-optimal 
+  [v x] (gt (* -1 x) (* v (abs v))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn cart-suboptimal [v x] (gt (* -1 x) (* v v)))</pre></td></tr><tr><td class="docs"><h4>Initializing fungp</h4>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Compute fitness for cart problem.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn cart-fitness
   [tree] (let [f (eval (list 'fn '[v x] tree))]
            (cart-error f)))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
 </td><td class="codes"><pre class="brush: clojure">(defn cart-report
   [tree fitness]
-  (clojure.pprint/pprint (list 'fn '[v x] tree))(print &quot;\n&quot;)
-  (print &quot;Error:\t&quot;)(print fitness)(print &quot;\n\n&quot;)
+  (pprint (list 'fn '[v x] tree))
+  (print (str &quot;Error:\t&quot; fitness &quot;\n\n&quot;))
   (flush))</pre></td></tr><tr><td class="docs"><p>Run the cart problem</p>
 </td><td class="codes"><pre class="brush: clojure">(defn test-cart
   [n1 n2]
@@ -3785,20 +3784,22 @@ in whichever direction it is facing.</p>
 
 <p>This is an implementation of Koza's Santa Fe Ant Trail
 that uses fungp's local variables and result wrappers.
-Unlike the interpret-ants implementation, this one 
+Unlike the interpret-ants implementation, this one
 takes advantage of the JVM by compiling the individuals
 into JVM bytecode.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.compile-ants
   (:use fungp.core)
   (:use fungp.util)
-  (:require clojure.pprint))</pre></td></tr><tr><td class="docs"><p>First some constants need to be established.</p>
-</td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def MAXSTEPS 40)
-(def STARTFOOD [[1 0][1 1][1 2][1 3][1 4][1 5][2 5][3 5][3 6][4 6]
-                [5 6][6 6][7 7][7 8][8 8][9 8][9 9][10 9][10 10][9 10]
-                [8 10][8 9][11 9][11 10]])
-(def NUMFOOD (count STARTFOOD))</pre></td></tr><tr><td class="docs"><p>Vars in Clojure are thread-local, which is a useful property. Here
+  (:use clojure.pprint))</pre></td></tr><tr><td class="docs"><p>First some constants need to be established.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Maximum number of iterations before penalty</p>
+</td><td class="codes"><pre class="brush: clojure">(def MAXSTEPS 
+  30)</pre></td></tr><tr><td class="docs"><p>Location of food to be eaten.</p>
+</td><td class="codes"><pre class="brush: clojure">(def STARTFOOD 
+  [[1 1][1 2][1 3][1 4][1 5][2 5][3 5][4 5][5 5][5 4]
+   [5 3][6 3][7 3][8 3][8 4][7 4][6 4][6 2][7 2][8 3]])</pre></td></tr><tr><td class="docs"><p>Number of food items.</p>
+</td><td class="codes"><pre class="brush: clojure">(def NUMFOOD 
+  (count STARTFOOD))</pre></td></tr><tr><td class="docs"><p>Vars in Clojure are thread-local, which is a useful property. Here
 a bunch of dynamic vars are declared, and they can be referenced by
 the rest of the code in this file. Once fungp has been started, there
 will be separate versions of these vars in each thread, and so the
@@ -3863,27 +3864,28 @@ statement below in the fitness function</p>
 </td><td class="codes"><pre class="brush: clojure">(def ant-terminals '[(left) (right) (move)])
 (def ant-functions '[[sense 2][do 2][do 3]])</pre></td></tr><tr><td class="docs"><p>This evaluates the fitness of the individuals. It uses a binding block to create
    thread-local bindings, evaluates the evolved code, and runs it in a loop.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn ant-compile-fitness 
+</td><td class="codes"><pre class="brush: clojure">(defn ant-compile-fitness
   [tree]
   (binding [ant-x 0 ant-y 0 ant-dir 0 food STARTFOOD eaten 0 steps 0]
     (let [func (eval (list 'fn [] tree))]
       (loop [n MAXSTEPS]
-        (do 
+        (do
           (func) ;; run the code
           (set! steps (inc steps))
-          (if (zero? n)
-            (if (empty? food) steps (+ MAXSTEPS (count food)))
-            (recur (- n 1))))))))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
+          (if (zero? (count food))
+            steps
+            (if (zero? n)
+              (+ MAXSTEPS (count food))
+              (recur (- n 1)))))))))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
 </td><td class="codes"><pre class="brush: clojure">(defn ant-report
   [tree fitness]
-  (clojure.pprint/pprint (nth tree 2))(print &quot;\n&quot;)
-  (print &quot;Error:\t&quot;)(print fitness)(print &quot;\n\n&quot;)
-  (flush))</pre></td></tr><tr><td class="docs">
+  (pprint (nth tree 2))
+  (println (str &quot;Error:\t&quot; fitness &quot;\n\n&quot;)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn test-compile-ants [n1 n2]
   (println &quot;Ant problem (compiled)\n&quot;)
   (println (str &quot;Food count: &quot; NUMFOOD &quot;\n&quot;))
-  (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 20 :tournament-size 3
-                 :max-depth 8 :mutation-depth 2
+  (let [options {:iterations n1 :migrations n2 :num-islands 8
+                 :population-size 25 :max-depth 4
                  :terminals ant-terminals :fitness ant-compile-fitness
                  :functions ant-functions :report ant-report}
         [tree score] (rest (run-genetic-programming options))]
@@ -3904,7 +3906,7 @@ code. There are benefits and downsides to both approaches.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.interpret-ants
   (:use fungp.core)
   (:use fungp.util)
-  (:require clojure.pprint))</pre></td></tr><tr><td class="docs"><p>First some constants need to be established.</p>
+  (:use clojure.pprint))</pre></td></tr><tr><td class="docs"><p>First some constants need to be established.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def MAXSTEPS 40)
 (def STARTFOOD [[1 0][1 1][1 2][1 3][1 4][1 5][2 5][3 5][3 6][4 6]
@@ -3949,11 +3951,11 @@ code. There are benefits and downsides to both approaches.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn simulate-ants
   [iter full-tree tree ant-dir ant-x ant-y food eaten steps]
   (cond (zero? iter) (+ MAXSTEPS (count food))
-        (and (seq? tree) (empty? tree)) 
+        (and (seq? tree) (empty? tree))
         (recur (dec iter) full-tree full-tree ant-dir ant-x ant-y food eaten (inc steps))
         (empty? food) steps ;; ant ate all the food
-        :else 
-        (cond (not (seq? tree)) 
+        :else
+        (cond (not (seq? tree))
               (recur iter full-tree '()
                      (new-direction tree ant-dir)
                      (new-x tree ant-dir ant-x)
@@ -3982,13 +3984,13 @@ code. There are benefits and downsides to both approaches.</p>
   (simulate-ants MAXSTEPS (nth tree 2) (nth tree 2) 0 0 0 STARTFOOD 0 0))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
 </td><td class="codes"><pre class="brush: clojure">(defn ant-report
   [tree fitness]
-  (clojure.pprint/pprint (nth tree 2))(print &quot;\n&quot;)
-  (print &quot;Error:\t&quot;)(print fitness)(print &quot;\n\n&quot;)
+  (pprint (nth tree 2))
+  (print (str &quot;Error:\t&quot; fitness &quot;\n\n&quot;))
   (flush))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn test-ants [n1 n2]
   (println &quot;Ant problem\n&quot;)
   (println (str &quot;Food count: &quot; NUMFOOD &quot;\n&quot;))
-  (let [options {:iterations n1 :migrations n2 :num-islands 2 :population-size 200 :tournament-size 5 :mutation-probability 0.1
+  (let [options {:iterations n1 :migrations n2 :num-islands 8 :population-size 50
                  :max-depth 5 :mutation-depth 1
                  :terminals ant-terminals :fitness ant-fitness
                  :functions ant-functions :report ant-report}
@@ -3999,7 +4001,7 @@ code. There are benefits and downsides to both approaches.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.sinbowl
   (:use fungp.core)
   (:use fungp.util)
-  (:require clojure.pprint))</pre></td></tr><tr><td class="docs"><p>The function to match</p>
+  (:use clojure.pprint))</pre></td></tr><tr><td class="docs"><p>The function to match</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sinbowl-function
   [x] (- (* 0.1 (abs x)) (sin x)))</pre></td></tr><tr><td class="docs"><p>Functions and their arities</p>
 </td><td class="codes"><pre class="brush: clojure">(def sinbowl-functions
@@ -4010,7 +4012,7 @@ code. There are benefits and downsides to both approaches.</p>
 </td><td class="codes"><pre class="brush: clojure">(def sinbowl-numbers
   '[-1 0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1 10])</pre></td></tr><tr><td class="docs"><p>The input test cases</p>
 </td><td class="codes"><pre class="brush: clojure">(def test-range
-  (map #(- % 20) (range 40)))</pre></td></tr><tr><td class="docs"><p>The output test cases</p>
+  (map #(float (* (- % 7) 3)) (range 14)))</pre></td></tr><tr><td class="docs"><p>The output test cases</p>
 </td><td class="codes"><pre class="brush: clojure">(def sinbowl-actual
   (map sinbowl-function test-range))</pre></td></tr><tr><td class="docs"><p>Fitness function. Takes a tree, evals it, and returns a fitness/error score.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sinbowl-fitness
@@ -4022,17 +4024,19 @@ code. There are benefits and downsides to both approaches.</p>
     (catch Exception e (println e) (println tree))))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sinbowl-report
   [tree fitness]
-  (clojure.pprint/pprint (list 'fn '[a] tree))(print &quot;\n&quot;)
-  (print &quot;Error:\t&quot;)(print fitness)(print &quot;\n\n&quot;)
+  (pprint (list 'fn '[a] tree))
+  (print (str &quot;Error:\t&quot; fitness &quot;\n\n&quot;))
   (flush))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn test-sinbowl [n1 n2]
   (println (str &quot;Test inputs: &quot; (vec test-range)))
   (println (str &quot;Test outputs: &quot; (vec sinbowl-actual)))
   (println (str &quot;Max generations: &quot; (* n1 n2)))
   (println)
-  (let [options {:iterations n1 :migrations n2 :num-islands 6 :population-size 50 :tournament-size 4 :mutation-probability 0.1
-                 :max-depth 10 :terminals sinbowl-parameters :numbers sinbowl-numbers :fitness sinbowl-fitness
-                 :functions sinbowl-functions :report sinbowl-report :adf-count 1}
+  (let [options {:iterations n1 :migrations n2 :num-islands 6 
+                 :population-size 30
+                 :max-depth 5 :terminals sinbowl-parameters 
+                 :numbers sinbowl-numbers :fitness sinbowl-fitness
+                 :functions sinbowl-functions :report sinbowl-report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println &quot;Done!&quot;)
         (sinbowl-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.tutorial" name="fungp.tutorial"><h1 class="project-name">fungp.tutorial</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Getting Started Tutorial</h2>
@@ -4040,11 +4044,20 @@ code. There are benefits and downsides to both approaches.</p>
 <p>The simplest problem for GP is regression, or coming up
 with a function to map pairs of input and output. This tutorial goes through
 how to set up <em>fungp</em> to evolve a function to match a series of points.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Sample use of fungp.</p>
+
+<p>If you don't already have <em>fungp</em> set up, look at the explanation at the top
+of fungp.core. Basically, all you need to do is install lein and download the
+<em>fungp</em> code.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Namespace for sample use of fungp.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.tutorial
-  (:use fungp.core)
-  (:use fungp.util)
-  (:require clojure.pprint))</pre></td></tr><tr><td class="docs"><h3>Choosing functions and terminals</h3>
+  (:use fungp.core) ;; include the core framework
+  (:use fungp.util) ;; include utility functions
+  (:use clojure.pprint))</pre></td></tr><tr><td class="docs"><p>The general structure here is very simple, and probably similar to what you'll want
+if you're using <em>fungp.</em> We define a bunch of values and use them at the bottom
+when invoking the library. In creating these values we have to think a little bit
+about the problem we're trying to solve.</p>
+
+<h3>Choosing functions and terminals</h3>
 
 <p>The trees evolved in <em>fungp</em> consist of functions and terminals. The functions
 take an arbitrary number of arguments.</p>
@@ -4062,7 +4075,14 @@ terminals.</p>
    that function takes.</p>
 </td><td class="codes"><pre class="brush: clojure">(def sample-functions
   '[[+ 2][- 2][* 2][fungp.util/abs 1]
-    [fungp.util/sdiv 2][inc 1][dec 1]])</pre></td></tr><tr><td class="docs"><p>This defines the parameters (or, in this case, parameter) to be used to eval the
+    [fungp.util/sdiv 2][inc 1][dec 1]])</pre></td></tr><tr><td class="docs"><p>We also need to pick the terminals. In the above expression, a b and c were terminals.
+Terminals can be anything, but <em>fungp</em> separates them into two groups: numbers and
+everything else. This is just a suggestion, though, not a requirement. You can
+put anything you want in your ordinary terminals list, including numbers.</p>
+
+<p>For this example, the only terminals are the function parameter (which I'll call a)
+and a range of numbers.</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>This defines the parameters (or, in this case, parameter) to be used to eval the
   generated functions.</p>
 </td><td class="codes"><pre class="brush: clojure">(def sample-parameters
   ['a])</pre></td></tr><tr><td class="docs"><p>This generates floating point numbers up to 10 as number literals to be used in the code.</p>
@@ -4070,8 +4090,8 @@ terminals.</p>
   (map float (range 10)))</pre></td></tr><tr><td class="docs"><h3>Testing data</h3>
 
 <p>The following code is used to test the evolved functions.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>This defines the range of input to use as test input. The first argument for map is a shortcut for
-   anonymous functions in Clojure</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>This defines the range of input to use as test input. The first argument for map here uses a shortcut for
+   single-variable anonymous functions in Clojure.</p>
 </td><td class="codes"><pre class="brush: clojure">(def test-range
   (map #(* 2 (- % 5)) (range 10)))</pre></td></tr><tr><td class="docs"><p>For sake of convenience, we can define a function to generate the outputs we're attempting to match.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn match-func
@@ -4091,7 +4111,7 @@ terminals.</p>
     (catch Exception e (println e) (println tree))))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sample-report
   [tree fitness]
-  (clojure.pprint/pprint tree)
+  (pprint tree)
   (println (str &quot;Error:\t&quot; fitness &quot;\n&quot;))
   (flush))</pre></td></tr><tr><td class="docs"><h3>Running it!</h3>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>This is the function that launches <em>fungp</em> and starts the evolution. It takes iteration and migration counts as parameters.</p>
@@ -4105,19 +4125,30 @@ terminals.</p>
   (println)
   ;; These keyword arguments specify the options for fungp. They should be self-explanatory,
   ;; but you can read more about them in fungp.core
-  (let [options {:iterations n1 :migrations n2 :num-islands 4 :population-size 100
+  (let [options {:iterations n1 :migrations n2 :num-islands 6 :population-size 40
                  :tournament-size 5 :mutation-probability 0.1
                  :max-depth 10 :terminals sample-parameters
                  :numbers number-literals :fitness sample-fitness
-                 :functions sample-functions :report sample-report}
+                 :functions sample-functions :report sample-report }
+        ;; the data returned by run-genetic-programming is as follows:
+        ;; [population [best-tree score]]
+        ;; since we don't care about keeping the whole population
+        ;; around, we can save off the tree and score like this
         [tree score] (rest (run-genetic-programming options))]
+    ;; that's it!
     (do (println &quot;Done!&quot;)
         (sample-report tree score))))</pre></td></tr><tr><td class="docs"><p>To run <em>test-genetic-program</em> you can load this file in the repl and run the function:</p>
 
-<p>   user=> (use 'fungp.tutorial)
-   nil
-   user=> (test-genetic-program 15 15)
-   ...</p>
+<pre><code>user=&gt; (use 'fungp.tutorial)
+nil
+user=&gt; (test-genetic-program 15 15)
+...
+</code></pre>
+
+<p>The two parameters correspond to the iterations between migrations and the number of
+migrations. This also results in the reporting rate -- results are printed to the
+screen at each migration. The total number of generations is the result of these
+two numbers multiplied together.</p>
 </td><td class="codes"></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.util" name="fungp.util"><h1 class="project-name">fungp.util</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.util)</pre></td></tr><tr><td class="docs"><h3>Useful functions for evolved code</h3>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Inverts a number. If it's 0, return 0</p>
