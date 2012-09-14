@@ -13,7 +13,7 @@ fun-gee-pee, for *functional genetic programming*.
 
 A far more detailed explanation can be found in the core.clj source code. It is thoroughly documented. An
 HTML document generated from the source is in the ```docs/``` folder, and is available hosted on my school's
-web server [here](http://gaia.ecs.csus.edu/~vollmerm/gp/). It's a good place to start and it includes a
+web server [here](http://gaia.ecs.csus.edu/~vollmerm/gp/uberdoc.html). It's a good place to start and it includes a
 getting started tutoral (the source of which is of course available under src/fungp).
 
 How do I set it up?
