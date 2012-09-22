@@ -28,7 +28,7 @@ mkdir ~/bin
 wget https://raw.github.com/technomancy/leiningen/preview/bin/lein
 mv lein ~/bin
 chmod 755 ~/bin/lein
-lein
+lein repl
 ```
 
 This assumes ```~/bin``` is on your ```$PATH```. The lein executable could go anywhere as long as it's on your path, but I'd recommend you put it somewhere in your user's home directory. Use ```echo $PATH``` to see what directories are on your path, or read [this article](http://www.cs.purdue.edu/homes/cs348/unix_path.html) to learn how to edit Unix environment variables.
@@ -60,7 +60,19 @@ How do I use it?
 See the samples for example usage (located in src/fungp/samples). The general idea is to pass in a fitness function, a terminal set, a function set, and other various options, and the algorithm will attempt to evolve code out of
 the functions and terminals.
 
-The **run-genetic-programming** function accepts the following options keywords:
+To use **fungp** you'll likely want to take advantage of Clojure's REPL (read-eval-print-loop). Once you have installed lein (see above), you can start the REPL with ```lein repl``` and start using **fungp.** For more detail on what to do from there, read the documentation (either in the ```docs/``` folder, in the source code, or on the website linked above). You can experiment with the included sampls or run the tutorial code like this:
+
+```
+=> (use 'fungp.tutorial)
+nil
+=> (test-genetic-program 5 10)
+...
+=> (use 'fungp.tutorial :reload-all) ;; reload file with changes
+```
+
+If you're starting out with **fungp** and Clojure, I recommend you start by copying and modifying the tutorial code or one of the samples. If you make a copy, be sure to give it a new name and namespace.
+
+The **run-genetic-programming** function (the function you call to start the search) accepts the following options keywords:
 
  * iterations : number of iterations *between migrations*
  * migrations : number of migrations
