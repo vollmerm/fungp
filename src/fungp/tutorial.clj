@@ -61,18 +61,18 @@
 ;;;
 ;;; The following code is used to test the evolved functions.
 
-(def test-range
-  "This defines the range of input to use as test input. The first argument for map here uses a shortcut for
+(def training-range
+  "This defines the range of input to use as training input. The first argument for map here uses a shortcut for
    single-variable anonymous functions in Clojure."
   (map #(* 2 (- % 5)) (range 10)))
 
 (defn match-func
   "For sake of convenience, we can define a function to generate the outputs we're attempting to match."
-  [x] (abs (* 3 (* x x))))
+  [a] (abs (* 3 (* a a))))
 
-(def sample-actual
+(def actual-output
   "This defines the actual outputs we are trying to match."
-  (map float (map match-func test-range)))
+  (map float (map match-func training-range)))
 
 ;;; ### Computing and reporting fitness
 
@@ -81,10 +81,10 @@
   [tree]
   (try
     (let [f (compile-tree tree sample-parameters) ;; compile using compile-tree
-          results (map f test-range)] ;; map the function to the test range
+          results (map f training-range)] ;; map the function to the test range
       ;; then we compare the test results to the actual expected output
       ;; off-by-sq is a utility function that calculates difference squared
-      (reduce + (map off-by-sq sample-actual results)))
+      (reduce + (map off-by-sq actual-output results)))
     ;; not necessary here, but this is how you might catch a possible exception
     (catch Exception e (println e) (println tree))))
 
@@ -102,8 +102,8 @@
   [n1 n2]
   (println "\nfungp :: Functional Genetic Programming in Clojure")
   (println "Mike Vollmer, 2012")
-  (println (str "Test inputs: " (vec test-range)))
-  (println (str "Test outputs: " (vec sample-actual)))
+  (println (str "Test inputs: " (vec training-range)))
+  (println (str "Test outputs: " (vec actual-output)))
   (println (str "Max generations: " (* n1 n2)))
   (println)
   ;; These keyword arguments specify the options for fungp. They should be self-explanatory,
