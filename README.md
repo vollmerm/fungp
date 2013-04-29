@@ -1,7 +1,7 @@
 fungp
 =====
 
-This is the README for **fungp,** the genetic programming library I am working on as a student at [CSUS](http://csus.edu).
+This is the README for **fungp,** the genetic programming library I am working on as a student at [CSUS](http://csus.edu). The current version is 0.3.2.
 
 If you're reading this as HTML, it was automatically generated from the README.md file in the root of the [source repository](https://github.com/probabilityZero/fungp).
 
@@ -53,8 +53,8 @@ You can also list **fungp** as a dependency in your ```project.clj``` and make l
 (defproject testfungp "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
-  :dependencies [[org.clojure/clojure "1.3.0"]
-                 [fungp "0.3.1"]])
+  :dependencies [[org.clojure/clojure "1.4.0"]
+                 [fungp "0.3.2"]])
 ```
 
 Then run ```lein deps``` and lein will download the library.
