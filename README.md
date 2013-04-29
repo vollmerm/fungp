@@ -8,8 +8,13 @@ If you're reading this as HTML, it was automatically generated from the README.m
 About this program
 ------------------
 
+> There are only two hard things in Computer Science: cache invalidation,
+> naming things, and off-by-one errors.
+>
+> --- *Paraphrased from Phil Karlton*
+
 **fungp** is a genetic programming library implemented in the Clojure programming language. It's pronounced
-fun-gee-pee, for *functional genetic programming*.
+fun-gee-pee, for *functional genetic programming* (or "genetic programming is fun").
 
 A far more detailed explanation can be found in the core.clj source code. It is thoroughly documented. An
 HTML document generated from the source is in the ```docs/``` folder, and [is available hosted on my school's
@@ -80,7 +85,7 @@ The **run-genetic-programming** function (the function you call to start the sea
  * population-size : size of the populations
  * tournament-size : size of the tournaments
  * mutation-probability : probability of mutation
- * mutation-depth : depth of mutated trees
+ * mutation-depth : depth of mutation-generated sub-trees
  * max-depth : maximum depth of trees
  * terminals : terminals used in tree building
  * numbers : number literals to be used in tree building

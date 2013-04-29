@@ -3028,8 +3028,8 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>fungp -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">fungp</h1><h2 class="project-version">0.3.1</h2><br /><p>Genetic programming in Clojure</p>
-</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.defined-branches">fungp.defined-branches</a></li><li><a href="#fungp.java-api">fungp.java-api</a></li><li><a href="#fungp.sample.cart">fungp.sample.cart</a></li><li><a href="#fungp.sample.compile-ants">fungp.sample.compile-ants</a></li><li><a href="#fungp.sample.interpret-ants">fungp.sample.interpret-ants</a></li><li><a href="#fungp.sample.sinbowl">fungp.sample.sinbowl</a></li><li><a href="#fungp.tutorial">fungp.tutorial</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
+</script><title>fungp -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">fungp</h1><h2 class="project-version">0.3.2</h2><br /><p>Genetic programming in Clojure</p>
+</div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">org.clojure/clojure</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#fungp.core">fungp.core</a></li><li><a href="#fungp.defined-branches">fungp.defined-branches</a></li><li><a href="#fungp.sample.cart">fungp.sample.cart</a></li><li><a href="#fungp.sample.compile-ants">fungp.sample.compile-ants</a></li><li><a href="#fungp.sample.interpret-ants">fungp.sample.interpret-ants</a></li><li><a href="#fungp.sample.robot">fungp.sample.robot</a></li><li><a href="#fungp.sample.sinbowl">fungp.sample.sinbowl</a></li><li><a href="#fungp.tutorial">fungp.tutorial</a></li><li><a href="#fungp.util">fungp.util</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.core" name="fungp.core"><h1 class="project-name">fungp.core</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>Mike Vollmer, 2012, GPL</p>
 
 <h2>Downloading and Installing</h2>
 
@@ -3460,7 +3460,7 @@ explanation of each of the keyword parameters.</p>
            mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count
            adl-count adl-limit]
     ;; the :or block here specifies default values for some of the arguments
-   :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0
+   :or {tournament-size 3 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0
         adl-count 0 adl-limit 25 numbers []}}]
   ;; some basic type checking: most of the parameters must be integers
   (map #(assert (integer? %)) [iterations migrations num-islands population-size tournament-size mutation-probability
@@ -3624,89 +3624,7 @@ functions are helper functions for creating individuals with ADL branches.</p>
                             (nth tree1 5)))]
     (concat (take cross vec1)
             (list newtree)
-            (drop (+ cross 1) vec1))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.java-api" name="fungp.java-api"><h1 class="project-name">fungp.java-api</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>A Simple Java API</h2>
-
-<p>This is a very basic attempt at a Java API for <em>fungp</em> based around using strings
-like symbols. It is not even close to idiomatic Java but should be enough to get
-<em>fungp</em> running in a Java program.</p>
-
-<p>That said, none of this code is tested at all and you shouldn't expect any of it
-to work.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>This declares not only the current namespace but the class to be generated as
-   the external Java API.</p>
-</td><td class="codes"><pre class="brush: clojure">(ns fungp.java-api
-  (:use fungp.core)
-  (:use fungp.util)
-  (:use clojure.walk)
-  (:use clojure.pprint)
-  (:use [clojure.string :only (split)])
-  (:import (java.util HashMap))
-  (:gen-class
-    :name fungp.GPSearch
-    :methods [^{:static true} [runSearch [java.util.HashMap] Object]
-              ^{:static true} [compileTree [Object Object] 
-                               clojure.lang.IFn]
-              ^{:static true} [applyTree [clojure.lang.IFn Object] Object]]))</pre></td></tr><tr><td class="docs"><p>Apply a function to a value in a map and assoc the result.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn replace-key-value
-  [hmap key f]
-  (assoc hmap key (f (get hmap key))))</pre></td></tr><tr><td class="docs"><p>Apply replace-key-value for multiple keys.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn replace-values-for-keys
-  [hmap keys f]
-  (if (empty? keys) hmap
-    (recur (replace-key-value hmap (first keys) f)
-           (rest keys)
-           f)))</pre></td></tr><tr><td class="docs"><p>Generate and eval import statements passed in via the Java API.</p>
-
-<p>In order for the strategy of "strings to symbols of static methods" to work, we need to
-execute the proper import statements. So the API allows for the user to submit a sequence
-of strings representing classes to import. The key for this is "java-imports."</p>
-</td><td class="codes"><pre class="brush: clojure">(defn eval-import-statements
-  [imports]
-  (map eval (map #(list 'import (list 'quote (symbol %))) imports)))</pre></td></tr><tr><td class="docs"><p>Takes a string like "+ 2" and converts it to [+ 2]</p>
-</td><td class="codes"><pre class="brush: clojure">(defn function-string-to-vector
-  [s]
-  (let [s (seq (split s #&quot;\s+&quot;))]
-    [(symbol (first s)) (Integer/parseInt (second s))]))</pre></td></tr><tr><td class="docs"><p>Translate the hash map passed in from (presumably) Java into something usable by fungp.</p>
-
-<p>The idea is to have strings representing keywords and symbols. First all the string
-keys are replaced with keywords, and then the instances where symbols were used
-in the values are replaced with symbols. To include (for example) a fitness function
-written in Java, you could provide a string containing the fully qualified path to
-a static Java method for the "fitness" value in the HashMap.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn translate-hmap
-  [hmap]
-  (-&gt; hmap
-      (keywordize-keys)
-      (replace-key-value
-       :terminals
-       #(map symbol %))
-      (replace-key-value
-       :functions
-       #(vec (map function-string-to-vector %)))
-      (replace-key-value
-       :numbers
-       #(let [nums (seq %)] (if (nil? nums) [] nums)))
-      (replace-key-value
-       :report
-       #(fn report [a b] (eval `(~(symbol %) (quote ~a) ~b))))
-      (replace-key-value
-       :fitness
-       #(fn fitness [a] (eval `(~(symbol %) (quote ~a)))))))</pre></td></tr><tr><td class="docs"><p>The static method for running the search, which takes a HashMap as a parameter.</p>
-
-<p>Actually running the trees is complicated, as Java has no support for anonymous
-functions. </p>
-</td><td class="codes"><pre class="brush: clojure">(defn -runSearch
-  [hmap]
-  (let [hmap (into {} hmap)]
-    (do (eval-import-statements (get hmap :java-imports))
-      (let [hmap (translate-hmap hmap)]
-        (run-genetic-programming hmap)))))</pre></td></tr><tr><td class="docs"><p>Attempt to compile and run a tree of code.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn -compileTree
-  [tree parameters]
-  (eval (list 'fn (vec (map symbol parameters)) tree)))</pre></td></tr><tr><td class="docs"><p>Use apply to run a function that was compiled with compileTree.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn -applyTree
-  [func args]
-  (apply func args))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.cart" name="fungp.sample.cart"><h1 class="project-name">fungp.sample.cart</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Cart problem</h3>
+            (drop (+ cross 1) vec1))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.cart" name="fungp.sample.cart"><h1 class="project-name">fungp.sample.cart</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Cart problem</h3>
 
 <p>This is an example of evolving a function that takes parameters and
 returns a number. In this case, the function acts as a controller for
@@ -3714,53 +3632,115 @@ and imaginary cart.</p>
 
 <p>The cart is on a track and has a rocket attached to it. The goal of the
 controller is to aim the rocket either forward and backward and eventually
-center the cart. The controller function takes two parameters: the current
-speed and current direction. It returns either a positive or negative
-number to determine which direction to face. It applies a constant force
-in whichever direction it is facing.</p>
+center the cart. The controller function takes two parameters: the current 
+velocity, v, and the current position, x. When v is positive the cart is 
+moving to the right, and when v is negative the cart is moving to the left.
+The evolved function will use these inputs to return either a positive or 
+negative number, which designates which direction to point the rocket; 
+negative points it to the left, and positive points it to the right. 
+The rocket applies a constant force (1 unit/second^2) in whichever 
+direction it is facing on every tick of the clock.</p>
+
+<p>Evolved programs will be tested with a variety of random starting 
+configurations (position and velocity) to see if the cart can be centered
+every time. </p>
+
+<p>To test an evolved program, we need to simulate a cart and let the 
+controller programs experiment by pushing it around. As they do this 
+they should "learn" how to center the cart. The simulation will work
+like this: the cart is placed in a random location with a random
+velocity, and, in a loop, the simulation function will call the
+evolved function with the state of the cart as input, and use the
+output of the program to update the state of the cart. Remember, the
+cart's state is its location and velocity. The simulation function 
+will do this repeatedly until the cart is centered or we hit a 
+pre-defined time limit.</p>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.cart
   (:use fungp.core)
   (:use fungp.util)
   (:use clojure.pprint))</pre></td></tr><tr><td class="docs"><h4>Some constants</h4>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Max time limit</p>
-</td><td class="codes"><pre class="brush: clojure">(def MAX_T  5)</pre></td></tr><tr><td class="docs"><p>Number of test cases</p>
-</td><td class="codes"><pre class="brush: clojure">(def TEST_POINTS  20)</pre></td></tr><tr><td class="docs"><h4>The simulation function</h4>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Simulate cart movement with the evolved function used to calculate
-   thrust. Assuming acceleration is one unit/second^2, and time is in
-   steps of 0.02.</p>
+
+<p>Step increment</p>
+
+<p>Number of test cases</p>
+
+<p>Add this to fitness if program runs out of time</p>
+
+<p>Stop if fitness is lower than this value.</p>
+</td><td class="codes"><pre class="brush: clojure">(def MAX_T  5)
+(def STEP_INC  0.02)
+(def TEST_POINTS  40)
+(def PENALTY  200)
+(def CRITERIA  65)</pre></td></tr><tr><td class="docs"><h4>The simulation functions</h4>
+
+<p>These functions are designed to test a given cart controlling function to
+see if it is able to center the cart. </p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Is the cart at rest? This function tests its location, x, and velocity, v,
+   to see if it is stopped in the center of the track.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn cart-at-rest?
+  [x v]
+  (and (&lt;= (Math/abs x) 0.01) (&lt;= (Math/abs v) 0.01)))</pre></td></tr><tr><td class="docs"><p>Has the simulation hit the maximum time limit? This function compares the
+   amount of time, t, in the simulation so far to the maximum time, MAX_T.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn out-of-time?
+  [t]
+  (&gt;= t MAX_T))</pre></td></tr><tr><td class="docs"><p>Get the thrust of the cart by running the generated function with 
+   velocity v and position x as inputs.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn get-thrust
+  [f v x]
+  (if (&gt; (f v x) 0) 1.0 -1.0))</pre></td></tr><tr><td class="docs"><p>Update the t (time) value in the simulation by incrementing it by STEP_INC.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn update-t
+  [t]
+  (+ t STEP_INC))</pre></td></tr><tr><td class="docs"><p>Update the v (velocity) value in the simulation given the current thrust.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn update-v
+  [v thrust]
+  (+ v (* thrust STEP_INC)))</pre></td></tr><tr><td class="docs"><p>Update the x (position) value in the simulation given the current x 
+   and v (velocity)</p>
+</td><td class="codes"><pre class="brush: clojure">(defn update-x
+  [x v]
+  (+ x (* v STEP_INC)))</pre></td></tr><tr><td class="docs"><p>Simulate cart movement with the evolved function used to calculate
+   thrust. Parameters are: t (time), v (velocity), x (position), 
+   and f (function). This function loops until it is out of time or the cart is
+   centered and at rest. On each iteration of the loop it updates the
+   values of t, v, and x.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn move-cart
   [t v x f]
   (loop [t (float t) v (float v) x (float x)]
-    (cond (and (&lt;= (Math/abs x) 0.01) (&lt;= (Math/abs v) 0.01)) t
-          (&gt;= t MAX_T) 100
-          :else
-          (let [thrust (if (&gt; (f v x) 0) 1.0 -1.0)]
-            (recur (+ t 0.02)
-                   (+ v (* thrust 0.02))
-                   (+ x (* v 0.02)))))))</pre></td></tr><tr><td class="docs"><h4>Test data</h4>
+    ;; Explicitly calling &quot;float&quot; like this allows the Clojure compiler to unbox
+    ;; the floating point values in the loop body.
+    (cond (cart-at-rest? x v) t
+          (out-of-time? t) PENALTY
+          :else (recur (update-t t)
+                       (update-v v (get-thrust f v x))
+                       (update-x x v)))))</pre></td></tr><tr><td class="docs"><h4>Test data</h4>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Range of starting position or velocity</p>
 </td><td class="codes"><pre class="brush: clojure">(defn rand-spread
   [l] (repeatedly l #(- (* 1.5 (rand)) 0.75)))</pre></td></tr><tr><td class="docs"><p>Functions available to the evolved programs</p>
 </td><td class="codes"><pre class="brush: clojure">(def cart-functions 
   '[[+ 2][* 2][- 2][fungp.util/abs 1][fungp.util/gt 2]])</pre></td></tr><tr><td class="docs"><p>Terminals available to the evolved programs</p>
 </td><td class="codes"><pre class="brush: clojure">(def cart-terminals 
-  '[x v -1])</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def rand-velocity (rand-spread TEST_POINTS))
-(def rand-position (rand-spread TEST_POINTS))</pre></td></tr><tr><td class="docs"><p>Calculate error using move-cart</p>
+  '[x v -1])</pre></td></tr><tr><td class="docs"><p>Calculate error using move-cart, given a function and sequences of
+   starting velocities and positions.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn cart-error
-  [f]
+  [f velocity position]
   (reduce + (map (fn [v x] (move-cart 0 v x f))
-                 rand-velocity
-                 rand-position)))</pre></td></tr><tr><td class="docs"><h4>Some existing solutions</h4>
+                 velocity
+                 position)))</pre></td></tr><tr><td class="docs"><p>Test an evolved function on random starting configurations.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn cart-test
+  [f] (let [err (cart-error f (rand-spread TEST_POINTS) (rand-spread TEST_POINTS))]
+        (if (&gt; err CRITERIA) err 0)))</pre></td></tr><tr><td class="docs"><h4>Some existing solutions</h4>
+
+<p>These are some examples to compare your outputs to.</p>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>The solution according to physics</p>
 </td><td class="codes"><pre class="brush: clojure">(defn cart-optimal 
-  [v x] (gt (* -1 x) (* v (abs v))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn cart-suboptimal [v x] (gt (* -1 x) (* v v)))</pre></td></tr><tr><td class="docs"><h4>Initializing fungp</h4>
+  [v x] (gt (* -1 x) (* v (abs v))))</pre></td></tr><tr><td class="docs"><p>A non-optimal evolved program</p>
+</td><td class="codes"><pre class="brush: clojure">(defn cart-suboptimal 
+  [v x] (gt (- x x) (+ (+ x (+ v x)) x)))</pre></td></tr><tr><td class="docs"><h4>Initializing fungp</h4>
 </td><td class="codes"></td></tr><tr><td class="docs"><p>Compute fitness for cart problem.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn cart-fitness
   [tree] (let [f (eval (list 'fn '[v x] tree))]
-           (cart-error f)))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
+           (cart-test f)))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
 </td><td class="codes"><pre class="brush: clojure">(defn cart-report
   [tree fitness]
   (pprint (list 'fn '[v x] tree))
@@ -3768,16 +3748,17 @@ in whichever direction it is facing.</p>
   (flush))</pre></td></tr><tr><td class="docs"><p>Run the cart problem</p>
 </td><td class="codes"><pre class="brush: clojure">(defn test-cart
   [n1 n2]
-  (println &quot;Koza's Cart Problem&quot;)
+  (println &quot;Cart Problem&quot;)
   (println &quot;Error is number of seconds taken total across all the tests.&quot;)
-  (println &quot;If a program times out it is assigned 100 seconds.&quot;)
+  (println (str &quot;If a program times out it is assigned &quot; PENALTY &quot; seconds.&quot;))
+  (println (str &quot;Because the simulation randomizes the test inputs, &quot;
+                &quot;error values will go up and down during a search.&quot;))
   (let [options {:iterations n1 :migrations n2 :num-islands 4
-                 :population-size 50 :terminals cart-terminals
-                 :tournament-size 3
+                 :population-size 30 :terminals cart-terminals
+                 :tournament-size 3 :mutation-probability 0.15
                  :functions cart-functions :fitness cart-fitness
                  :report cart-report
-                 :adf-count 1
-                 :max-depth 5}
+                 :max-depth 4 :mutation-depth 3}
         [tree score] (rest (run-genetic-programming options))]
     (do (println &quot;Done!&quot;)
         (cart-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.compile-ants" name="fungp.sample.compile-ants"><h1 class="project-name">fungp.sample.compile-ants</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Santa Fe Ant Trail</h3>
@@ -3792,14 +3773,25 @@ into JVM bytecode.</p>
   (:use fungp.core)
   (:use fungp.util)
   (:use clojure.pprint))</pre></td></tr><tr><td class="docs"><p>First some constants need to be established.</p>
-</td><td class="codes"></td></tr><tr><td class="docs"><p>Maximum number of iterations before penalty</p>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Maximum number of steps before penalty</p>
 </td><td class="codes"><pre class="brush: clojure">(def MAXSTEPS 
-  30)</pre></td></tr><tr><td class="docs"><p>Location of food to be eaten.</p>
-</td><td class="codes"><pre class="brush: clojure">(def STARTFOOD 
+  50)</pre></td></tr><tr><td class="docs"><p>Penalty applied to individuals that don't eat all the food</p>
+</td><td class="codes"><pre class="brush: clojure">(def PENALTY 
+  50)</pre></td></tr><tr><td class="docs"><p>Maximum number of iterations (length of loop in fitness function)</p>
+</td><td class="codes"><pre class="brush: clojure">(def MAXITER 
+  50)</pre></td></tr><tr><td class="docs"><p>Locations of food to be eaten.</p>
+</td><td class="codes"><pre class="brush: clojure">(def STARTFOOD1 
   [[1 1][1 2][1 3][1 4][1 5][2 5][3 5][4 5][5 5][5 4]
-   [5 3][6 3][7 3][8 3][8 4][7 4][6 4][6 2][7 2][8 3]])</pre></td></tr><tr><td class="docs"><p>Number of food items.</p>
-</td><td class="codes"><pre class="brush: clojure">(def NUMFOOD 
-  (count STARTFOOD))</pre></td></tr><tr><td class="docs"><p>Vars in Clojure are thread-local, which is a useful property. Here
+   [5 3][6 3][7 3][8 3][8 4][7 4][6 4][6 2][7 2][8 3]
+   [8 4][9 4][9 5][9 6][9 8][8 8][8 7][9 7]])</pre></td></tr><tr><td class="docs"><p>Second set of locations of food to be eaten.</p>
+</td><td class="codes"><pre class="brush: clojure">(def STARTFOOD2 
+  [[0 1][1 1][1 2][2 2][3 2][3 3][4 3][5 4][5 5][5 6]
+   [6 6][7 6][8 6][9 6][9 7][9 8][9 9][8 9][7 9][6 9]
+   [6 8][5 8][5 7][4 7][4 6][4 5][4 4][4 3]])</pre></td></tr><tr><td class="docs"><p>New set of food to test for generalization</p>
+</td><td class="codes"><pre class="brush: clojure">(def TESTFOOD 
+  [[1 0][2 0][3 0][4 0][5 0][6 1][6 2][6 3][6 4][6 5]
+   [6 6][5 6][4 6][4 7][3 7][2 7][1 7][0 7][0 6][0 5]
+   [1 5][2 5][2 4][2 3][2 1][3 1][3 2][3 3]])</pre></td></tr><tr><td class="docs"><p>Vars in Clojure are thread-local, which is a useful property. Here
 a bunch of dynamic vars are declared, and they can be referenced by
 the rest of the code in this file. Once fungp has been started, there
 will be separate versions of these vars in each thread, and so the
@@ -3857,40 +3849,46 @@ statement below in the fitness function</p>
   (if (some #(= % [ant-x ant-y]) food) (inc eaten) eaten))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn move []
   (do
+    (set! steps (inc steps))
     (set! ant-x (new-x ant-dir ant-x))
     (set! ant-y (new-y ant-dir ant-y))
     (set! eaten (new-eaten ant-x ant-y food eaten))
     (set! food (new-food ant-x ant-y food))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(def ant-terminals '[(left) (right) (move)])
 (def ant-functions '[[sense 2][do 2][do 3]])</pre></td></tr><tr><td class="docs"><p>This evaluates the fitness of the individuals. It uses a binding block to create
-   thread-local bindings, evaluates the evolved code, and runs it in a loop.</p>
-</td><td class="codes"><pre class="brush: clojure">(defn ant-compile-fitness
-  [tree]
-  (binding [ant-x 0 ant-y 0 ant-dir 0 food STARTFOOD eaten 0 steps 0]
+  thread-local bindings, evaluates the evolved code, and runs it in a loop.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn run-ant
+  [tree init-food]
+  (binding [ant-x 0 ant-y 0 ant-dir 0 food init-food eaten 0 steps 0]
     (let [func (eval (list 'fn [] tree))]
-      (loop [n MAXSTEPS]
+      (loop [iter MAXITER]
         (do
           (func) ;; run the code
-          (set! steps (inc steps))
           (if (zero? (count food))
             steps
-            (if (zero? n)
-              (+ MAXSTEPS (count food))
-              (recur (- n 1)))))))))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
+            (if (or (zero? iter) (zero? steps) (&gt; steps MAXSTEPS))
+              (+ MAXSTEPS PENALTY (count food))
+              (recur (dec iter)))))))))</pre></td></tr><tr><td class="docs"><p>Tests the fitness of an ant using run-ant and STARTFOOD.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn ant-fitness
+  [tree] (+ (run-ant tree STARTFOOD1) (run-ant tree STARTFOOD2)))</pre></td></tr><tr><td class="docs"><p>Reporting function. Prints out the tree and its score</p>
 </td><td class="codes"><pre class="brush: clojure">(defn ant-report
   [tree fitness]
   (pprint (nth tree 2))
   (println (str &quot;Error:\t&quot; fitness &quot;\n\n&quot;)))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn test-compile-ants [n1 n2]
-  (println &quot;Ant problem (compiled)\n&quot;)
-  (println (str &quot;Food count: &quot; NUMFOOD &quot;\n&quot;))
+  (println &quot;Ant problem, from Koza&quot;)
+  (println (str &quot;Generations: &quot; (* n1 n2)))
+  (println &quot;Training is done on two data sets, each with a penalty of 50 and 50 max steps.&quot;)
   (let [options {:iterations n1 :migrations n2 :num-islands 8
-                 :population-size 25 :max-depth 4
-                 :terminals ant-terminals :fitness ant-compile-fitness
+                 :tournament-size 3
+                 :population-size 20 :max-depth 5
+                 :terminals ant-terminals :fitness ant-fitness
                  :functions ant-functions :report ant-report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println &quot;Done!&quot;)
-        (ant-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.interpret-ants" name="fungp.sample.interpret-ants"><h1 class="project-name">fungp.sample.interpret-ants</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Interpreter-based Santa Fe Ant Trail</h3>
+        (ant-report tree score)
+        (println &quot;Testing for generalization (one data set, same penalty and max steps)&quot;)
+        (println (str &quot;Score: &quot; (run-ant tree TESTFOOD))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.interpret-ants" name="fungp.sample.interpret-ants"><h1 class="project-name">fungp.sample.interpret-ants</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Interpreter-based Santa Fe Ant Trail</h3>
 
 <p>This implementation of Koza's Santa Fe Ant Trail problem evolves
 an s-expression that is treated as a tree rather than as literal
@@ -3996,7 +3994,175 @@ code. There are benefits and downsides to both approaches.</p>
                  :functions ant-functions :report ant-report}
         [tree score] (rest (run-genetic-programming options))]
     (do (println &quot;Done!&quot;)
-        (ant-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.sinbowl" name="fungp.sample.sinbowl"><h1 class="project-name">fungp.sample.sinbowl</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Sinbowl regression problem</h3>
+        (ant-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.robot" name="fungp.sample.robot"><h1 class="project-name">fungp.sample.robot</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Robot Grid</h3>
+
+<p>Here we want to control a robot on a grid and have
+it collect coins.</p>
+
+<p>The robot has three state variables: x, y, and direction.
+These values are not passed as parameters to functions, but
+stored outside the function in variables. The evolved
+programs mutate these variables, and the simulation
+function checks these changes to determine the fitness
+of the evolved code.</p>
+
+<p>Each evolved program is tested on a series of grids
+with coins scattered randomly around. The robot can
+move forward, rotate left, rotate right, and sense
+whether a coin is in front of it.</p>
+
+<p>A sample evolved program might be:</p>
+
+<pre><code> (detect-coin (move-forward) 
+              (do (left) (move-forward)))
+</code></pre>
+
+<p>There are 5 total state variables: robot-x, robot-y,
+robot-dir, ticks, and coins-available. The first two
+are obvious (x and y coordinates of the robot). The
+third is a number corresponding to the direction the
+robot is facing. The fourth is the number of clock
+ticks that have gone by (each movement of the robot
+takes one click). If too much time has gone by, the
+simulation stops and the program is given a penalty.
+The last one, coins-available, is a list of (x,y)
+pairs corresponding to coin locations. It is
+randomly generated. Once the robot picks up a 
+coin, that pair is removed from the list.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.robot
+    (:use fungp.core)
+    (:use fungp.util)
+    (:use clojure.pprint))</pre></td></tr><tr><td class="docs"><h3>Some constants</h3>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Maximum number of ticks</p>
+
+<p>Points added when time is up</p>
+
+<p>Number of coins on grid</p>
+
+<p>Length of one side of the grid</p>
+
+<p>Acceptable minimum value</p>
+
+<p>Number of trials for each program</p>
+</td><td class="codes"><pre class="brush: clojure">(def MAX_T  100)
+(def PENALTY  200)
+(def COIN_COUNT  5)
+(def GRID_SIZE  4)
+(def CRITERIA  120)
+(def TRIALS  4)</pre></td></tr><tr><td class="docs"><h3>State variables</h3>
+
+<p>State variables are dynamic vars. They are thread-local
+in Clojure, which is useful because populations in
+fungp run in parallel threads.</p>
+
+<p>When these variables are referenced in the functions
+below, they will be re-bound at runtime to the 
+appropriate thread-local values.</p>
+</td><td class="codes"></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:dynamic robot-x)
+(def ^:dynamic robot-y)
+(def ^:dynamic robot-dir)
+(def ^:dynamic ticks)
+(def ^:dynamic coins-available)</pre></td></tr><tr><td class="docs"><p>Generate a list of coins consisting of [x y] pairs.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn generate-coins-list
+  []
+  (take COIN_COUNT (shuffle (for [x (range GRID_SIZE)
+                                  y (range GRID_SIZE)]
+                               [x y]))))</pre></td></tr><tr><td class="docs"><h3>Simulation functions</h3>
+
+<p>The robot direction is stored as an integer.</p>
+
+<ul>
+<li>0 is left</li>
+<li>1 is up</li>
+<li>2 is right</li>
+<li>3 is down</li>
+</ul>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Return a new x coordinate given a direction for movement.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn new-x
+     [dir x]
+     (mod 
+       (case dir
+         0 (dec x),
+         1 x,
+         2 (inc x),
+         3 x) 
+      4))</pre></td></tr><tr><td class="docs"><p>Return a new y coordinate given a direction for movement.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn new-y
+     [dir y]
+     (mod 
+       (case dir
+         0 y,
+         1 (inc y),
+         2 y,
+         3 (dec y)) 
+       4))</pre></td></tr><tr><td class="docs"><p>Check if a coin exists at a certain location on the grid.
+      Expects x and y coordinates and the coins sequence.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn coin-at?
+     [x y coins] (some #(= % [x y]) coins))</pre></td></tr><tr><td class="docs"><p>Robot sensor to detect if a coin is in front of the robot.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn coin-ahead?
+     [] (coin-at? (new-x robot-dir robot-x) 
+                  (new-y robot-dir robot-y) 
+                  coins-available))</pre></td></tr><tr><td class="docs"><p>Use robot's sensors to look for a coin, and if it's found execute
+   the first branch, otherwise execute the second branch.</p>
+</td><td class="codes"><pre class="brush: clojure">(defmacro detect-coin
+  [found not-found]
+  `(if (coin-ahead?)
+     ~found
+     ~not-found))</pre></td></tr><tr><td class="docs"><p>Make the robot turn left.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn left
+  [] 
+  (set! robot-dir (mod (- robot-dir 1) 4))
+  (set! ticks (inc ticks)))</pre></td></tr><tr><td class="docs"><p>Make the robot turn right.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn right
+  [] 
+  (set! robot-dir (mod (+ robot-dir 1) 4))
+  (set! ticks (inc ticks)))</pre></td></tr><tr><td class="docs"><p>Make the robot move forward one step in whatever direction it is facing.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn move-forward
+  [] 
+  (set! robot-x (new-x robot-dir robot-x))
+  (set! robot-y (new-y robot-dir robot-y))
+  (set! ticks (inc ticks))
+  (when (coin-at? robot-x robot-y coins-available)
+    (set! coins-available (remove #(= % [robot-x robot-y]) coins-available))))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def robot-terminals '[(left) (right) (move-forward)])
+(def robot-functions '[[detect-coin 2] [do 2]])</pre></td></tr><tr><td class="docs"><p>This function repeatedly runs the evolved code and checks its side effects
+   (the dynamic variables) to see if the robot has run out of time or collected
+   all of the coins.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn simulate-robot
+  [f]
+  (binding [robot-x (int (/ GRID_SIZE 2)), robot-y (int (/ GRID_SIZE 2)),
+            robot-dir 0, ticks 0,
+            coins-available (generate-coins-list)]
+           (loop []
+                 (f)
+                 (cond (&gt; ticks MAX_T) (+ PENALTY ticks (count coins-available))
+                       (empty? coins-available) ticks
+                       :else (recur)))))</pre></td></tr><tr><td class="docs"><p>Calculate the error of the evolved program.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn robot-error
+  [tree] 
+  (let [f (eval (list 'fn [] tree))] 
+    (apply + (repeatedly TRIALS #(simulate-robot f)))))</pre></td></tr><tr><td class="docs"><p>Calculate the fitness, taking the criteria into account.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn robot-fitness
+  [tree]
+  (let [error (robot-error tree)]
+    (if (&gt; error CRITERIA) error 0)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn robot-report
+  [tree fitness]
+  (pprint (nth tree 2))
+  (println (str &quot;Error:\t&quot; fitness &quot;\n\n&quot;)))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(defn test-robots [n1 n2]
+  (println &quot;Robot Grid Movement Control Problem&quot;)
+  (let [options {:iterations n1 :migrations n2 :num-islands 2
+                 :tournament-size 3 :population-size 50 :max-depth 4
+                 :terminals robot-terminals :fitness robot-fitness
+                 :functions robot-functions :report robot-report
+                 :mutation-depth 3
+        }
+        [tree score] (rest (run-genetic-programming options))]
+    (do (println &quot;Done!&quot;)
+        (robot-report tree score))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#fungp.sample.sinbowl" name="fungp.sample.sinbowl"><h1 class="project-name">fungp.sample.sinbowl</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h3>Sinbowl regression problem</h3>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(ns fungp.sample.sinbowl
   (:use fungp.core)

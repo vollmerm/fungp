@@ -486,7 +486,7 @@
            mutation-depth max-depth terminals functions numbers fitness report adf-arity adf-count
            adl-count adl-limit]
     ;; the :or block here specifies default values for some of the arguments
-   :or {tournament-size 5 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0
+   :or {tournament-size 3 mutation-probability 0.1 mutation-depth 6 adf-arity 1 adf-count 0
         adl-count 0 adl-limit 25 numbers []}}]
   ;; some basic type checking: most of the parameters must be integers
   (map #(assert (integer? %)) [iterations migrations num-islands population-size tournament-size mutation-probability
