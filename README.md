@@ -102,7 +102,7 @@ The **run-genetic-programming** function (the function you call to start the sea
  * fitness : a fitness function that takes a tree and returns an error number, lower is better
  * report : a reporting function passed [best-tree best-fit] at each migration
 
-Some minimal knowledge of Clojure is probably necessary to use this library well. There is an experimental (undocumented and untested) Java API, and a file demonstrating its use, but right now I wouldn't recommend that route. Clojure is a rather nice language, with excellent documentation and many great tutorials (like [this one](http://java.ociweb.com/mark/clojure/article.html)).
+Some minimal knowledge of Clojure is probably necessary to use this library well. Not to worry, though! Clojure is a rather nice language, with excellent documentation and many great tutorials (like [this one](http://java.ociweb.com/mark/clojure/article.html)).
 
 What does it do?
 ----------------
