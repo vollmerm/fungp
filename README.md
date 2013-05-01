@@ -5,6 +5,13 @@ This is the README for **fungp,** the genetic programming library I am working o
 
 If you're reading this as HTML, it was automatically generated from the README.md file in the root of the [source repository](https://github.com/probabilityZero/fungp).
 
+What is genetic programming?
+----------------------------
+
+Genetic programming (GP) is the process of evolving computer programs using a process inspired by biological evolution. In GP, a computer program automatically writes new computer programs (in this case, by generating trees of new Clojure code), and judges them according to their ability to solve a problem or produce correct output. 
+
+In **fungp,** like in many GP systems, tree structures representing programs go through processes inspired by biological evolution, such as mutation and reproduction. Their chance of reproduction is decided by their "fitness," which is assigned by a fitness function. For example, a simple problem you might solve with GP is symbolic regression, in which the evolved trees represent mathematical functions mapping one or more inputs to an output, and the fitness function would compile and run the evolved programs on known data to test whether sets of inputs produce correct output.
+
 About this program
 ------------------
 
