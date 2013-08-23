@@ -41,11 +41,11 @@
 
 ;;; ### Some constants
 
-(def MAX_T "Maximum number of ticks" 100)
-(def PENALTY "Points added when time is up" 200)
+(def MAX_T "Maximum number of ticks" 250)
+(def PENALTY "Points added when time is up" 250)
 (def COIN_COUNT "Number of coins on grid" 5)
-(def GRID_SIZE "Length of one side of the grid" 4)
-(def CRITERIA "Acceptable minimum value" 120)
+(def GRID_SIZE "Length of one side of the grid" 5)
+(def CRITERIA "Acceptable minimum value" 200)
 (def TRIALS "Number of trials for each program" 4)
 
 ;;; ### State variables
@@ -90,7 +90,7 @@
          1 x,
          2 (inc x),
          3 x) 
-      4))
+      GRID_SIZE))
 
 (defn new-y
      "Return a new y coordinate given a direction for movement."
@@ -101,7 +101,7 @@
          1 (inc y),
          2 y,
          3 (dec y)) 
-       4))
+       GRID_SIZE))
 
 (defn coin-at?
      "Check if a coin exists at a certain location on the grid.
@@ -145,7 +145,7 @@
 
 
 (def robot-terminals '[(left) (right) (move-forward)])
-(def robot-functions '[[detect-coin 2] [do 2]])
+(def robot-functions '[[detect-coin 2] [do 2] [do 3]])
 
 (defn simulate-robot
   "This function repeatedly runs the evolved code and checks its side effects
@@ -181,10 +181,10 @@
 (defn test-robots [n1 n2]
   (println "Robot Grid Movement Control Problem")
   (let [options {:iterations n1 :migrations n2 :num-islands 2
-                 :tournament-size 3 :population-size 50 :max-depth 4
+                 :tournament-size 3 :population-size 200 :max-depth 4
                  :terminals robot-terminals :fitness robot-fitness
                  :functions robot-functions :report robot-report
-                 :mutation-depth 3
+                 :mutation-depth 2
         }
         [tree score] (rest (run-genetic-programming options))]
     (do (println "Done!")
