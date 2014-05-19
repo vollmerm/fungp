@@ -14,22 +14,20 @@
   (if (zero? y) 0
       (/ x y)))
 
+(defn sin [x] (Math/sin x))
+(defn cos [x] (Math/cos x))
+(defn tan [x] (Math/tan x))
+(defn abs [x] (if (>= x 0) x (- x)))
+(defn dub [x] (* x 2))
+(defn half [x] (sdiv x 2))
+(defn sqrt [x] (if (> x 0) (Math/sqrt x) 0))
 
-;;; Conditionals can be done in terms of 4 arity functions
+;;; Conditionals can be done in terms of functions
 
 (defn ifeq [a b c d] (if (= a b) c d))
 (defn ifnoteq [a b c d] (if (not (= a b)) c d))
 (defn gte [a b c d] (if (>= a b) c d))
-
 (defn gt [x y] (if (> x y) 1 -1))
-
-(defn sin [x] (Math/sin x))
-(defn cos [x] (Math/cos x))
-(defn tan [x] (Math/tan x))
-(defn abs [x] (if (< x 0) (* -1 x) x))
-(defn dub [x] (* x x))
-(defn half [x] (sdiv x 2))
-(defn sqrt [x] (if (x > 0) (Math/sqrt x) 0))
 
 ;;; ### Misc. manipulation/utility functions
 
